@@ -1,0 +1,23 @@
+root: true
+extends:
+  - '@maicol07'
+rules:
+  '@typescript-eslint/naming-convention': 'off'
+  import/prefer-default-export: 'warn'
+  max-len:
+    - "error"
+    - "code": 200
+  consistent-return: 'off'
+  no-new: 'off'
+  no-return-assign:
+    - error
+    - except-parens
+  no-plusplus: off
+  new-cap:
+    - error
+    - capIsNewExceptions: ['Model', 'Attr', 'HasMany', 'HasOne', 'BelongsTo', 'Link', 'Stream']
+      properties: false
+  unicorn/prevent-abbreviations:
+    - error
+    - replacements:
+        props: false
