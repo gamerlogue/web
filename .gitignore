@@ -4,6 +4,12 @@ public/build
 .phpunit.cache
 auth.json
 
+# Laravel Octane
+*/caddy
+frankenphp
+frankenphp-worker.php
+
+
 # Created by https://www.toptal.com/developers/gitignore/api/node,laravel,composer,phpstorm+iml,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,laravel,composer,phpstorm+iml,visualstudiocode
 
