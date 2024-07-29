@@ -11,6 +11,8 @@ initialStuff() {
     if [ ${running_migrations_and_seeders} = "true" ]; then
         echo "Running migrations and seeding database ..."
         php artisan migrate --force;
+        # Run Laravel Pulse migration (in some cases it may not be recognized)
+        php artisan migrate --path=vendor/laravel/pulse/database/migrations/2023_06_07_000001_create_pulse_tables.php
     fi
 
     php artisan storage:link
