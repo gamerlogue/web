@@ -8,6 +8,7 @@
     },
     "devDependencies": {
         "@maicol07/eslint-config": "^2.4.2",
+        "chokidar": "^3.6.0",
         "include-media": "^2.0.0",
         "laravel-vite-plugin": "^1.0.2",
         "sass": "^1.74.1",
