@@ -15,6 +15,9 @@ importers:
       '@maicol07/eslint-config':
         specifier: ^2.4.2
         version: 2.4.2(typescript@5.5.4)
+      chokidar:
+        specifier: ^3.6.0
+        version: 3.6.0
       include-media:
         specifier: ^2.0.0
         version: 2.0.0
