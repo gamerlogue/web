@@ -20,6 +20,7 @@ docker compose -f docker-compose.prod.yml up -d
 #### First time
 ```bash
 docker compose up -d
+./vendor/bin/sail composer run-script post-create-project-cmd # Runs the commands from Composer scripts
 ```
 #### Subsequent times
 ```bash
