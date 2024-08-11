@@ -19,8 +19,14 @@ docker compose -f docker-compose.prod.yml up -d
 ### Development
 #### First time
 ```bash
+# Start all the services, this will automatically install the dependencies
 docker compose up -d
-./vendor/bin/sail composer run-script post-create-project-cmd # Runs the commands from Composer scripts
+# Change the ownership of the files to the current user (removes conflicts with folders created as root in the container)
+sudo chown -R $USER:$USER .
+# Run the post-create-project-cmd script (creates app key, installs Octane, makes sqlite database and runs migrations)
+./vendor/bin/sail composer run-script post-create-project-cmd
+# Restart the services to apply the changes
+./vendor/bin/sail restart
 ```
 #### Subsequent times
 ```bash
