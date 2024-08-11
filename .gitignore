@@ -9,7 +9,13 @@ auth.json
 */caddy
 frankenphp
 frankenphp-worker.php
+config/composer
 
+# Debug bar
+storage/debugbar
+
+# Twill
+public/assets/twill
 
 # Created by https://www.toptal.com/developers/gitignore/api/node,laravel,composer,phpstorm+iml,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,laravel,composer,phpstorm+iml,visualstudiocode
