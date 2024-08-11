@@ -19,33 +19,26 @@ docker compose -f docker-compose.prod.yml up -d
 ### Development
 #### First time
 ```bash
-# Start all the services, this will automatically install the dependencies
-docker compose up -d
-# Change the ownership of the files to the current user (removes conflicts with folders created as root in the container)
+# Enable the custom sail venv
+./bin activate
+# Start services
+sail up -d
+# Set permissions to avoid conflicts with the container creating files as root
 sudo chown -R $USER:$USER .
 # Run the post-create-project-cmd script (creates app key, installs Octane, makes sqlite database and runs migrations)
-./vendor/bin/sail composer run-script post-create-project-cmd
+sail composer run-script post-create-project-cmd
 # Restart the services to apply the changes
-./vendor/bin/sail restart
+sail restart
 ```
 #### Subsequent times
 ```bash
-./vendor/bin/sail up
+./bin activate
+sail up -d # -d is needed to run in the background
 ```
-> TIP!
-> If you want to avoid typing `./vendor/bin/sail` every time, you can add an alias in your shell:
-> 
-> Bash/Zsh:
-> ```bash
-> alias sail='[ -f sail ] && sh sail || sh vendor/bin/sail'
-> ```
-> 
-> Fish:
-> ```fish
-> alias sail '[ -f sail ]; and sh sail; or sh vendor/bin/sail'
-> ```
-> Then you can just type `sail up -d` to start the development environment.
-> 
+> NOTE: bin/activate is a custom script that activates the custom sail venv. It is not included in the Laravel Sail package.
+> It creates some aliases to avoid typing `./vendor/bin/sail` every time.
+> Also common commands like `composer`, `php`, `artisan`, `npm`, `yarn`, `sail` and `sail-root` are sent to the sail container.
+
 
 ## Template routes
 | Method    | URI         | Name            | Docs                                    |

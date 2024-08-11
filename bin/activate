@@ -1,0 +1,2 @@
+# Call activate.sh
+. bin/activate.sh
