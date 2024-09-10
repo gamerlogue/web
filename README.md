@@ -41,10 +41,11 @@ sail up -d # -d is needed to run in the background
 
 
 ## Template routes
-| Method    | URI         | Name            | Docs                                    |
-|-----------|-------------|-----------------|-----------------------------------------|
-| GET\|HEAD | /log-viewer | Log viewer      | https://github.com/opcodesio/log-viewer |
-| GET\|HEAD | /pulse      | Pulse dashboard | https://pulse.laravel.com               |
+| Method    | URI         | Name                | Docs                                    |
+|-----------|-------------|---------------------|-----------------------------------------|
+| GET\|HEAD | /log-viewer | Log viewer          | https://github.com/opcodesio/log-viewer |
+| GET\|HEAD | /pulse      | Pulse dashboard     | https://pulse.laravel.com               |
+| GET\|HEAD | /telescope  | Telescope dashboard | https://laravel.com/docs/11.x/telescope |
 
 ## Troubleshooting
 ### Laravel pulse migrations not found

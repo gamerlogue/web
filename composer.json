@@ -10,6 +10,7 @@
         "laravel/framework": "^11.9",
         "laravel/octane": "^2.5",
         "laravel/pulse": "^1.2",
+        "laravel/telescope": "*",
         "laravel/tinker": "^2.9",
         "opcodesio/log-viewer": "^3.10"
     },
