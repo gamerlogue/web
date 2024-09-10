@@ -11,17 +11,17 @@
         "chokidar": "^3.6.0",
         "include-media": "^2.0.0",
         "laravel-vite-plugin": "^1.0.2",
-        "sass": "^1.74.1",
-        "stylelint": "^16.7.0",
+        "sass": "^1.78.0",
+        "stylelint": "^16.9.0",
         "stylelint-config-clean-order": "^6.1.0",
         "stylelint-config-html": "^1.1.0",
         "stylelint-config-standard": "^36.0.1",
         "stylelint-config-standard-scss": "^13.1.0",
-        "type-fest": "^4.15.0",
-        "typescript": "^5.4.4",
-        "vite": "^5.2.8"
+        "type-fest": "^4.26.1",
+        "typescript": "^5.6.2",
+        "vite": "^5.4.3"
     },
     "dependencies": {
-        "modern-normalize": "^2.0.0"
+        "modern-normalize": "^3.0.1"
     }
 }
