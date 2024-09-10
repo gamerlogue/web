@@ -12,7 +12,6 @@ function deactivate  -d "Exit virtual environment and return to normal shell env
         end
     end
 
-    set -e VIRTUAL_ENV
     set -e VIRTUAL_ENV_PROMPT
     if test "$argv[1]" != "nondestructive"
         # Self-destruct!
@@ -25,8 +24,6 @@ end
 
 # Unset irrelevant variables.
 deactivate nondestructive
-
-set -gx VIRTUAL_ENV "$PWD"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
@@ -46,26 +43,25 @@ alias tinker="./vendor/bin/sail tinker"
 alias share="./vendor/bin/sail share"
 alias open="./vendor/bin/sail open"
 
-if test -z "$VIRTUAL_ENV_DISABLE_PROMPT"
-    # fish uses a function instead of an env var to generate the prompt.
 
-    # Save the current fish_prompt function as the function _old_fish_prompt.
-    functions -c fish_prompt _old_fish_prompt
+# fish uses a function instead of an env var to generate the prompt.
 
-    # With the original prompt function renamed, we can override with our own.
-    function fish_prompt
-        # Save the return status of the last command.
-        set -l old_status $status
+# Save the current fish_prompt function as the function _old_fish_prompt.
+functions -c fish_prompt _old_fish_prompt
 
-        # Output the venv prompt; color taken from the blue of the Python logo.
-        echo "(sail) "
+# With the original prompt function renamed, we can override with our own.
+function fish_prompt
+    # Save the return status of the last command.
+    set -l old_status $status
 
-        # Restore the return status of the previous command.
-        echo "exit $old_status" | .
-        # Output the original/"old" prompt.
-        _old_fish_prompt
-    end
+    # Output the venv prompt; color taken from the blue of the Python logo.
+    echo -n "(sail) "
 
-    set -gx _OLD_FISH_PROMPT_OVERRIDE "$PWD"
-    set -gx VIRTUAL_ENV_PROMPT "(sail) "
+    # Restore the return status of the previous command.
+    echo "exit $old_status" | .
+    # Output the original/"old" prompt.
+    _old_fish_prompt
 end
+
+set -gx _OLD_FISH_PROMPT_OVERRIDE "$PWD"
+set -gx VIRTUAL_ENV_PROMPT "(sail) "
