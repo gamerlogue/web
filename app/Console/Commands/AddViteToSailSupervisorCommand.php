@@ -15,7 +15,7 @@ class AddViteToSailSupervisorCommand extends Command
         $this->info('Adding Vite to the Sail supervisor...');
 
         $conf = '[program:vite]
-command=bash -c "corepack enable && gosu %(ENV_WWWUSER bash -c \'cd /var/www/html && pnpm dev\'"
+command=bash -c "corepack enable && gosu %(ENV_WWWUSER)s bash -c \'cd /var/www/html && pnpm dev\'"
 user=root
 environment=LARAVEL_SAIL="1"
 stdout_logfile=/dev/stdout
