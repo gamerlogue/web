@@ -6,3 +6,4 @@ repos:
       - id: check-branch
       - id: check-author-name
       - id: check-author-email
+      - id: check-merge-base
