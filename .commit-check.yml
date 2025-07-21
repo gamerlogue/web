@@ -1,6 +1,6 @@
 checks:
   - check: message
-    regex: '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\([\w\-\.]+\))?(!)?: ((?:. )?[\w ])+([\s\S]*)|(Merge).*|(fixup!.*)'
+    regex: '^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert|wip|security|i18n|a11y|ux|ui|config|deps|infra|init|analytics|seo|legal|typo|comment|example|mock|hotfix|merge|cleanup|deprecate|move|rename|split|combine|add|remove|update|downgrade|patch|optimize){1}(\([\w\-\.]+\))?(!)?: ((?:. )?[\w ])+([\s\S]*)|(Merge).*|(fixup!.*)'
     error: "The commit message should be structured as follows:\n\n
     <type>[optional scope]: <description>\n
     [optional body]\n
