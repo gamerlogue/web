@@ -1,0 +1,72 @@
+services:
+  laravel:
+    build:
+      context: .
+      target: prod
+    user: "${WWWUSER-web}:${WWWGROUP-1000}"
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+      - '${SERVER_NAME}:0.0.0.0'
+    ports:
+      - '${APP_PORT:-80}:80'
+      - '443:443'
+      - '443:443/udp'
+    env_file:
+      -   .env
+    environment:
+      XDG_CACHE_HOME: /var/www/html/.cache
+      XDG_CONFIG_HOME: /var/www/html/.config
+      XDG_DATA_HOME: /var/www/html/.data
+    depends_on:
+      - mysql
+      - redis
+      - memcached
+      - mailpit
+    healthcheck:
+      test: [ CMD, curl, '-o', '-', '-I', '-k', '--silent', '--fail', 'https://localhost/up' ]
+      retries: 3
+      timeout: 5s
+
+  mysql:
+    image: 'mysql'
+    ports:
+      - '${FORWARD_DB_PORT:-3306}:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - 'mysql:/var/lib/mysql'
+      - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+    healthcheck:
+      test: [ CMD, healthcheck.sh, '--connect', '--innodb_initialized' ]
+      retries: 3
+      timeout: 5s
+  redis:
+    image: 'redis:alpine'
+    ports:
+      - '${FORWARD_REDIS_PORT:-6379}:6379'
+    volumes:
+      - 'redis:/data'
+    healthcheck:
+      test: [ CMD, redis-cli, ping ]
+      retries: 3
+      timeout: 5s
+  memcached:
+    image: 'memcached:alpine'
+    ports:
+      - '${FORWARD_MEMCACHED_PORT:-11211}:11211'
+    healthcheck:
+      test: [ CMD, nc, '-z', '127.0.0.1', '11211' ]
+      timeout: 2s
+      start_period: 3s
+      interval: 10s
+
+volumes:
+  mysql:
+    driver: local
+  redis:
+    driver: local

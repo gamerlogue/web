@@ -1,128 +1,60 @@
 services:
-    laravel.test:
-        build:
-            context: ./vendor/laravel/sail/runtimes/8.3
-            dockerfile: Dockerfile
-            args:
-                WWWGROUP: '${WWWGROUP-1000}'
-                MYSQL_CLIENT: mariadb-client
-        image: sail-8.3/app
-        extra_hosts:
-            - 'host.docker.internal:host-gateway'
-        ports:
-            - '${APP_PORT:-8888}:80'
-            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
-            - '443:443'
-            - '443:443/udp'
-        env_file:
-            - .env
-        environment:
-            WWWUSER: '${WWWUSER-1000}'
-            LARAVEL_SAIL: 1
-            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
-            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
-            IGNITION_LOCAL_SITES_PATH: '${PWD}'
-            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --host=localhost --port=443 --admin-port=2019 --https --http-redirect --watch"
-            SUPERVISOR_PHP_USER: root
-            XDG_CONFIG_HOME:  /var/www/html/config
-            XDG_DATA_HOME:  /var/www/html/data
-        volumes:
-            - '.:/var/www/html'
-        networks:
-            - sail
-        depends_on:
-            mariadb:
-                condition: service_healthy
-            redis:
-                condition: service_healthy
-            memcached:
-                condition: service_healthy
-            typesense:
-                condition: service_healthy
-            mailpit:
-                condition: service_healthy
-        healthcheck:
-            test: [ CMD, curl, '-o', '-', '-I', '-k', '--silent', '--fail', 'https://localhost/up' ]
-            retries: 3
-            timeout: 5s
-    mariadb:
-        image: 'mariadb:11'
-        ports:
-            - '${FORWARD_DB_PORT:-3307}:3306'
-        environment:
-            MARIADB_ROOT_PASSWORD: '${DB_PASSWORD}'
-            MARIADB_ROOT_HOST: '%'
-            MARIADB_DATABASE: '${DB_DATABASE}'
-            MARIADB_USER: '${DB_USERNAME}'
-            MARIADB_PASSWORD: '${DB_PASSWORD}'
-            MARIADB_ALLOW_EMPTY_PASSWORD: 'yes'
-        volumes:
-            - 'sail-mariadb:/var/lib/mysql'
-            - './vendor/laravel/sail/database/mariadb/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
-        networks:
-            - sail
-        healthcheck:
-            test: [ CMD, healthcheck.sh, '--connect', '--innodb_initialized' ]
-            retries: 3
-            timeout: 5s
-    redis:
-        image: 'redis:alpine'
-        ports:
-            - '${FORWARD_REDIS_PORT:-6379}:6379'
-        volumes:
-            - 'sail-redis:/data'
-        networks:
-            - sail
-        healthcheck:
-            test: [ CMD, redis-cli, ping ]
-            retries: 3
-            timeout: 5s
-    memcached:
-        image: 'memcached:alpine'
-        ports:
-            - '${FORWARD_MEMCACHED_PORT:-11211}:11211'
-        networks:
-            - sail
-        healthcheck:
-            test: [ CMD, nc, '-z', '127.0.0.1', '11211' ]
-            timeout: 2s
-            start_period: 3s
-            interval: 10s
-    typesense:
-        image: 'typesense/typesense:0.25.2'
-        ports:
-            - '${FORWARD_TYPESENSE_PORT:-8108}:8108'
-        environment:
-            TYPESENSE_DATA_DIR: '${TYPESENSE_DATA_DIR:-/typesense-data}'
-            TYPESENSE_API_KEY: '${TYPESENSE_API_KEY:-xyz}'
-            TYPESENSE_ENABLE_CORS: '${TYPESENSE_ENABLE_CORS:-true}'
-        volumes:
-            - 'sail-typesense:/typesense-data'
-        networks:
-            - sail
-        healthcheck:
-            # there it is installing curl silently if not already installed.
-            test: [ "CMD-SHELL", "apt install curl -y &>/dev/null || curl --silent --fail localhost:8108/health || exit 1" ]
-            interval: 5s
-            timeout: 5s
-            retries: 10
-    mailpit:
-        image: 'axllent/mailpit:latest'
-        ports:
-            - '${FORWARD_MAILPIT_PORT:-1025}:1025'
-            - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
-        networks:
-            - sail
-        healthcheck:
-            test: [ "CMD", "/mailpit", "readyz" ]
-            interval: 15s
-networks:
-    sail:
-        driver: bridge
+  laravel:
+    extends:
+      file: docker-compose.common.yml
+      service: laravel
+    build:
+      target: dev
+    user: "${WWWUSER-sail}:${WWWGROUP-1000}"
+    ports:
+      - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+    hostname: '${SERVER_NAME:-laravel.local}'
+    environment:
+      WEBSERVER: octane-watch
+      #            WWWUSER: '${WWWUSER:-1000}'
+      #            WWWGROUP: '${WWWGROUP:-1000}'
+      LARAVEL_SAIL: 1
+      XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-debug,develop}'
+      XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal log=/tmp/xdebug.log}'
+      PHP_IDE_CONFIG: '${PHP_IDE_CONFIG:-serverName=Sail}'
+      IGNITION_EDITOR: '${IGNITION_EDITOR:-vscode}'
+      IGNITION_REMOTE_SITES_PATH: '/app'
+      SUPERVISOR_USER: sail
+      SUPERVISOR_PHP_USER: sail
+      SUPERVISOR_VITE_USER: sail
+    #            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --host=localhost --port=443 --admin-port=2019 --https"
+    volumes:
+      - '.:/var/www/html'
+      - ~/.caddy/ca:/var/www/html/.data/caddy/pki/authorities/local
+
+  mysql:
+    extends:
+      file: docker-compose.common.yml
+      service: mysql
+    volumes:
+      - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+
+  redis:
+    extends:
+      file: docker-compose.common.yml
+      service: redis
+
+  memcached:
+    extends:
+      file: docker-compose.common.yml
+      service: memcached
+
+  mailpit:
+    image: 'axllent/mailpit:latest'
+    ports:
+      - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+      - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+    healthcheck:
+      test: [ "CMD", "/mailpit", "readyz" ]
+      interval: 15s
+
 volumes:
-    sail-mariadb:
-        driver: local
-    sail-redis:
-        driver: local
-    sail-typesense:
-        driver: local
+  mysql:
+    driver: local
+  redis:
+    driver: local
