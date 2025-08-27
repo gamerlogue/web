@@ -9,6 +9,7 @@
 
 ## Requirements
 - [Docker](https://www.docker.com/)
+- [pre-commit](https://pre-commit.com/)
 
 ## Running
 ### Production
@@ -19,6 +20,8 @@ docker compose -f docker-compose.prod.yml up -d
 ### Development
 #### First time
 ```bash
+pre-commit install
+pre-commit install -t prepare-commit-msg
 # Enable the custom sail venv
 ./bin activate
 # Start services

@@ -5,6 +5,11 @@
       <LaravelPintConfiguration tool_path="$PROJECT_DIR$/vendor/bin/pint" />
     </laravel_pint_settings>
   </component>
+  <component name="MessDetector">
+    <phpmd_settings>
+      <phpmd_by_interpreter asDefaultInterpreter="true" interpreter_id="3640fe51-5d13-4bfe-8d87-90fa592c4b19" timeout="30000" />
+    </phpmd_settings>
+  </component>
   <component name="MessDetectorOptionsConfiguration">
     <option name="transferred" value="true" />
   </component>
@@ -14,6 +19,11 @@
   <component name="PHPCodeSnifferOptionsConfiguration">
     <option name="highlightLevel" value="WARNING" />
     <option name="transferred" value="true" />
+  </component>
+  <component name="PhpCodeSniffer">
+    <phpcs_settings>
+      <phpcs_by_interpreter asDefaultInterpreter="true" interpreter_id="3640fe51-5d13-4bfe-8d87-90fa592c4b19" timeout="30000" />
+    </phpcs_settings>
   </component>
   <component name="PhpExternalFormatter">
     <option name="externalFormatter" value="LARAVEL_PINT" />
@@ -187,6 +197,7 @@
       <path value="$PROJECT_DIR$/vendor/chillerlan/php-qrcode" />
       <path value="$PROJECT_DIR$/vendor/livewire/volt" />
       <path value="$PROJECT_DIR$/vendor/laravel/telescope" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php72" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />
