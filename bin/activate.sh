@@ -27,7 +27,7 @@ deactivate () {
     fi
 
     # Unset sail aliases if they exist in one command (check if they exist before unsetting)
-    for alias in sail artisan php composer node npm pnpm mariadb shell root-shell tinker share open; do
+    for alias in sail artisan php composer node npm pnpm mysql shell root-shell tinker share open; do
         if [ -n "$(alias | grep $alias)" ]; then
             unalias $alias
         fi
@@ -51,7 +51,7 @@ alias composer='./vendor/bin/sail composer'
 alias node='./vendor/bin/sail node'
 alias npm='./vendor/bin/sail npm'
 alias pnpm='./vendor/bin/sail pnpm'
-alias mariadb='./vendor/bin/sail mariadb'
+alias mysql='./vendor/bin/sail mysql'
 alias shell='./vendor/bin/sail shell'
 alias root-shell='./vendor/bin/sail root-shell'
 alias tinker='./vendor/bin/sail tinker'
