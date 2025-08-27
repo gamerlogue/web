@@ -1,113 +1,52 @@
-# Accepted values: 8.3 - 8.2
-ARG PHP_VERSION=8.3
-ARG FRANKENPHP_VERSION=latest
-ARG COMPOSER_VERSION=latest
+ARG PHP_VERSION=8.4
+ARG FRANKENPHP_VERSION=1.9.0
 
-###########################################
-# Build frontend assets with NPM
-###########################################
-ARG NODE_VERSION=20-alpine
-FROM node:${NODE_VERSION} AS base
+FROM php:${PHP_VERSION}-cli-alpine AS dev
+
+# Install helpers
+RUN apk add --no-cache \
+    git \
+    wget \
+    supervisor \
+    nodejs \
+    npm \
+    fish \
+    pnpm-fish-completion \
+    pnpm-bash-completion
+
+COPY --from=ghcr.io/mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions @composer apcu xdebug imagick gd imap zip bcmath intl exif redis opcache memcached pcntl pdo_mysql
+
+ARG WWWUSER=sail
+ARG WWWGROUP=sail
+ARG UID=1000
+ARG GID=1000
+
+# Change ${WWWUSER} and ${WWWGROUP} ids to ${UID} and ${GID}
+RUN adduser -s /usr/bin/fish -H -D -g ${WWWGROUP} -u ${UID} ${WWWUSER}
+
+# Allow installing certs for sail to /etc/ssl/certs and /usr/local/share/ca-certificates
+RUN mkdir -p /etc/ssl/certs \
+    && mkdir -p /usr/local/share/ca-certificates \
+    && chown -R ${WWWUSER}:${WWWGROUP} /etc/ssl/certs \
+    && chown -R ${WWWUSER}:${WWWGROUP} /usr/local/share/ca-certificates
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install --global corepack@latest && corepack enable pnpm
 
-ENV ROOT=/var/www/html
+ENV ROOT=/var/www/html \
+    WITH_SCHEDULER=true \
+    WITH_HORIZON=true
 
-WORKDIR ${ROOT}
+# Allow writing supervisor logs and pid file
+RUN mkdir -p /var/log/supervisor \
+    && touch /var/run/supervisord.pid \
+    && chown -R ${WWWUSER}:${WWWGROUP} /var/log/supervisor \
+    && chown -R ${WWWUSER}:${WWWGROUP} /var/run/supervisord.pid
 
-RUN #npm config set update-notifier false && npm set progress=false
-
-COPY --link package.json ./
-COPY --link *pnpm* ./
-
-FROM base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
-
-FROM base AS build
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-
-COPY --link . .
-
-RUN pnpm build
-
-###########################################
-
-FROM composer:${COMPOSER_VERSION} AS vendor
-
-FROM dunglas/frankenphp:${FRANKENPHP_VERSION}-php${PHP_VERSION}
-
-#LABEL maintainer="SMortexa <seyed.me720@gmail.com>"
-#LABEL org.opencontainers.image.title="Laravel Octane Dockerfile"
-#LABEL org.opencontainers.image.description="Production-ready Dockerfile for Laravel Octane"
-#LABEL org.opencontainers.image.source=https://github.com/exaco/laravel-octane-dockerfile
-#LABEL org.opencontainers.image.licenses=MIT
-
-ARG WWWUSER=1000
-ARG WWWGROUP=1000
-ARG TZ=UTC
-ARG APP_DIR=/var/www/html
-
-ENV DEBIAN_FRONTEND=noninteractive \
-    TERM=xterm-color \
-    WITH_HORIZON=false \
-    WITH_SCHEDULER=false \
-    OCTANE_SERVER=frankenphp \
-    USER=octane \
-    ROOT=${APP_DIR} \
-    COMPOSER_FUND=0 \
-    COMPOSER_MAX_PARALLEL_HTTP=24 \
-    XDG_CONFIG_HOME=${APP_DIR}/.config \
-    XDG_DATA_HOME=${APP_DIR}/.data
-
-WORKDIR ${ROOT}
-
-SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
-
-RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime \
-    && echo ${TZ} > /etc/timezone
-
-RUN apt-get update; \
-    apt-get upgrade -yqq; \
-    apt-get install -yqq --no-install-recommends --show-progress \
-    apt-utils \
-    curl \
-    wget \
-    nano \
-	git \
-    ncdu \
-    procps \
-    ca-certificates \
-    supervisor \
-    libsodium-dev \
-    # Install PHP extensions (included with dunglas/frankenphp)
-    && install-php-extensions \
-    bz2 \
-    pcntl \
-    mbstring \
-    bcmath \
-    sockets \
-    pgsql \
-    pdo_pgsql \
-    opcache \
-    exif \
-    pdo_mysql \
-    zip \
-    intl \
-    gd \
-    redis \
-    rdkafka \
-    memcached \
-    igbinary \
-    ldap \
-    && apt-get -y autoremove \
-    && apt-get clean \
-    && docker-php-source delete \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    && rm /var/log/lastlog /var/log/faillog
-
-RUN arch="$(uname -m)" \
+# Install supercronic for Laravel scheduler in dev
+RUN arch="$(apk --print-arch)" \
     && case "$arch" in \
     armhf) _cronic_fname='supercronic-linux-arm' ;; \
     aarch64) _cronic_fname='supercronic-linux-arm64' ;; \
@@ -121,68 +60,208 @@ RUN arch="$(uname -m)" \
     && mkdir -p /etc/supercronic \
     && echo "*/1 * * * * php ${ROOT}/artisan schedule:run --no-interaction" > /etc/supercronic/laravel
 
-RUN userdel --remove --force www-data \
-    && groupadd --force -g ${WWWGROUP} ${USER} \
-    && useradd -ms /bin/bash --no-log-init --no-user-group -g ${WWWGROUP} -u ${WWWUSER} ${USER}
+RUN ln -s /usr/local/bin/php /usr/bin/php
+COPY deployment/dev/start-container-dev.sh /usr/local/bin/start-container
+COPY deployment/dev/supervisord.dev.conf /etc/supervisor/conf.d/supervisord.conf
+COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/healthcheck /usr/local/bin/healthcheck
+# Reuse prod scheduler/horizon config in dev to avoid duplication
+COPY deployment/supervisord.conf /etc/supervisord.conf
+COPY deployment/supervisord.scheduler.conf /etc/supervisor/conf.d/supervisord.scheduler.conf
+COPY deployment/supervisord.horizon.conf /etc/supervisor/conf.d/supervisord.horizon.conf
 
-RUN chown -R ${USER}:${USER} ${ROOT} /var/{log,run} \
-    && chmod -R a+rw ${ROOT} /var/{log,run}
+RUN chmod +x /usr/local/bin/start-container
+RUN chmod +x /usr/local/bin/start-container /usr/local/bin/healthcheck
+
+EXPOSE 80/tcp
+
+ENTRYPOINT ["start-container"]
+HEALTHCHECK --start-period=5s --interval=2s --timeout=5s --retries=8 CMD healthcheck || exit 1
+
+USER ${WWWUSER}
+WORKDIR ${ROOT}
+
+###########################################
+# Derived from https://github.com/exaco/laravel-octane-dockerfile
+###########################################
+FROM dunglas/frankenphp:${FRANKENPHP_VERSION}-php${PHP_VERSION}-alpine AS base
+ARG WWWUSER=1000
+ARG WWWGROUP=1000
+ARG TZ=Europe/Rome
+ARG APP_DIR=/var/www/html
+
+ENV TERM=xterm-color \
+    OCTANE_SERVER=frankenphp \
+    TZ=${TZ} \
+    USER=octane \
+    ROOT=${APP_DIR} \
+    APP_ENV=production \
+    COMPOSER_FUND=0 \
+    COMPOSER_MAX_PARALLEL_HTTP=24 \
+    XDG_CONFIG_HOME=${APP_DIR}/.config \
+    XDG_DATA_HOME=${APP_DIR}/.data
+WORKDIR ${ROOT}
+
+SHELL ["/bin/sh", "-eou", "pipefail", "-c"]
+
+RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime \
+    && echo ${TZ} > /etc/timezone
+
+RUN apk update; \
+    apk upgrade; \
+    apk add --no-cache \
+    curl \
+    wget \
+    fish \
+    vim \
+    tzdata \
+    git \
+    ncdu \
+    procps \
+    unzip \
+    ca-certificates \
+    supervisor \
+    libsodium-dev \
+    brotli \
+    # Install PHP extensions (included with dunglas/frankenphp) \
+    && install-php-extensions \
+    apcu \
+    bz2 \
+    pcntl \
+    mbstring \
+    bcmath \
+    sockets \
+    opcache \
+    exif \
+    pdo_mysql \
+    zip \
+    uv \
+    vips \
+    intl \
+    gd \
+    redis \
+    rdkafka \
+    memcached \
+    igbinary \
+    ldap \
+    && docker-php-source delete \
+    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
+
+RUN arch="$(apk --print-arch)" \
+    && case "$arch" in \
+    armhf) _cronic_fname='supercronic-linux-arm' ;; \
+    aarch64) _cronic_fname='supercronic-linux-arm64' ;; \
+    x86_64) _cronic_fname='supercronic-linux-amd64' ;; \
+    x86) _cronic_fname='supercronic-linux-386' ;; \
+    *) echo >&2 "error: unsupported architecture: $arch"; exit 1 ;; \
+    esac \
+    && wget -q "https://github.com/aptible/supercronic/releases/download/v0.2.29/${_cronic_fname}" \
+    -O /usr/bin/supercronic \
+    && chmod +x /usr/bin/supercronic \
+    && mkdir -p /etc/supercronic \
+    && echo "*/1 * * * * php ${ROOT}/artisan schedule:run --no-interaction" > /etc/supercronic/laravel
+
+RUN addgroup -g ${WWWGROUP} ${USER} \
+    && adduser -D -h ${ROOT} -G ${USER} -u ${WWWUSER} -s /bin/sh ${USER} \
+    && setcap -r /usr/local/bin/frankenphp
+
+RUN mkdir -p /var/log/supervisor /var/run/supervisor \
+    && chown -R ${USER}:${USER} ${ROOT} /var/log /var/run \
+    && chmod -R a+rw ${ROOT} /var/log /var/run
 
 RUN cp ${PHP_INI_DIR}/php.ini-production ${PHP_INI_DIR}/php.ini
 
-#RUN frankenphp start
-#RUN frankenphp trust
-#RUN frankenphp stop
+USER ${USER}
+
+COPY --link --chown=${WWWUSER}:${WWWUSER} --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.conf /etc/
+COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.frankenphp.conf /etc/supervisor/conf.d/
+COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.*.conf /etc/supervisor/conf.d/
+COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/start-container /usr/local/bin/start-container
+COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/healthcheck /usr/local/bin/healthcheck
+COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/php.ini ${PHP_INI_DIR}/conf.d/99-octane.ini
+
+RUN chmod +x /usr/local/bin/start-container /usr/local/bin/healthcheck
+
+COPY --link --chown=${WWWUSER}:${WWWUSER} . .
+
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --optimize-autoloader \
+    --prefer-dist \
+    --audit \
+    && composer clear-cache
+RUN composer run post-root-package-install
+
+# TODO: Remove when https://github.com/laravel/wayfinder/issues/59 is done
+FROM base AS wayfinder
+ARG WAYFINDER_MIGRATIONS_FILE=${ROOT}/database/wayfinder-migrations.sqlite
+
+USER root
+
+RUN apk add --no-cache sqlite
+
+USER ${USER}
+RUN touch ${WAYFINDER_MIGRATIONS_FILE} && chmod 777 ${WAYFINDER_MIGRATIONS_FILE}
+ENV APP_ENV=local
+ENV WAYFINDER_WORKAROUND=true
+ENV DB_CONNECTION=sqlite
+ENV DB_DATABASE=${WAYFINDER_MIGRATIONS_FILE}
+ENV CACHE_DRIVER=file
+RUN php artisan migrate
+RUN php artisan wayfinder:generate --path=resources/ts
+
+###########################################
+# Build frontend assets with PNPM
+###########################################
+FROM node:24-alpine AS build-base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV ROOT=/var/www/html
+ENV WAYFINDER_WORKAROUND=true
+COPY --link . /app
+WORKDIR /app
+COPY --link --from=base ${ROOT}/vendor vendor
+RUN npm install -g corepack && corepack enable pnpm
+
+FROM build-base AS build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+COPY --from=wayfinder ${ROOT}/resources/ts/wayfinder resources/ts/wayfinder
+COPY --from=wayfinder ${ROOT}/resources/ts/routes resources/ts/routes
+COPY --from=wayfinder ${ROOT}/resources/ts/actions resources/ts/actions
+RUN ls -la resources/ts/routes
+RUN pnpm run build
+
+###########################################
+
+FROM base AS prod
 
 USER ${USER}
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} --from=vendor /usr/bin/composer /usr/bin/composer
-COPY --link --chown=${WWWUSER}:${WWWUSER} composer.json composer.lock ./
+ENV WITH_HORIZON=true \
+    WITH_SCHEDULER=true \
+    WITH_REVERB=false
 
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --no-autoloader \
-    --no-ansi \
-    --no-scripts \
-    --audit
-
-COPY --link --chown=${WWWUSER}:${WWWUSER} . .
-COPY --link --chown=${WWWUSER}:${WWWUSER} --from=build ${ROOT}/public public
+COPY --link --chown=${WWWUSER}:${WWWUSER} --from=build /app/public public
 
 RUN mkdir -p \
-    storage/framework/{sessions,views,cache,testing} \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache \
+    storage/framework/testing \
     storage/logs \
     bootstrap/cache && chmod -R a+rw storage
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.conf /etc/supervisor/
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/octane/FrankenPHP/supervisord.frankenphp.conf /etc/supervisor/conf.d/
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.*.conf /etc/supervisor/conf.d/
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/start-container /usr/local/bin/start-container
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/php.ini ${PHP_INI_DIR}/conf.d/99-octane.ini
-
-## FrankenPHP embedded PHP configuration
-# WARNING! For some reason, this command makes the succeeding commands to fail because it can't find the shell.
-#COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/php.ini /lib/php.ini
-
-RUN composer install \
-    --classmap-authoritative \
-    --no-interaction \
-    --no-ansi \
-    --no-dev \
-    && composer clear-cache
-
-RUN chmod +x /usr/local/bin/start-container
-
-RUN cat deployment/utilities.sh >> ~/.bashrc
+RUN php artisan passport:keys
 
 EXPOSE 8000
 EXPOSE 443
 EXPOSE 443/udp
 EXPOSE 2019
-
-USER root
+EXPOSE 8080
 
 ENTRYPOINT ["start-container"]
 
-HEALTHCHECK --start-period=5s --interval=2s --timeout=5s --retries=8 CMD php artisan octane:status || exit 1
+HEALTHCHECK --start-period=5s --interval=2s --timeout=5s --retries=8 CMD healthcheck || exit 1
