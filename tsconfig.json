@@ -1,22 +1,36 @@
 {
-    "compilerOptions": {
-        "target": "esnext",
-        "module": "esnext",
-        "moduleResolution": "node",
-        "experimentalDecorators": true,
-        "strict": true,
-        "isolatedModules": true,
-        "lib": ["esnext", "dom", "dom.iterable"],
-        "paths": {
-            "~/*": [
-                "./resources/ts/*"
-            ],
-            "@images/*": [
-                "./resources/images/*"
-            ],
-            "@animations/*": [
-                "./resources/animations/*"
-            ],
-        }
+  //  "extends": "@vue/tsconfig/tsconfig.json",
+  "include": [
+    "resources/ts/**/*.ts",
+    "resources/ts/**/*.vue",
+    "vite.config.ts"
+  ],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "isolatedModules": true,
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable"
+    ],
+    "types": [
+      "vite/client"
+    ],
+    "paths": {
+      "~/*": [
+        "./resources/ts/*"
+      ],
+      "@images/*": [
+        "./resources/images/*"
+      ],
+      "@animations/*": [
+        "./resources/animations/*"
+      ]
     }
+  }
 }
