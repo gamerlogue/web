@@ -57,6 +57,26 @@ For some reason, the migrations for Laravel Pulse are not found when running `ph
 sail php artisan migrate --path=vendor/laravel/pulse/database/migrations/2023_06_07_000001_create_pulse_tables.php
 ```
 
+### Webserver not starting
+If you receive the following errors when starting the webserver:
+```
+WARN   unable to get instance ID; storage clean stamps will be incomplete.  
+ERROR  could not clean default/global storage.  
+ERROR  job failed.  
+```
+Then you have to set appropriate permissions to the container user (usually 1000:1000) on the .config, .data directories:
+```bash
+for dir in .config .data; do
+    sudo chown -R <your_user>:1000 $dir && sudo chmod 0775 $dir
+done
+```
+Fish version:
+```fish
+for dir in .config .data
+    sudo chown -R <your_user>:1000 $dir && sudo chmod 0775 $dir
+end
+```
+
 ## About Laravel
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
