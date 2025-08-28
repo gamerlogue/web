@@ -1,6 +1,7 @@
 checks:
   - check: message
-    regex: '^(?<message>(?<type>feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert|wip|security|i18n|a11y|ux|ui|config|deps|infra|init|analytics|seo|legal|typo|comment|example|mock|hotfix|merge|cleanup|deprecate|move|rename|split|combine|add|remove|update|downgrade|patch|optimize){1}\((?<scope>[\w\-\.]+)\)?(?<breaking>!)?: (?<description>.+))(?<body>[\s\S]*)|(Merge).*|(fixup!.*)'
+    # From https://regex101.com/r/UB2C1f/1
+    regex: '\A(?:(?:^(?P<type>feat|fix|ci|chore|docs|test|style|refactor|build|perf|revert)(?:\((?P<scope>.+)\))?(?P<breaking>!)?:\s(?P<subject>.{3,})$)(?:(?:(?P<BLANK_LINE>\n^$\n)(?P<body>(?:^.{3,}$\n?)+))?(?:(?P<BLANK_LINE2>\n^$\n)(?P<breaking_change>^BREAKING\sCHANGE:\s[\s\w]+$))?\n?(?:(?P<footer>^\w+:\s.+))?)?\n?|)\Z'
     error: "The commit message should be structured as follows:\n\n
     <type>[optional scope]: <description>\n
     [optional body]\n
@@ -32,3 +33,8 @@ checks:
     regex: main # it can be master, develop, devel etc based on your project.
     error: Current branch is not rebased onto target branch
     suggest: Please ensure your branch is rebased with the target branch
+
+  - check: imperative
+    regex: '' # Not used for imperative mood check
+    error: 'Commit message should use imperative mood (e.g., "Add feature" not "Added feature")'
+    suggest: 'Use imperative mood in commit message like "Add", "Fix", "Update", "Remove"'
