@@ -37,7 +37,7 @@ RUN npm install --global corepack@latest && corepack enable pnpm
 
 ENV ROOT=/var/www/html \
     WITH_SCHEDULER=true \
-    WITH_HORIZON=true
+    WITH_HORIZON=false
 
 # Allow writing supervisor logs and pid file
 RUN mkdir -p /var/log/supervisor \
@@ -240,7 +240,7 @@ FROM base AS prod
 
 USER ${USER}
 
-ENV WITH_HORIZON=true \
+ENV WITH_HORIZON=false \
     WITH_SCHEDULER=true \
     WITH_REVERB=false
 
