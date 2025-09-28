@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="1000" height="1000"><style>
+    #light-icon {
+      display: inline;
+    }
+    #dark-icon {
+      display: none;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #light-icon {
+        display: none;
+      }
+      #dark-icon {
+        display: inline;
+      }
+    }
+  </style><g id="light-icon"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="1000" height="1000"><g><g transform="matrix(4.545454545454546,0,0,4.545454545454546,-5.684341886080802e-14,90.95454545454544)"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="220" height="179.98"><svg id="Livello_2" data-name="Livello 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 220 179.98">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#Sfumatura_senza_nome_443);
+      }
+
+      .cls-2 {
+        fill: url(#Sfumatura_senza_nome_399);
+      }
+
+      .cls-3 {
+        fill: url(#Sfumatura_senza_nome_172);
+      }
+
+      .cls-4 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-5 {
+        fill: url(#Sfumatura_senza_nome_191);
+      }
+    </style>
+    <linearGradient id="Sfumatura_senza_nome_172" data-name="Sfumatura senza nome 172" x1="39.58" y1="180.83" x2="39.58" y2="5.83" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2e3e83" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #253269;"></stop>
+      <stop offset=".55" stop-color="#3c61fa" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #0424a7;"></stop>
+      <stop offset="1" stop-color="#71bced" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #115582;"></stop>
+    </linearGradient>
+    <linearGradient id="Sfumatura_senza_nome_443" data-name="Sfumatura senza nome 443" x1="108.27" y1="132.79" x2="111.39" y2="-1.24" gradientUnits="userSpaceOnUse">
+      <stop offset=".03" stop-color="#71bced" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #115582;"></stop>
+      <stop offset=".98" stop-color="#3c61fa" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #0424a7;"></stop>
+    </linearGradient>
+    <linearGradient id="linear-gradient" x1="60.66" y1="-3.73" x2="110.16" y2="57.02" gradientUnits="userSpaceOnUse">
+      <stop offset=".02" stop-color="#8d3e45" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #713237;"></stop>
+      <stop offset=".65" stop-color="#8d3e45" stop-opacity="0" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #713237;"></stop>
+    </linearGradient>
+    <linearGradient id="Sfumatura_senza_nome_399" data-name="Sfumatura senza nome 399" x1="156.05" y1="-18.1" x2="106.55" y2="60.15" gradientUnits="userSpaceOnUse">
+      <stop offset=".02" stop-color="#475fa5" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #394c84;"></stop>
+      <stop offset=".65" stop-color="#2e3e83" stop-opacity="0" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #253269;"></stop>
+    </linearGradient>
+    <linearGradient id="Sfumatura_senza_nome_191" data-name="Sfumatura senza nome 191" x1="180.87" y1="4.77" x2="179.87" y2="179.77" gradientUnits="userSpaceOnUse">
+      <stop offset=".03" stop-color="#71bced" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #115582;"></stop>
+      <stop offset=".51" stop-color="#3c61fa" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #0424a7;"></stop>
+      <stop offset="1" stop-color="#2e3e83" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #253269;"></stop>
+    </linearGradient>
+  </defs>
+  <g id="OBJECTS">
+    <g>
+      <path class="cls-3" d="M79.16,15.4c-14.05.94-25.16,12.64-25.16,26.93v110.65c0,14.91-12.09,27-27,27S0,167.89,0,152.98V45.22C0,25.52,12.6,8.23,31.36,2.19c17.33-5.57,36-.27,47.8,13.21Z"></path>
+      <path class="cls-1" d="M166,42.33v32.57l-18.59,28.55c-.22.34-.45.68-.69,1.01-8.47,11.8-22.2,18.84-36.72,18.84s-28.25-7.04-36.72-18.84c-.24-.33-.47-.67-.69-1.01l-18.59-28.55v-32.57c0-14.29,11.11-25.99,25.16-26.93.97,1.1,1.89,2.26,2.76,3.47.23.33.46.66.68,1l27.4,42.07,27.4-42.07c.22-.34.45-.67.68-1,.87-1.21,1.79-2.37,2.76-3.47,6.73.44,12.77,3.36,17.25,7.84,4.89,4.89,7.91,11.63,7.91,19.09Z"></path>
+      <path class="cls-4" d="M166,42.33v32.57l-18.59,28.55c-.22.34-.45.68-.69,1.01-8.47,11.8-22.2,18.84-36.72,18.84s-28.25-7.04-36.72-18.84c-.24-.33-.47-.67-.69-1.01l-18.59-28.55v-32.57c0-14.29,11.11-25.99,25.16-26.93.97,1.1,1.89,2.26,2.76,3.47.23.33.46.66.68,1l27.4,42.07,27.4-42.07c.22-.34.45-.67.68-1,.87-1.21,1.79-2.37,2.76-3.47,6.73.44,12.77,3.36,17.25,7.84,4.89,4.89,7.91,11.63,7.91,19.09Z"></path>
+      <path class="cls-2" d="M166,42.33v32.57l-18.59,28.55c-.22.34-.45.68-.69,1.01-8.47,11.8-22.2,18.84-36.72,18.84s-28.25-7.04-36.72-18.84c-.24-.33-.47-.67-.69-1.01l-18.59-28.55v-32.57c0-14.29,11.11-25.99,25.16-26.93.97,1.1,1.89,2.26,2.76,3.47.23.33.46.66.68,1l27.4,42.07,27.4-42.07c.22-.34.45-.67.68-1,.87-1.21,1.79-2.37,2.76-3.47,6.73.44,12.77,3.36,17.25,7.84,4.89,4.89,7.91,11.63,7.91,19.09Z"></path>
+      <path class="cls-5" d="M220,45.22v107.76c0,14.91-12.09,27-27,27s-27-12.09-27-27V42.33c0-7.46-3.02-14.2-7.91-19.09-4.48-4.48-10.52-7.4-17.25-7.84,11.8-13.48,30.47-18.78,47.8-13.21,18.76,6.04,31.36,23.33,31.36,43.03Z"></path>
+    </g>
+  </g>
+</svg></svg></g></g></svg></g><g id="dark-icon"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="1000" height="1000"><g clip-path="url(#SvgjsClipPath1082)"><rect width="1000" height="1000" fill="#ffffff"></rect><g transform="matrix(3.1818181818181817,0,0,3.1818181818181817,150,213.66818181818184)"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" width="220" height="179.98"><svg id="Livello_2" data-name="Livello 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 220 179.98">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#Sfumatura_senza_nome_443);
+      }
+
+      .cls-2 {
+        fill: url(#Sfumatura_senza_nome_399);
+      }
+
+      .cls-3 {
+        fill: url(#Sfumatura_senza_nome_172);
+      }
+
+      .cls-4 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-5 {
+        fill: url(#Sfumatura_senza_nome_191);
+      }
+    </style>
+    <linearGradient id="Sfumatura_senza_nome_172" data-name="Sfumatura senza nome 172" x1="39.58" y1="180.83" x2="39.58" y2="5.83" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2e3e83" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #253269;"></stop>
+      <stop offset=".55" stop-color="#3c61fa" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #0424a7;"></stop>
+      <stop offset="1" stop-color="#71bced" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #115582;"></stop>
+    </linearGradient>
+    <linearGradient id="Sfumatura_senza_nome_443" data-name="Sfumatura senza nome 443" x1="108.27" y1="132.79" x2="111.39" y2="-1.24" gradientUnits="userSpaceOnUse">
+      <stop offset=".03" stop-color="#71bced" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #115582;"></stop>
+      <stop offset=".98" stop-color="#3c61fa" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #0424a7;"></stop>
+    </linearGradient>
+    <linearGradient id="linear-gradient" x1="60.66" y1="-3.73" x2="110.16" y2="57.02" gradientUnits="userSpaceOnUse">
+      <stop offset=".02" stop-color="#8d3e45" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #713237;"></stop>
+      <stop offset=".65" stop-color="#8d3e45" stop-opacity="0" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #713237;"></stop>
+    </linearGradient>
+    <linearGradient id="Sfumatura_senza_nome_399" data-name="Sfumatura senza nome 399" x1="156.05" y1="-18.1" x2="106.55" y2="60.15" gradientUnits="userSpaceOnUse">
+      <stop offset=".02" stop-color="#475fa5" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #394c84;"></stop>
+      <stop offset=".65" stop-color="#2e3e83" stop-opacity="0" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #253269;"></stop>
+    </linearGradient>
+    <linearGradient id="Sfumatura_senza_nome_191" data-name="Sfumatura senza nome 191" x1="180.87" y1="4.77" x2="179.87" y2="179.77" gradientUnits="userSpaceOnUse">
+      <stop offset=".03" stop-color="#71bced" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #115582;"></stop>
+      <stop offset=".51" stop-color="#3c61fa" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #0424a7;"></stop>
+      <stop offset="1" stop-color="#2e3e83" data-darkreader-inline-stopcolor="" style="--darkreader-inline-stopcolor: #253269;"></stop>
+    </linearGradient>
+  <clipPath id="SvgjsClipPath1082"><rect width="1000" height="1000" x="0" y="0" rx="500" ry="500"></rect></clipPath></defs>
+  <g id="OBJECTS">
+    <g>
+      <path class="cls-3" d="M79.16,15.4c-14.05.94-25.16,12.64-25.16,26.93v110.65c0,14.91-12.09,27-27,27S0,167.89,0,152.98V45.22C0,25.52,12.6,8.23,31.36,2.19c17.33-5.57,36-.27,47.8,13.21Z"></path>
+      <path class="cls-1" d="M166,42.33v32.57l-18.59,28.55c-.22.34-.45.68-.69,1.01-8.47,11.8-22.2,18.84-36.72,18.84s-28.25-7.04-36.72-18.84c-.24-.33-.47-.67-.69-1.01l-18.59-28.55v-32.57c0-14.29,11.11-25.99,25.16-26.93.97,1.1,1.89,2.26,2.76,3.47.23.33.46.66.68,1l27.4,42.07,27.4-42.07c.22-.34.45-.67.68-1,.87-1.21,1.79-2.37,2.76-3.47,6.73.44,12.77,3.36,17.25,7.84,4.89,4.89,7.91,11.63,7.91,19.09Z"></path>
+      <path class="cls-4" d="M166,42.33v32.57l-18.59,28.55c-.22.34-.45.68-.69,1.01-8.47,11.8-22.2,18.84-36.72,18.84s-28.25-7.04-36.72-18.84c-.24-.33-.47-.67-.69-1.01l-18.59-28.55v-32.57c0-14.29,11.11-25.99,25.16-26.93.97,1.1,1.89,2.26,2.76,3.47.23.33.46.66.68,1l27.4,42.07,27.4-42.07c.22-.34.45-.67.68-1,.87-1.21,1.79-2.37,2.76-3.47,6.73.44,12.77,3.36,17.25,7.84,4.89,4.89,7.91,11.63,7.91,19.09Z"></path>
+      <path class="cls-2" d="M166,42.33v32.57l-18.59,28.55c-.22.34-.45.68-.69,1.01-8.47,11.8-22.2,18.84-36.72,18.84s-28.25-7.04-36.72-18.84c-.24-.33-.47-.67-.69-1.01l-18.59-28.55v-32.57c0-14.29,11.11-25.99,25.16-26.93.97,1.1,1.89,2.26,2.76,3.47.23.33.46.66.68,1l27.4,42.07,27.4-42.07c.22-.34.45-.67.68-1,.87-1.21,1.79-2.37,2.76-3.47,6.73.44,12.77,3.36,17.25,7.84,4.89,4.89,7.91,11.63,7.91,19.09Z"></path>
+      <path class="cls-5" d="M220,45.22v107.76c0,14.91-12.09,27-27,27s-27-12.09-27-27V42.33c0-7.46-3.02-14.2-7.91-19.09-4.48-4.48-10.52-7.4-17.25-7.84,11.8-13.48,30.47-18.78,47.8-13.21,18.76,6.04,31.36,23.33,31.36,43.03Z"></path>
+    </g>
+  </g>
+</svg></svg></g></g></svg></g></svg>

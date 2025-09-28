@@ -1,0 +1,16 @@
+@mixin auth {
+  body {
+    // Center the content
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  md-filled-card {
+    --md-filled-card-container-color: var(--md-sys-color-surface-container);
+
+    color: var(--md-sys-color-on-surface);
+  }
+}
+

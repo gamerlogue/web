@@ -1,0 +1,39 @@
+#!/usr/bin/env sh
+
+set -e
+
+container_mode=${CONTAINER_MODE:-"http"}
+
+health_fail() {
+  echo "Healthcheck failed."
+  exit 1
+}
+
+supervisor_is_running() {
+  name="$1"
+  # Estrae lo stato (2a colonna), lo normalizza in minuscolo e confronta con "running"
+  status=$(supervisorctl status "$name" | awk '{print tolower($2)}')
+  [ "$status" = "running" ]
+}
+
+case "${container_mode}" in
+http)
+  php "${ROOT}/artisan" octane:status
+  ;;
+horizon)
+  php "${ROOT}/artisan" horizon:status
+  ;;
+scheduler)
+  supervisor_is_running "scheduler:scheduler_0" || health_fail
+  ;;
+reverb)
+  supervisor_is_running "reverb:reverb_0" || health_fail
+  ;;
+worker)
+  supervisor_is_running "worker:worker_0" || health_fail
+  ;;
+*)
+  echo "Container mode mismatched."
+  exit 1
+  ;;
+esac

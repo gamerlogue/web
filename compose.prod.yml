@@ -1,0 +1,27 @@
+services:
+  laravel:
+    user: octane
+    extends:
+      file: compose.common.yml
+      service: laravel
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  mariadb:
+    extends:
+      file: compose.common.yml
+      service: mariadb
+
+  redis:
+    extends:
+      file: compose.common.yml
+      service: redis
+
+volumes:
+  mariadb:
+    driver: local
+  redis:
+    driver: local

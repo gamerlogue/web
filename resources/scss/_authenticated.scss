@@ -1,0 +1,85 @@
+/**
+ * These styles are applied to authenticated users pages.
+ */
+@use "include-media/dist/include-media" as im;
+
+@mixin authenticated {
+  main {
+    padding: 0 16px 16px;
+
+    .main-grid {
+      // noinspection CssInvalidPropertyValue
+      display: masonry;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+
+      // noinspection CssInvalidPropertyValue
+      @supports not (display: masonry) {
+        display: grid;
+      }
+
+      > md-filled-card {
+        height: fit-content;
+      }
+    }
+
+    md-filled-card {
+      h2 {
+        @extend .md-typescale-title-large;
+
+        margin: 0;
+      }
+
+      &.intro-card {
+        grid-column: 1/-1;
+
+        h1 {
+          @extend .md-typescale-headline-large;
+
+          margin: 0;
+          font-size: 2em;
+        }
+
+        span {
+          @extend .md-typescale-title-medium;
+        }
+      }
+    }
+  }
+
+  md-filled-card {
+    --md-filled-card-container-color: var(--md-sys-color-surface-variant);
+
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  // Zoho chat
+  @include im.media(">=tablet") {
+    // noinspection Stylelint
+    #cookiescript_badge {
+      bottom: 72px !important;
+    }
+
+    // noinspection Stylelint
+    .siq_bR {
+      bottom: 63px !important;
+      transform: scale(.7666);
+    }
+
+    .siqembed {
+      bottom: 63px !important;
+    }
+  }
+
+  @include im.media("<tablet") {
+    // noinspection Stylelint
+    #cookiescript_badge {
+      bottom: 20px !important;
+      transform: scale(1.1666);
+    }
+
+    .siq_bR {
+      transform: scale(0.7);
+    }
+  }
+}

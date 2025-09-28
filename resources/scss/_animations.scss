@@ -1,0 +1,69 @@
+@keyframes slide-fade-in {
+  0% {
+    transform: translateY(32px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-fade-in {
+  opacity: 0;
+  animation: slide-fade-in 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+// Delays
+@for $i from 1 through 10 {
+  .animation-delay-#{$i} {
+    animation-delay: #{$i * 100}ms;
+  }
+}
+
+/*
+ * Vue transitions
+ */
+
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active {
+  transition: transform 0.25s ease;
+}
+
+.slide-enter-from {
+  transform: translateY(32px);
+}
+
+// Slide horizontal inside container
+
+.slide-horizontal-enter-active {
+  transition: transform 0.25s ease;
+}
+
+.slide-horizontal-enter-from {
+  transform: translateX(100%);
+}
+
+.slide-horizontal-enter-to {
+  transform: translateX(0);
+}
+
+// Vue3 shimmer dark mode via prefers-color-scheme
+@media (prefers-color-scheme: dark) {
+  .vue3-loading-shimmer {
+    --vue3-loading-shimmer-bg: #313537 !important;
+
+    // noinspection Stylelint
+    --vue3-loading-shimmer-shimmerBg: linear-gradient(90deg, rgb(24 26 27 / 0%) 0%, rgb(24 26 27 / 10%) 20%, rgb(24 26 27 / 30%) 40%, rgb(24 26 27 / 50%) 60%, rgb(24 26 27 / 30%) 80%, rgb(24 26 27 / 10%) 100%) !important;
+  }
+}

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Livello_2" data-name="Livello 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 510.56 179.98">
+  <defs>
+    <style>
+      .cls-1 {
+        letter-spacing: -.03em;
+      }
+
+      .cls-2 {
+        letter-spacing: 0em;
+      }
+
+      .cls-3 {
+        fill: url(#Sfumatura_senza_nome_443);
+      }
+
+      .cls-4 {
+        fill: url(#Sfumatura_senza_nome_399);
+      }
+
+      .cls-5 {
+        fill: #2e3e83;
+      }
+
+      .cls-5, .cls-6 {
+        font-family: Anta-Regular, Anta;
+        font-size: 50.04px;
+      }
+
+      .cls-7 {
+        fill: url(#Sfumatura_senza_nome_172);
+      }
+
+      .cls-8 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-9 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-10 {
+        fill: url(#Sfumatura_senza_nome_191);
+      }
+    </style>
+    <linearGradient id="Sfumatura_senza_nome_172" data-name="Sfumatura senza nome 172" x1="39.58" y1="180.83" x2="39.58" y2="5.83" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2e3e83"/>
+      <stop offset=".55" stop-color="#3c61fa"/>
+      <stop offset="1" stop-color="#71bced"/>
+    </linearGradient>
+    <linearGradient id="Sfumatura_senza_nome_443" data-name="Sfumatura senza nome 443" x1="108.27" y1="132.79" x2="111.39" y2="-1.24" gradientUnits="userSpaceOnUse">
+      <stop offset=".03" stop-color="#71bced"/>
+      <stop offset=".98" stop-color="#3c61fa"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient" x1="60.66" y1="-3.73" x2="110.16" y2="57.02" gradientUnits="userSpaceOnUse">
+      <stop offset=".02" stop-color="#8d3e45"/>
+      <stop offset=".65" stop-color="#8d3e45" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="Sfumatura_senza_nome_399" data-name="Sfumatura senza nome 399" x1="156.05" y1="-18.1" x2="106.55" y2="60.15" gradientUnits="userSpaceOnUse">
+      <stop offset=".02" stop-color="#475fa5"/>
+      <stop offset=".65" stop-color="#2e3e83" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="Sfumatura_senza_nome_191" data-name="Sfumatura senza nome 191" x1="180.87" y1="4.77" x2="179.87" y2="179.77" gradientUnits="userSpaceOnUse">
+      <stop offset=".03" stop-color="#71bced"/>
+      <stop offset=".51" stop-color="#3c61fa"/>
+      <stop offset="1" stop-color="#2e3e83"/>
+    </linearGradient>
+  </defs>
+  <g id="OBJECTS">
+    <g>
+      <path class="cls-7" d="M79.16,15.4c-14.05.94-25.16,12.64-25.16,26.93v110.65c0,14.91-12.09,27-27,27S0,167.89,0,152.98V45.22C0,25.52,12.6,8.23,31.36,2.19c17.33-5.57,36-.27,47.8,13.21Z"/>
+      <path class="cls-3" d="M166,42.33v32.57l-18.59,28.55c-.22.34-.45.68-.69,1.01-8.47,11.8-22.2,18.84-36.72,18.84s-28.25-7.04-36.72-18.84c-.24-.33-.47-.67-.69-1.01l-18.59-28.55v-32.57c0-14.29,11.11-25.99,25.16-26.93.97,1.1,1.89,2.26,2.76,3.47.23.33.46.66.68,1l27.4,42.07,27.4-42.07c.22-.34.45-.67.68-1,.87-1.21,1.79-2.37,2.76-3.47,6.73.44,12.77,3.36,17.25,7.84,4.89,4.89,7.91,11.63,7.91,19.09Z"/>
+      <path class="cls-9" d="M166,42.33v32.57l-18.59,28.55c-.22.34-.45.68-.69,1.01-8.47,11.8-22.2,18.84-36.72,18.84s-28.25-7.04-36.72-18.84c-.24-.33-.47-.67-.69-1.01l-18.59-28.55v-32.57c0-14.29,11.11-25.99,25.16-26.93.97,1.1,1.89,2.26,2.76,3.47.23.33.46.66.68,1l27.4,42.07,27.4-42.07c.22-.34.45-.67.68-1,.87-1.21,1.79-2.37,2.76-3.47,6.73.44,12.77,3.36,17.25,7.84,4.89,4.89,7.91,11.63,7.91,19.09Z"/>
+      <path class="cls-4" d="M166,42.33v32.57l-18.59,28.55c-.22.34-.45.68-.69,1.01-8.47,11.8-22.2,18.84-36.72,18.84s-28.25-7.04-36.72-18.84c-.24-.33-.47-.67-.69-1.01l-18.59-28.55v-32.57c0-14.29,11.11-25.99,25.16-26.93.97,1.1,1.89,2.26,2.76,3.47.23.33.46.66.68,1l27.4,42.07,27.4-42.07c.22-.34.45-.67.68-1,.87-1.21,1.79-2.37,2.76-3.47,6.73.44,12.77,3.36,17.25,7.84,4.89,4.89,7.91,11.63,7.91,19.09Z"/>
+      <path class="cls-10" d="M220,45.22v107.76c0,14.91-12.09,27-27,27s-27-12.09-27-27V42.33c0-7.46-3.02-14.2-7.91-19.09-4.48-4.48-10.52-7.4-17.25-7.84,11.8-13.48,30.47-18.78,47.8-13.21,18.76,6.04,31.36,23.33,31.36,43.03Z"/>
+    </g>
+    <g>
+      <text class="cls-6" transform="translate(248.3 105.69) scale(1.06 1)"><tspan x="0" y="0">MAICO</tspan><tspan class="cls-8" x="153.38" y="0">L</tspan><tspan class="cls-2" x="183.72" y="0">0</tspan><tspan class="cls-1" x="216.53" y="0">7</tspan></text>
+      <text class="cls-5" transform="translate(248.3 105.69) scale(1.06 1)"><tspan x="0" y="0">MAICO</tspan><tspan class="cls-8" x="153.38" y="0">L</tspan><tspan class="cls-2" x="183.72" y="0">0</tspan><tspan class="cls-1" x="216.53" y="0">7</tspan></text>
+    </g>
+  </g>
+</svg>
