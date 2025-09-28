@@ -1,0 +1,71 @@
+services:
+  laravel:
+    extends:
+      file: compose.common.yml
+      service: laravel
+    build:
+      target: dev
+    depends_on:
+      - mailpit
+    user: "${WWWUSER-sail}:${WWWGROUP-1000}"
+    ports:
+      - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+    hostname: '${SERVER_NAME:-laravel.local}'
+    environment:
+      WEBSERVER: octane-watch
+      #            WWWUSER: '${WWWUSER:-1000}'
+      #            WWWGROUP: '${WWWGROUP:-1000}'
+      LARAVEL_SAIL: 1
+      XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-debug,develop}'
+      XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal log=/tmp/xdebug.log}'
+      PHP_IDE_CONFIG: '${PHP_IDE_CONFIG:-serverName=Sail}'
+      IGNITION_EDITOR: '${IGNITION_EDITOR:-vscode}'
+      IGNITION_REMOTE_SITES_PATH: '/app'
+      SUPERVISOR_USER: sail
+      SUPERVISOR_PHP_USER: sail
+      SUPERVISOR_VITE_USER: sail
+    #            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --host=localhost --port=443 --admin-port=2019 --https"
+    volumes:
+      - '.:/var/www/html'
+      - ~/.config/composer/auth.json:/home/sail/.composer/auth.json:rw
+      - ~/.cache/composer:/home/sail/.composer/cache:rw
+      - ~/.cache/node:/home/sail/.cache/node:rw
+      - ~/.caddy/ca:/home/sail/.local/share/caddy/pki/authorities/local:rw
+
+  mariadb:
+    extends:
+      file: compose.common.yml
+      service: mariadb
+    volumes:
+      - './vendor/laravel/sail/database/mariadb/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+
+  redis:
+    extends:
+      file: compose.common.yml
+      service: redis
+
+  mailpit:
+    image: 'axllent/mailpit:latest'
+    ports:
+      - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+      - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+    healthcheck:
+      test: [ "CMD", "/mailpit", "readyz" ]
+      interval: 15s
+
+  # Follow https://github.com/johnpaulett/sham-oidc#container-setup
+  oidc:
+    image: "johnpaulett/sham-oidc"
+    hostname: oidc-gamerlogue.localhost
+    ports:
+      - "4000:8000"
+    volumes:
+      - oidc-db:/data
+    environment:
+      SECRET_KEY: examplekey123
+      DEBUG: "true"
+
+volumes:
+  mariadb:
+  redis:
+  oidc-db:

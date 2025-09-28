@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index 17db2fbc11b16c0412765b121309d0050dd906fc..a2a603bf931099066898a9f7ff79ddc83e756931 100644
+--- a/package.json
++++ b/package.json
+@@ -11,6 +11,7 @@
+   "module": "./dist/vue-circle-flags.es.js",
+   "exports": {
+     ".": {
++      "types": "./dist/components/main.d.ts",
+       "import": "./dist/vue-circle-flags.es.js",
+       "require": "./dist/vue-circle-flags.cjs.js"
+     },

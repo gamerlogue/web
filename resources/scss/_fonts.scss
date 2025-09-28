@@ -1,0 +1,17 @@
+@use "@sass-fairy/string";
+@use "@material/web/typography/md-typescale-styles";
+
+$headlines-font-sizes: (
+        'h1': 'display-small',
+        'h2': 'headline-large',
+        'h3': 'headline-medium',
+        'h4': 'headline-small',
+        'h5': 'title-large',
+        'h6': 'title-medium',
+);
+
+@each $headline, $token in $headlines-font-sizes {
+  #{$headline} {
+    @extend .md-typescale-#{$token};
+  }
+}

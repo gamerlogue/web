@@ -1,0 +1,38 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.json",
+  "include": [
+    "resources/ts/**/*.ts",
+    "resources/ts/**/*.vue",
+    "vite.config.ts",
+    "eslint.config.ts"
+  ],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "experimentalDecorators": true,
+    "strict": true,
+    "isolatedModules": true,
+    "libReplacement": true,
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable"
+    ],
+    "types": [
+      "vite/client",
+      "vue-i18n/dist/vue-i18n.d.ts"
+    ],
+    "paths": {
+      "~/*": [
+        "./resources/ts/*"
+      ],
+      "@images/*": [
+        "./resources/images/*"
+      ],
+      "@animations/*": [
+        "./resources/animations/*"
+      ]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://laravel-ide.com/schema/laravel-ide-v2.json",
+  "completions": [
+    {
+      "complete": "routeName",
+      "condition": [
+        {
+          "parameters": [3],
+          "methodNames": ["inertiaModal"],
+          "classFqn": ["\\Route", "\\Illuminate\\Support\\Facades\\Route", "\\Illuminate\\Routing\\Router"]
+        }
+      ]
+    },
+    {
+      "complete": "inertiaPage",
+      "condition": [
+        {
+          "parameters": [2],
+          "methodNames": ["inertiaModal"],
+          "classFqn": ["\\Route", "\\Illuminate\\Support\\Facades\\Route", "\\Illuminate\\Routing\\Router"]
+        }
+      ]
+    }
+  ]
+}

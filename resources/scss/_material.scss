@@ -1,0 +1,26 @@
+md-list:not(.nav) {
+  --md-list-container-color: transparent;
+  --md-list-item-container-color: var(--md-sys-color-surface, #fef7ff);
+
+  gap: 2px;
+  padding: 0;
+
+  > md-list-item {
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    background-color: var(--md-list-item-container-color);
+
+    &:first-of-type {
+      border-top-left-radius: var(--md-sys-shape-corner-large);
+      border-top-right-radius: var(--md-sys-shape-corner-large);
+    }
+
+    &:last-of-type {
+      border-bottom-right-radius: var(--md-sys-shape-corner-large);
+      border-bottom-left-radius: var(--md-sys-shape-corner-large);
+    }
+  }
+}
+
+md-dialog > [slot="content"] > p:first-child {
+  margin-top: 0;
+}
