@@ -34,4 +34,12 @@ return [
         ],
     ],
 
+    // IGDB API
+    'igdb' => [
+        'base_url' => env('IGDB_BASE_URL', 'https://api.igdb.com/v4'),
+        'client_id' => env('IGDB_CLIENT_ID'),
+        'access_token' => env('IGDB_ACCESS_TOKEN'), // Twitch/IGDB OAuth app access token
+        'cache_ttl' => env('IGDB_CACHE_TTL', 300),   // seconds
+        'rate_limit' => env('IGDB_RATE_LIMIT', 30),  // richieste al minuto per IP
+    ]
 ];

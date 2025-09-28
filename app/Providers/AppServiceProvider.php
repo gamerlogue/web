@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,5 +34,13 @@ class AppServiceProvider extends ServiceProvider
                 });
             }
         );
+
+        // Rate limiter per proxy IGDB (per IP)
+        RateLimiter::for('igdb', function (Request $request) {
+            $limit = (int) config('services.igdb.rate_limit', 30);
+            return [
+                Limit::perMinute($limit)->by($request->ip()),
+            ];
+        });
     }
 }
