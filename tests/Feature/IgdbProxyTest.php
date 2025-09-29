@@ -1,37 +1,28 @@
 <?php
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 
 test('returns error if not configured', function () {
-    config()->set('services.igdb.client_id', null);
-    config()->set('services.igdb.access_token', null);
+    config()->set('igdb.credentials.client_id');
+    config()->set('igdb.credentials.access_token');
+    Cache::flush();
 
-    $this->get('/igdb/games')
-        ->assertStatus(500)
-        ->assertJson([
-            'error' => 'IGDB service not configured',
-        ]);
+
+    $this->post('/api/igdb/games', ['fields id; where id = 1;'])
+//        ->dump()
+        ->assertStatus(500);
 });
 
 test('caches successful get response', function () {
     Cache::flush();
 
-    Http::fake([
-        'https://api.igdb.com/v4/games*' => Http::response('[{"id":1}]', 200, ['Content-Type' => 'application/json']),
-    ]);
+    $count = 5;
 
-    // Prima richiesta: deve colpire l'upstream (finto)
-    $this->get('/igdb/games')
+    $query = "fields id; limit $count;";
+    $this->post('/api/igdb/games', [$query])
         ->assertOk()
-        ->assertHeader('X-IGDB-Proxy-Cached', '0')
-        ->assertContent('[{"id":1}]');
+//        ->dump()
+        ->assertJsonCount($count);
 
-    // Seconda richiesta identica: deve arrivare da cache
-    $this->get('/igdb/games')
-        ->assertOk()
-        ->assertHeader('X-IGDB-Proxy-Cached', '1')
-        ->assertContent('[{"id":1}]');
-
-    Http::assertSentCount(1);
+    $this->assertTrue(Cache::has(config('igdb.cache_prefix', 'igdb_cache') . '.' . md5('games' . $query)));
 });
