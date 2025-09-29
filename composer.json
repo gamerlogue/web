@@ -20,6 +20,7 @@
     "laravel/telescope": "^5",
     "laravel/tinker": "^2.9",
     "laravel/wayfinder": "^0.1.4",
+    "marcreichel/igdb-laravel": "^5.3",
     "opcodesio/log-viewer": "^3.10",
     "soved/laravel-gdpr": "^1.9",
     "spatie/laravel-activitylog": "^4.10"
