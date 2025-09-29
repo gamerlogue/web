@@ -15,12 +15,3 @@ Route::get('/', static function () {
  * Service routes
  */
 Route::patch('/set-locale', [LocaleController::class, 'update'])->name('set-locale');
-
-/**
- * IGDB proxy routes
- * Supporta tutti i metodi principali e inoltra a https://api.igdb.com/v4/{percorso}
- */
-Route::middleware(['throttle:igdb'])
-    ->match(['get','post','put','patch','delete','options'], '/igdb/{path?}', [IgdbProxyController::class, 'handle'])
-    ->where('path', '.*')
-    ->name('igdb.proxy');
