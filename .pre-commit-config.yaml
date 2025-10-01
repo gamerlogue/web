@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/commit-check/commit-check
-    rev: v0.9.3
+    rev: v0.10.2
     hooks: # support hooks
       - id: check-message  # requires prepare-commit-msg hook
       - id: check-branch
