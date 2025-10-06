@@ -1,20 +1,44 @@
+# syntax=docker/dockerfile:1-labs
+####
+# DO NOT SET ARGS IN THIS FILE!
+# Use the docker compose file to set the args.
+####
 ARG PHP_VERSION=8.4
-ARG FRANKENPHP_VERSION=1.9.0
 
-FROM php:${PHP_VERSION}-cli-alpine AS dev
+FROM ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/dunglas/frankenphp:1-builder-php${PHP_VERSION}-alpine AS builder
+
+# Copy xcaddy in the builder image
+COPY --from=${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
+
+# CGO must be enabled to build FrankenPHP
+RUN CGO_ENABLED=1 \
+    XCADDY_SETCAP=1 \
+    XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s' -tags=nobadger,nomysql,nopgx" \
+    CGO_CFLAGS=$(php-config --includes) \
+    CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" \
+    xcaddy build \
+        --output /usr/local/bin/frankenphp \
+        --with github.com/dunglas/frankenphp=./ \
+        --with github.com/dunglas/frankenphp/caddy=./caddy/ \
+        --with github.com/dunglas/caddy-cbrotli \
+        --with github.com/caddyserver/transform-encoder
+
+FROM ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/php:${PHP_VERSION}-cli-alpine AS dev
 
 # Install helpers
 RUN apk add --no-cache \
     git \
     wget \
     supervisor \
+    supercronic \
     nodejs \
     npm \
     fish \
+    expect \
     pnpm-fish-completion \
     pnpm-bash-completion
 
-COPY --from=ghcr.io/mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN install-php-extensions @composer apcu xdebug imagick gd imap zip bcmath intl exif redis opcache memcached pcntl pdo_mysql
 
 ARG WWWUSER=sail
@@ -26,10 +50,8 @@ ARG GID=1000
 RUN adduser -s /usr/bin/fish -H -D -g ${WWWGROUP} -u ${UID} ${WWWUSER}
 
 # Allow installing certs for sail to /etc/ssl/certs and /usr/local/share/ca-certificates
-RUN mkdir -p /etc/ssl/certs \
-    && mkdir -p /usr/local/share/ca-certificates \
-    && chown -R ${WWWUSER}:${WWWGROUP} /etc/ssl/certs \
-    && chown -R ${WWWUSER}:${WWWGROUP} /usr/local/share/ca-certificates
+RUN mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates \
+    && chown -R ${UID}:${GID} /etc/ssl/certs /usr/local/share/ca-certificates
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -42,34 +64,21 @@ ENV ROOT=/var/www/html \
 # Allow writing supervisor logs and pid file
 RUN mkdir -p /var/log/supervisor \
     && touch /var/run/supervisord.pid \
-    && chown -R ${WWWUSER}:${WWWGROUP} /var/log/supervisor \
-    && chown -R ${WWWUSER}:${WWWGROUP} /var/run/supervisord.pid
+    && chown -R ${UID}:${GID} /var/log/supervisor /var/run/supervisord.pid
 
-# Install supercronic for Laravel scheduler in dev
-RUN arch="$(apk --print-arch)" \
-    && case "$arch" in \
-    armhf) _cronic_fname='supercronic-linux-arm' ;; \
-    aarch64) _cronic_fname='supercronic-linux-arm64' ;; \
-    x86_64) _cronic_fname='supercronic-linux-amd64' ;; \
-    x86) _cronic_fname='supercronic-linux-386' ;; \
-    *) echo >&2 "error: unsupported architecture: $arch"; exit 1 ;; \
-    esac \
-    && wget -q "https://github.com/aptible/supercronic/releases/download/v0.2.29/${_cronic_fname}" \
-    -O /usr/bin/supercronic \
-    && chmod +x /usr/bin/supercronic \
-    && mkdir -p /etc/supercronic \
+# Setup supercronic for Laravel scheduler in dev
+RUN mkdir -p /etc/supercronic \
     && echo "*/1 * * * * php ${ROOT}/artisan schedule:run --no-interaction" > /etc/supercronic/laravel
 
 RUN ln -s /usr/local/bin/php /usr/bin/php
 COPY deployment/dev/start-container-dev.sh /usr/local/bin/start-container
 COPY deployment/dev/supervisord.dev.conf /etc/supervisor/conf.d/supervisord.conf
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/healthcheck /usr/local/bin/healthcheck
+COPY --link --chown=${UID}:${GID} deployment/healthcheck /usr/local/bin/healthcheck
 # Reuse prod scheduler/horizon config in dev to avoid duplication
 COPY deployment/supervisord.conf /etc/supervisord.conf
 COPY deployment/supervisord.scheduler.conf /etc/supervisor/conf.d/supervisord.scheduler.conf
 COPY deployment/supervisord.horizon.conf /etc/supervisor/conf.d/supervisord.horizon.conf
 
-RUN chmod +x /usr/local/bin/start-container
 RUN chmod +x /usr/local/bin/start-container /usr/local/bin/healthcheck
 
 EXPOSE 80/tcp
@@ -77,15 +86,15 @@ EXPOSE 80/tcp
 ENTRYPOINT ["start-container"]
 HEALTHCHECK --start-period=5s --interval=2s --timeout=5s --retries=8 CMD healthcheck || exit 1
 
-USER ${WWWUSER}
+USER ${UID}
 WORKDIR ${ROOT}
 
 ###########################################
 # Derived from https://github.com/exaco/laravel-octane-dockerfile
 ###########################################
-FROM dunglas/frankenphp:${FRANKENPHP_VERSION}-php${PHP_VERSION}-alpine AS base
-ARG WWWUSER=1000
-ARG WWWGROUP=1000
+FROM ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/dunglas/frankenphp:1-php${PHP_VERSION}-alpine AS base
+ARG UID=1000
+ARG GID=1000
 ARG TZ=Europe/Rome
 ARG APP_DIR=/var/www/html
 
@@ -101,6 +110,9 @@ ENV TERM=xterm-color \
     XDG_DATA_HOME=${APP_DIR}/.data
 WORKDIR ${ROOT}
 
+# Replace the official binary by the one contained your custom modules
+COPY --from=builder /usr/local/bin/frankenphp /usr/local/bin/frankenphp
+
 SHELL ["/bin/sh", "-eou", "pipefail", "-c"]
 
 RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime \
@@ -112,6 +124,13 @@ RUN apk update; \
     curl \
     wget \
     fish \
+    expect \
+    doas \
+    doas-sudo-shim \
+    iputils \
+    micro \
+    mycli \
+    nss-tools \
     vim \
     tzdata \
     git \
@@ -120,6 +139,7 @@ RUN apk update; \
     unzip \
     ca-certificates \
     supervisor \
+    supercronic \
     libsodium-dev \
     brotli \
     # Install PHP extensions (included with dunglas/frankenphp) \
@@ -139,30 +159,23 @@ RUN apk update; \
     intl \
     gd \
     redis \
-    rdkafka \
-    memcached \
     igbinary \
-    ldap \
     && docker-php-source delete \
     && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
 
-RUN arch="$(apk --print-arch)" \
-    && case "$arch" in \
-    armhf) _cronic_fname='supercronic-linux-arm' ;; \
-    aarch64) _cronic_fname='supercronic-linux-arm64' ;; \
-    x86_64) _cronic_fname='supercronic-linux-amd64' ;; \
-    x86) _cronic_fname='supercronic-linux-386' ;; \
-    *) echo >&2 "error: unsupported architecture: $arch"; exit 1 ;; \
-    esac \
-    && wget -q "https://github.com/aptible/supercronic/releases/download/v0.2.29/${_cronic_fname}" \
-    -O /usr/bin/supercronic \
-    && chmod +x /usr/bin/supercronic \
-    && mkdir -p /etc/supercronic \
+RUN mkdir -p /etc/supercronic \
     && echo "*/1 * * * * php ${ROOT}/artisan schedule:run --no-interaction" > /etc/supercronic/laravel
 
-RUN addgroup -g ${WWWGROUP} ${USER} \
-    && adduser -D -h ${ROOT} -G ${USER} -u ${WWWUSER} -s /bin/sh ${USER} \
-    && setcap -r /usr/local/bin/frankenphp
+RUN echo "permit nopass :${USER}" > /etc/doas.d/20-web.conf
+RUN addgroup -g ${GID} ${USER} \
+    && adduser -D -h ${ROOT} -G ${USER} -u ${UID} -s /bin/sh ${USER} \
+    && mkdir -p /home/${USER} \
+    && chown -R ${USER}:${USER} /home/${USER} ${ROOT} \
+    && \
+    # Add additional capability to bind to port 80 and 443
+    setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp && \
+    setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/php;
+
 
 RUN mkdir -p /var/log/supervisor /var/run/supervisor \
     && chown -R ${USER}:${USER} ${ROOT} /var/log /var/run \
@@ -172,66 +185,59 @@ RUN cp ${PHP_INI_DIR}/php.ini-production ${PHP_INI_DIR}/php.ini
 
 USER ${USER}
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --link --chown=${UID}:${GID} --from=${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/composer:2 /usr/bin/composer /usr/bin/composer
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.conf /etc/
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.frankenphp.conf /etc/supervisor/conf.d/
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.*.conf /etc/supervisor/conf.d/
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/start-container /usr/local/bin/start-container
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/healthcheck /usr/local/bin/healthcheck
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/php.ini ${PHP_INI_DIR}/conf.d/99-octane.ini
+COPY --link --chown=${UID}:${GID} deployment/supervisord.conf /etc/
+COPY --link --chown=${UID}:${GID} deployment/supervisord.frankenphp.conf /etc/supervisor/conf.d/
+COPY --link --chown=${UID}:${GID} deployment/supervisord.*.conf /etc/supervisor/conf.d/
+COPY --link --chown=${UID}:${GID} deployment/start-container /usr/local/bin/start-container
+COPY --link --chown=${UID}:${GID} deployment/healthcheck /usr/local/bin/healthcheck
+COPY --link --chown=${UID}:${GID} deployment/php.ini ${PHP_INI_DIR}/conf.d/99-octane.ini
 
 RUN chmod +x /usr/local/bin/start-container /usr/local/bin/healthcheck
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} . .
+COPY --link --chown=${UID}:${GID} composer.json composer.lock ./
 
-RUN composer install \
+RUN --mount=type=cache,target=.composer/cache composer install \
     --no-dev \
     --no-interaction \
     --optimize-autoloader \
     --prefer-dist \
-    --audit \
-    && composer clear-cache
-RUN composer run post-root-package-install
+    --no-scripts \
+    --audit
 
-# TODO: Remove when https://github.com/laravel/wayfinder/issues/59 is done
-FROM base AS wayfinder
-ARG WAYFINDER_MIGRATIONS_FILE=${ROOT}/database/wayfinder-migrations.sqlite
+RUN mkdir -p \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache \
+    storage/framework/testing \
+    storage/logs \
+    bootstrap/cache && chmod -R a+rw storage
 
-USER root
+COPY --link --chown=${UID}:${UID} . .
 
-RUN apk add --no-cache sqlite
-
-USER ${USER}
-RUN touch ${WAYFINDER_MIGRATIONS_FILE} && chmod 777 ${WAYFINDER_MIGRATIONS_FILE}
-ENV APP_ENV=local
-ENV WAYFINDER_WORKAROUND=true
-ENV DB_CONNECTION=sqlite
-ENV DB_DATABASE=${WAYFINDER_MIGRATIONS_FILE}
-ENV CACHE_DRIVER=file
-RUN php artisan migrate
+RUN composer run post-autoload-dump
 RUN php artisan wayfinder:generate --path=resources/ts
 
 ###########################################
 # Build frontend assets with PNPM
 ###########################################
-FROM node:24-alpine AS build-base
+FROM ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/node:24-alpine AS build-base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV ROOT=/var/www/html
 ENV WAYFINDER_WORKAROUND=true
-COPY --link . /app
+
 WORKDIR /app
-COPY --link --from=base ${ROOT}/vendor vendor
+COPY --link package.json pnpm-*.yaml ./
 RUN npm install -g corepack && corepack enable pnpm
 
 FROM build-base AS build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
-COPY --from=wayfinder ${ROOT}/resources/ts/wayfinder resources/ts/wayfinder
-COPY --from=wayfinder ${ROOT}/resources/ts/routes resources/ts/routes
-COPY --from=wayfinder ${ROOT}/resources/ts/actions resources/ts/actions
-RUN ls -la resources/ts/routes
+COPY --link --parents resources vite.config.ts tsconfig.json ./
+COPY --from=base --link --parents --chown=1000:1000 /var/www/html/resources/ts/actions /var/www/html/resources/ts/routes /var/www/html/resources/ts/wayfinder ./
+
 RUN pnpm run build
 
 ###########################################
@@ -244,23 +250,10 @@ ENV WITH_HORIZON=false \
     WITH_SCHEDULER=true \
     WITH_REVERB=false
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} --from=build /app/public public
+COPY --link --chown=${UID}:${GID} --from=build /app/public public
 
-RUN mkdir -p \
-    storage/framework/sessions \
-    storage/framework/views \
-    storage/framework/cache \
-    storage/framework/testing \
-    storage/logs \
-    bootstrap/cache && chmod -R a+rw storage
-
-RUN php artisan passport:keys
-
-EXPOSE 8000
-EXPOSE 443
-EXPOSE 443/udp
+EXPOSE 80
 EXPOSE 2019
-EXPOSE 8080
 
 ENTRYPOINT ["start-container"]
 
