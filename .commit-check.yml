@@ -1,7 +1,7 @@
 checks:
   - check: message
-    # From https://regex101.com/r/UB2C1f/1
-    regex: '\A(?<type>feat|fix|ci|chore|docs|test|style|refactor|build|perf|revert)(?:\((?<scope>.+?)\))?(?<breaking>!)?:\s(?<subject>.+)(?:\n\n(?<body>[\s\S]*?))?(?:\n\n(?<breaking_change>^BREAKING\sCHANGE:\s[\s\S]+))?\Z'
+    # From https://regex101.com/r/JYlVZF/1
+    regex: '\A(?P<type>feat|fix|ci|chore|docs|test|style|refactor|build|perf|revert)(?:\((?P<scope>.+?)\))?(?P<breaking>!)?:\s(?P<subject>.+)(?:\n\n(?P<body>[\s\S]*?))?(?:\n\n(?P<breaking_change>^BREAKING\sCHANGE:\s[\s\S]+))?\Z'
     error: "The commit message should be structured as follows:\n\n
     <type>[optional scope]: <description>\n
     [optional body]\n
