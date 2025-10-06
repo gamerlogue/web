@@ -4,7 +4,7 @@ import timer from 'node:timers/promises';
 
 import {wayfinder} from '@laravel/vite-plugin-wayfinder';
 import laravel from 'laravel-vite-plugin';
-import {defineConfig} from 'vite';
+import {defineConfig, PluginOption} from 'vite';
 import VitePluginRestart from 'vite-plugin-restart';
 
 const SERVER_NAME = process.env.SERVER_NAME;
@@ -12,6 +12,8 @@ const ssl = {
   key: `.data/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.key`,
   cert: `.data/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.crt`
 };
+
+const additionalPlugins: PluginOption[] = [];
 
 // Don't do it in production
 if (process.env.APP_ENV === 'local') {
@@ -28,6 +30,10 @@ if (process.env.APP_ENV === 'local') {
     await timer.setTimeout(3000); // Wait for 3 seconds before checking again
     attempts++;
   }
+
+  additionalPlugins.push(wayfinder({
+    path: 'resources/ts'
+  }));
 }
 
 // noinspection JSUnusedGlobalSymbols (Removes the false positive on "isCustomElement")
@@ -47,12 +53,7 @@ export default defineConfig({
       input: ['resources/scss/app.scss', 'resources/ts/app.ts'],
       refresh: true
     }),
-    // TODO: Remove check when https://github.com/laravel/wayfinder/issues/59 is done
-    ...(process.env.WAYFINDER_WORKAROUND === 'true'
-      ? []
-      : [wayfinder({
-        path: 'resources/ts'
-      })]),
+    ...additionalPlugins,
     VitePluginRestart({
       restart: [ssl.key, ssl.cert]
     })
