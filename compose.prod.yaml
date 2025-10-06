@@ -1,7 +1,7 @@
 services:
   laravel:
     extends:
-      file: docker-compose.common.yml
+      file: compose.common.yaml
       service: laravel
     depends_on:
       mysql:
@@ -13,17 +13,17 @@ services:
 
   mysql:
     extends:
-      file: docker-compose.common.yml
+      file: compose.common.yaml
       service: mysql
 
   redis:
     extends:
-      file: docker-compose.common.yml
+      file: compose.common.yaml
       service: redis
 
   memcached:
     extends:
-      file: docker-compose.common.yml
+      file: compose.common.yaml
       service: memcached
 
 volumes:
