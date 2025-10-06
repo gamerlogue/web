@@ -1,7 +1,7 @@
 services:
   laravel:
     extends:
-      file: docker-compose.common.yml
+      file: compose.common.yaml
       service: laravel
     build:
       target: dev
@@ -26,22 +26,25 @@ services:
     volumes:
       - '.:/var/www/html'
       - ~/.caddy/ca:/var/www/html/.data/caddy/pki/authorities/local
+    depends_on:
+      mailpit:
+        condition: service_healthy
 
   mysql:
     extends:
-      file: docker-compose.common.yml
+      file: compose.common.yaml
       service: mysql
     volumes:
       - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
 
   redis:
     extends:
-      file: docker-compose.common.yml
+      file: compose.common.yaml
       service: redis
 
   memcached:
     extends:
-      file: docker-compose.common.yml
+      file: compose.common.yaml
       service: memcached
 
   mailpit:
