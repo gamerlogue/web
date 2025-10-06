@@ -7,29 +7,22 @@
         worker "{$APP_PUBLIC_PATH}/frankenphp-worker.php" {$CADDY_SERVER_WORKER_COUNT}
     }
 
-    metrics {
-        per_host
+    log {
+        output file /var/log/frankenphp/server.log
+        format console
     }
 
-    servers {
-        protocols h1
-    }
+    # https://caddyserver.com/docs/caddyfile/directives#sorting-algorithm
+    order php_server before file_server
+    order php before file_server
 }
 
 {$CADDY_EXTRA_CONFIG}
 
 {$CADDY_SERVER_SERVER_NAME} {
     log {
-        level WARN
-
-        format filter {
-            wrap {$CADDY_SERVER_LOGGER}
-            fields {
-                uri query {
-                    replace authorization REDACTED
-                }
-            }
-        }
+        output file /var/log/frankenphp/access.log
+        format transform "{common_log}"
     }
 
     route {
