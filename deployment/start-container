@@ -1,55 +1,74 @@
 #!/usr/bin/env sh
-set -e
+set -eu
 
-container_mode=${CONTAINER_MODE:-"http"}
-octane_server=${OCTANE_SERVER}
-running_migrations_and_seeders=${RUNNING_MIGRATIONS_AND_SEEDERS:-"false"}
+container_mode="${CONTAINER_MODE:-http}"
+octane_server="${OCTANE_SERVER:-}"
+running_migrations_and_seeders="${RUNNING_MIGRATIONS_AND_SEEDERS:-false}"
 
-initialStuff() {
-  echo "Container mode: $container_mode"
+initial_setup() {
+    echo "Container mode: $container_mode"
 
-  if [ "${running_migrations_and_seeders}" = "true" ]; then
-    echo "Running migrations and seeding database ..."
-    php artisan migrate --isolated --seed --force || php artisan migrate --seed --force
-  fi
+    if [ "$running_migrations_and_seeders" = "true" ]; then
+        echo "Running migrations and seeding database ..."
+        php artisan migrate --isolated --seed --force --no-interaction ||
+            php artisan migrate --seed --force --no-interaction
+    fi
 
-  php artisan storage:link; \
-  php artisan optimize:clear; \
-  php artisan optimize
+    php artisan storage:link
+    php artisan optimize:clear
+    php artisan optimize
 }
 
-if [ "$1" != "" ]; then
-  exec "$@"
-elif [ "${container_mode}" = "http" ]; then
-  initialStuff
-  echo "Octane Server: $octane_server"
-  if [ "${octane_server}" = "frankenphp" ]; then
-    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.frankenphp.conf
-  elif [ "${octane_server}" = "swoole" ]; then
-    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.swoole.conf
-  elif [ "${octane_server}" = "roadrunner" ]; then
-    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.roadrunner.conf
-  else
-    echo "Invalid Octane server supplied."
-    exit 1
-  fi
-elif [ "${container_mode}" = "horizon" ]; then
-  initialStuff
-  exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.horizon.conf
-elif [ "${container_mode}" = "reverb" ]; then
-  initialStuff
-  exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.reverb.conf
-elif [ "${container_mode}" = "scheduler" ]; then
-  initialStuff
-  exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.scheduler.conf
-elif [ "${container_mode}" = "worker" ]; then
-  if [ -z "${WORKER_COMMAND}" ]; then
-    echo "WORKER_COMMAND is undefined."
-    exit 1
-  fi
-  initialStuff
-  exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.worker.conf
-else
-  echo "Container mode mismatched."
-  exit 1
+run_supervisord() {
+    conf_basename="$1"
+    exec /usr/bin/supervisord -c "/etc/supervisor/conf.d/supervisord.${conf_basename}.conf"
+}
+
+start_http() {
+    echo "Octane Server: $octane_server"
+    case "$octane_server" in
+    frankenphp | swoole | roadrunner)
+        run_supervisord "$octane_server"
+        ;;
+    *)
+        echo "Invalid Octane server supplied."
+        exit 1
+        ;;
+    esac
+}
+
+# Se sono stati passati argomenti, eseguili direttamente
+if [ "$#" -gt 0 ]; then
+    exec "$@"
 fi
+
+case "$container_mode" in
+http)
+    initial_setup
+    start_http
+    ;;
+horizon)
+    initial_setup
+    run_supervisord "horizon"
+    ;;
+reverb)
+    initial_setup
+    run_supervisord "reverb"
+    ;;
+scheduler)
+    initial_setup
+    run_supervisord "scheduler"
+    ;;
+worker)
+    if [ -z "${WORKER_COMMAND:-}" ]; then
+        echo "WORKER_COMMAND is undefined."
+        exit 1
+    fi
+    initial_setup
+    run_supervisord "worker"
+    ;;
+*)
+    echo "Container mode mismatched."
+    exit 1
+    ;;
+esac
