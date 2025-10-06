@@ -1,4 +1,3 @@
-#!/usr/bin/env fish
 # This file must be used with "source bin/activate.fish" *from fish*
 # (https://fishshell.com/). You cannot run it directly.
 # Source: https://github.com/python/cpython/blob/main/Lib/venv/scripts/common/activate.fish#L27
@@ -6,12 +5,11 @@
 # --- guard to prevent direct execution -----------------------------
 # If the script was not “sourced” with `source` or `.` block everything.
 set -l _cmd (status current-command)
-if not contains -- $_cmd source .
+if not contains -- $_cmd source . fish # For some reason some sources are called with "fish"
     echo "❌  This command only works with: source bin/activate.fish oppure . bin/activate.fish" >&2
     exit 1
 end
 # -------------------------------------------------------------------------
-
 
 function deactivate  -d "Exit virtual environment and return to normal shell environment"
     # reset old environment variables
@@ -44,17 +42,11 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-
 set -gx VIRTUAL_ENV "$PWD"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
 set -gx VIRTUAL_ENV_PROMPT "(sail) "
-
-function get_relative_path -d "Get the relative path from $VIRTUAL_ENV to the current directory"
-    echo (string replace -r "^$VIRTUAL_ENV" "" $PWD)
-end
-
 
 # Set sail aliases
 alias sail="docker compose"
