@@ -52,6 +52,8 @@
         @rejected `path('*.bak', '*.conf', '*.dist', '*.fla', '*.ini', '*.inc', '*.inci', '*.log', '*.orig', '*.psd', '*.sh', '*.sql', '*.swo', '*.swp', '*.swop', '*/.*') && !path('*/.well-known/*')`
         error @rejected 401
 
+        respond /health "OK" 200
+
         php_server {
             index frankenphp-worker.php
             try_files {path} frankenphp-worker.php
