@@ -48,6 +48,8 @@ ARG GID=1000
 
 # Change ${WWWUSER} and ${WWWGROUP} ids to ${UID} and ${GID}
 RUN adduser -s /usr/bin/fish -H -D -g ${WWWGROUP} -u ${UID} ${WWWUSER}
+# Create home directory for sail
+RUN mkdir -p /home/${WWWUSER} && chown -R ${WWWUSER}:${WWWGROUP} /home/${WWWUSER}
 
 # Allow installing certs for sail to /etc/ssl/certs and /usr/local/share/ca-certificates
 RUN mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates \
