@@ -5,10 +5,10 @@
 ####
 ARG PHP_VERSION=8.4
 
-FROM ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/dunglas/frankenphp:1-builder-php${PHP_VERSION}-alpine AS builder
+FROM dunglas/frankenphp:1-builder-php${PHP_VERSION}-alpine AS builder
 
 # Copy xcaddy in the builder image
-COPY --from=${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
+COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
 
 # CGO must be enabled to build FrankenPHP
 RUN CGO_ENABLED=1 \
@@ -23,7 +23,7 @@ RUN CGO_ENABLED=1 \
         --with github.com/dunglas/caddy-cbrotli \
         --with github.com/caddyserver/transform-encoder
 
-FROM ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/php:${PHP_VERSION}-cli-alpine AS dev
+FROM php:${PHP_VERSION}-cli-alpine AS dev
 
 # Install helpers
 RUN apk add --no-cache \
@@ -92,7 +92,7 @@ WORKDIR ${ROOT}
 ###########################################
 # Derived from https://github.com/exaco/laravel-octane-dockerfile
 ###########################################
-FROM ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/dunglas/frankenphp:1-php${PHP_VERSION}-alpine AS base
+FROM dunglas/frankenphp:1-php${PHP_VERSION}-alpine AS base
 ARG UID=1000
 ARG GID=1000
 ARG TZ=Europe/Rome
@@ -185,7 +185,7 @@ RUN cp ${PHP_INI_DIR}/php.ini-production ${PHP_INI_DIR}/php.ini
 
 USER ${USER}
 
-COPY --link --chown=${UID}:${GID} --from=${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/composer:2 /usr/bin/composer /usr/bin/composer
+COPY --link --chown=${UID}:${GID} --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY --link --chown=${UID}:${GID} deployment/supervisord.conf /etc/
 COPY --link --chown=${UID}:${GID} deployment/supervisord.frankenphp.conf /etc/supervisor/conf.d/
@@ -222,7 +222,7 @@ RUN php artisan wayfinder:generate --path=resources/ts
 ###########################################
 # Build frontend assets with PNPM
 ###########################################
-FROM ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX:-docker.io}/node:24-alpine AS build-base
+FROM node:24-alpine AS build-base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV ROOT=/var/www/html
