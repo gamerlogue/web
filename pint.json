@@ -1,6 +1,9 @@
 {
   "preset": "laravel",
   "rules": {
-    "trailing_comma_in_multiline": false
+    "trailing_comma_in_multiline": false,
+    "concat_space": {
+      "spacing": "one"
+    }
   }
 }
