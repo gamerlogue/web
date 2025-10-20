@@ -4,7 +4,7 @@
     <option name="yamlToUserMarkings">
       <map>
         <entry key="$PROJECT_DIR$/.gitlab-ci.yml" value="false" />
-        <entry key="$PROJECT_DIR$/docker-compose.yml" value="true" />
+        <entry key="$PROJECT_DIR$/compose.yaml" value="true" />
       </map>
     </option>
   </component>
