@@ -18,7 +18,7 @@ class IgdbProxyController extends Controller
             $cache_lifetime = 0;
         }
 
-        $query = $request->input()[0] ?? '';
+        $query = $request->getContent();
 
         $cache_key = config('igdb.cache_prefix', 'igdb_cache').'.'.md5($path.$query);
 
