@@ -28,14 +28,14 @@ PHP_INI_FLAGS="-d variables_order=EGPCS"
 
 case "$WEBSERVER" in
 cli)
-  export SUPERVISOR_PHP_COMMAND="${PHP_BIN} ${PHP_INI_FLAGS} $ARTISAN serve --host=${SERVER_NAME} --port=${PORT} --https"
+  export SUPERVISOR_PHP_COMMAND="${PHP_BIN} ${PHP_INI_FLAGS} $ARTISAN serve --host=\"${SERVER_NAME}\" --port=${PORT} --https"
   ;;
 octane|octane-watch)
   WATCH_FLAG=""
   if [ "$WEBSERVER" = "octane-watch" ]; then
     WATCH_FLAG="--watch"
   fi
-  export SUPERVISOR_PHP_COMMAND="${PHP_BIN} ${PHP_INI_FLAGS} ${ARTISAN} octane:start ${WATCH_FLAG} --host=${SERVER_NAME} --port=${PORT} --admin-port=${ADMIN_PORT} --https"
+  export SUPERVISOR_PHP_COMMAND="${PHP_BIN} ${PHP_INI_FLAGS} ${ARTISAN} octane:start ${WATCH_FLAG} --host=\"${SERVER_NAME}\" --port=${PORT} --admin-port=${ADMIN_PORT} --https --caddyfile=$ROOT/deployment/dev/Caddyfile"
   ;;
 *)
   echo "Unknown WEBSERVER='${WEBSERVER}'. Supported: cli, octane, octane-watch."

@@ -7,8 +7,9 @@ services:
       target: dev
     depends_on:
       - mailpit
-    user: "${WWWUSER-sail}:${WWWGROUP-1000}"
+    user: "${WWWUSER-sail}"
     ports:
+      - "80:80"
       - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
     hostname: '${SERVER_NAME:-laravel.local}'
     environment:
