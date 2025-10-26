@@ -44,8 +44,8 @@ ARG GID=1000
 
 # Change ${WWWUSER} and ${WWWGROUP} ids to ${UID} and ${GID}
 RUN adduser -s /usr/bin/fish -H -D -g ${WWWGROUP} -u ${UID} ${WWWUSER}
-# Create /home/${WWWUSER}
-RUN mkdir -p /home/${WWWUSER} \
+# Create /home/${WWWUSER} and subfolders (so they are not owned by root when using volumes)
+RUN mkdir -p /home/${WWWUSER} /home/${WWWUSER}/.cache /home/${WWWUSER}/.composer /home/${WWWUSER}/.local/share/caddy/pki/authorities \
     && chown -R ${WWWUSER}:${WWWGROUP} /home/${WWWUSER}
 
 # Allow installing certs for sail to /etc/ssl/certs and /usr/local/share/ca-certificates
