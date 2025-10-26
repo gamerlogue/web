@@ -73,7 +73,7 @@ RUN mkdir -p /etc/supercronic \
 RUN ln -s /usr/local/bin/php /usr/bin/php
 COPY deployment/dev/start-container-dev.sh /usr/local/bin/start-container
 COPY deployment/dev/supervisord.dev.conf /etc/supervisor/conf.d/supervisord.conf
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/healthcheck /usr/local/bin/healthcheck
+COPY --link --chown=${UID}:${UID} deployment/healthcheck /usr/local/bin/healthcheck
 # Reuse prod scheduler/horizon config in dev to avoid duplication
 COPY deployment/supervisord.conf /etc/supervisord.conf
 COPY deployment/supervisord.scheduler.conf /etc/supervisor/conf.d/supervisord.scheduler.conf
