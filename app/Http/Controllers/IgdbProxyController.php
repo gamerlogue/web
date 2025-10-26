@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -27,17 +28,21 @@ class IgdbProxyController extends Controller
         }
 
         return Cache::remember($cache_key, $cache_lifetime, static function () use ($path, $query) {
-            $response = Http::withOptions([
-                'base_uri' => ApiHelper::IGDB_BASE_URI,
-            ])->withHeaders([
-                'Accept' => 'application/json',
-                'Client-ID' => config('igdb.credentials.client_id'),
-            ])->withHeaders([
-                'Authorization' => 'Bearer '.ApiHelper::retrieveAccessToken(),
-            ])
-                ->withBody($query, 'plain/text')
-                ->retry(3, 100)
-                ->post($path);
+            try {
+                $response = Http::withOptions([
+                    'base_uri' => ApiHelper::IGDB_BASE_URI,
+                ])->withHeaders([
+                    'Accept' => 'application/json',
+                    'Client-ID' => config('igdb.credentials.client_id'),
+                    'Authorization' => 'Bearer '.ApiHelper::retrieveAccessToken(),
+                ])
+                    ->withBody($query, 'plain/text')
+                    ->dontTruncateExceptions()
+                    ->retry(3, 100)
+                    ->post($path);
+            } catch (RequestException $exception) {
+                $response = $exception->response;
+            }
 
             return new \Illuminate\Http\Response(
                 $response->body(),
