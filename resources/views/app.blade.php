@@ -19,7 +19,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{Vite::asset('resources/images/favicon/apple-touch-icon.png')}}" />
     <meta name="apple-mobile-web-app-title" content="Maicol07 Account" />
 
-    <x-turnstile::script meta />
+{{--    <x-turnstile::script meta />--}}
 
     @vite('resources/scss/app.scss')
     @inertiaHead
