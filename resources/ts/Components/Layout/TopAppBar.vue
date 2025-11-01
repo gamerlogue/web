@@ -7,7 +7,7 @@ import {computed, ref} from 'vue';
 import Logo from '~/Components/Logo.vue';
 import UserAccountImage from '~/Components/UserAccountImage.vue';
 import UserPopout from '~/Components/UserPopout.vue';
-import {dashboard} from '~/routes';
+// import {dashboard} from '~/routes';
 import '@material/web/focus/md-focus-ring.js';
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/icon-button.js';
@@ -43,9 +43,9 @@ const userPopoutOpen = ref(false);
         <MenuIcon/>
       </md-icon>
     </md-icon-button>
-    <div>
-      <Logo :href="dashboard()"/>
-    </div>
+<!--    <div>-->
+<!--      <Logo :href="dashboard()"/>-->
+<!--    </div>-->
 
     <div slot="end">
       <md-icon-button data-target="ln-embed" aria-label="Updates menu">
