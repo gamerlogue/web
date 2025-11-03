@@ -63,6 +63,8 @@ ENV ROOT=/var/www/html \
     WITH_SCHEDULER=true \
     WITH_HORIZON=false
 
+ENV PHP_INI_SCAN_DIR=$ROOT/deployment
+
 # Allow writing supervisor logs and pid file
 RUN mkdir -p /var/log/supervisor \
     && touch /var/run/supervisord.pid \
