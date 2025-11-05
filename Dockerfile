@@ -240,7 +240,9 @@ FROM build-base AS build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY --link --parents resources vite.config.ts tsconfig.json ./
-COPY --from=base --link --parents --chown=1000:1000 /var/www/html/resources/ts/actions /var/www/html/resources/ts/routes /var/www/html/resources/ts/wayfinder ./
+COPY --from=base --link --chown=1000:1000 /var/www/html/resources/ts/actions  ./resources/ts/actions
+COPY --from=base --link --chown=1000:1000 /var/www/html/resources/ts/routes  ./resources/ts/routes
+COPY --from=base --link --chown=1000:1000 /var/www/html/resources/ts/wayfinder  ./resources/ts/wayfinder
 
 RUN pnpm run build
 
