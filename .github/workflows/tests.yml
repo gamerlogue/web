@@ -40,6 +40,11 @@ jobs:
       - name: Copy environment file
         run: cp .env.example .env
 
+      - name: Add twitch client ID and secret to env
+        run: |
+          echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}" >> .env
+          echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env
+
       - name: Generate app key
         run: php artisan key:generate
 
