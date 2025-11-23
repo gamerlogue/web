@@ -1,9 +1,10 @@
+import type {PluginOption} from 'vite';
+
 import fs from 'node:fs';
 import path, {dirname, resolve} from 'node:path';
 import process from 'node:process';
 import timer from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
-
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import {wayfinder} from '@laravel/vite-plugin-wayfinder';
 import vue from '@vitejs/plugin-vue';
@@ -16,6 +17,8 @@ const ssl = {
   key: `${process.env.HOME}/.local/share/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.key`,
   cert: `${process.env.HOME}/.local/share/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.crt`
 };
+
+const additionalPlugins: PluginOption[] = [];
 
 // Don't do it in production
 if (process.env.APP_ENV === 'local') {
@@ -31,6 +34,13 @@ if (process.env.APP_ENV === 'local') {
     console.log(`Waiting for SSL certificate files to be available... (Attempt ${attempts + 1}/${maxAttempts})`);
     await timer.setTimeout(3000); // Wait for 3 seconds before checking again
     attempts++;
+  }
+
+  // Don't do it in production
+  if (process.env.APP_ENV === 'local') {
+    additionalPlugins.push(wayfinder({
+      path: 'resources/ts'
+    }));
   }
 }
 
@@ -63,12 +73,10 @@ export default defineConfig({
       // Locale messages resource pre-compile option
       include: resolve(dirname(fileURLToPath(import.meta.url)), './lang/**.json')
     }),
-    wayfinder({
-      path: 'resources/ts'
-    }),
     VitePluginRestart({
       restart: [ssl.key, ssl.cert]
-    })
+    }),
+    ...additionalPlugins
   ],
   server: {
     https: {
