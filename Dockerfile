@@ -206,8 +206,8 @@ COPY --from=ext-builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 RUN mkdir -p /etc/supercronic \
     && echo "*/1 * * * * php ${ROOT}/artisan schedule:run --no-interaction" > /etc/supercronic/laravel
 
-RUN addgroup -g ${WWWGROUP} ${USER} \
-    && adduser -D -h ${ROOT} -G ${USER} -u ${WWWUSER} -s /bin/sh ${USER} \
+RUN addgroup -g ${GID} ${USER} \
+    && adduser -D -h ${ROOT} -G ${USER} -u ${UID} -s /bin/sh ${USER} \
     && setcap -r /usr/local/bin/frankenphp
 
 RUN mkdir -p /var/log/supervisor /var/run/supervisor \
@@ -218,18 +218,18 @@ RUN cp ${PHP_INI_DIR}/php.ini-production ${PHP_INI_DIR}/php.ini
 
 USER ${USER}
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --link --chown=${UID}:${GID} --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.conf /etc/
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.frankenphp.conf /etc/supervisor/conf.d/
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/supervisord.*.conf /etc/supervisor/conf.d/
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/start-container /usr/local/bin/start-container
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/healthcheck /usr/local/bin/healthcheck
-COPY --link --chown=${WWWUSER}:${WWWUSER} deployment/php.ini ${PHP_INI_DIR}/conf.d/99-octane.ini
+COPY --link --chown=${UID}:${GID} deployment/supervisord.conf /etc/
+COPY --link --chown=${UID}:${GID} deployment/supervisord.frankenphp.conf /etc/supervisor/conf.d/
+COPY --link --chown=${UID}:${GID} deployment/supervisord.*.conf /etc/supervisor/conf.d/
+COPY --link --chown=${UID}:${GID} deployment/start-container /usr/local/bin/start-container
+COPY --link --chown=${UID}:${GID} deployment/healthcheck /usr/local/bin/healthcheck
+COPY --link --chown=${UID}:${GID} deployment/php.ini ${PHP_INI_DIR}/conf.d/99-octane.ini
 
 RUN chmod +x /usr/local/bin/start-container /usr/local/bin/healthcheck
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} . .
+COPY --link --chown=${UID}:${GID} . .
 
 RUN --mount=type=cache,target=/home/sail/.composer/cache,uid=${UID},gid=${GID} composer install \
     --no-dev \
@@ -275,6 +275,7 @@ COPY --link --parents resources lang vite.config.ts tsconfig.json ./
 COPY --from=base --link --chown=1000:1000 /var/www/html/resources/ts/actions  ./resources/ts/actions
 COPY --from=base --link --chown=1000:1000 /var/www/html/resources/ts/routes  ./resources/ts/routes
 COPY --from=base --link --chown=1000:1000 /var/www/html/resources/ts/wayfinder  ./resources/ts/wayfinder
+COPY --from=base --link --chown=1000:1000 /var/www/html/vendor/emargareten/inertia-modal  ./vendor/emargareten/inertia-modal
 
 RUN pnpm run build
 
@@ -288,7 +289,7 @@ ENV WITH_HORIZON=true \
     WITH_SCHEDULER=true \
     WITH_REVERB=false
 
-COPY --link --chown=${WWWUSER}:${WWWUSER} --from=build /app/public public
+COPY --link --chown=${UID}:${GID} --from=build /app/public public
 RUN php artisan vendor:publish --tag=log-viewer-assets --force
 
 EXPOSE 80
