@@ -9,18 +9,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Maicol07\OIDCClient\Models\OidcAuthMapping;
+use Maicol07\OIDCClient\Models\Traits\LogsInWithOidc;
+use Maicol07\OpenIDConnect\UserInfo;
 use Soved\Laravel\Gdpr\Contracts\Portable as PortableContract;
 use Soved\Laravel\Gdpr\Portable;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\CausesActivity;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class User extends Authenticatable implements MustVerifyEmail, PortableContract
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use CausesActivity, HasFactory, HasUuids,
-        LogsActivity, Notifiable, Portable, SoftDeletes;
+    use CausesActivity, HasFactory, HasUuids, LogsInWithOidc, Notifiable, Portable, SoftDeletes;
 
     protected $keyType = 'uuid';
 
@@ -91,34 +90,13 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
         );
     }
 
-    public function getActivitylogOptions(): LogOptions
+    public function mapOIDCUserinfo(string $issuer, UserInfo $user_info, OidcAuthMapping $mapping): void
     {
-        return LogOptions::defaults()
-            ->logOnly(['first_name', 'last_name', 'nickname', 'email', 'picture', 'password'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
-    }
-
-    /** @noinspection PhpUnused */
-    public function tapActivity(Activity $activity, string $eventName): void
-    {
-        add_ip_and_device_info_to_log($activity);
-
-        $properties = $activity->properties->dot();
-
-        // Mask password and old_password fields in activity
-        if ($eventName === 'updated' && $properties->has('attributes.password')) {
-            $properties->put('attributes.password', '********');
-        }
-
-        if ($eventName === 'updated' && $properties->has('attributes.old_password')) {
-            $properties->put('attributes.old_password', '********');
-        }
-
-        if ($eventName === 'deleted' && $properties->has('old.password')) {
-            $properties->put('old.password', '********');
-        }
-
-        $activity->properties = $properties->undot();
+        $this->first_name = $user_info->given_name;
+        $this->last_name = $user_info->family_name;
+        $this->nickname = $user_info->nickname;
+        $this->picture = $user_info->picture;
+        $this->email = $user_info->email;
+        $this->email_verified_at = $user_info->email_verified ? now() : null;
     }
 }
