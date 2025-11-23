@@ -25,6 +25,7 @@ services:
       SUPERVISOR_USER: sail
       SUPERVISOR_PHP_USER: sail
       SUPERVISOR_VITE_USER: sail
+      TERMINAL_EMULATOR: ${TERMINAL_EMULATOR:-Jetbrains-JediTerm}
     #            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --host=localhost --port=443 --admin-port=2019 --https"
     volumes:
       - '.:/var/www/html'
