@@ -34,7 +34,6 @@ RUN apk add --no-cache \
     icu-dev \
     linux-headers \
     libpng-dev \
-    libpq-dev \
     libtool \
     make \
     m4 \
@@ -53,7 +52,7 @@ RUN set -eux; \
 
 # Install and enable bundled extensions
 RUN set -eux; \
-    bundledexts="bcmath intl exif gd mbstring opcache pcntl pdo_pgsql zip"; \
+    bundledexts="bcmath intl exif gd mbstring opcache pcntl pdo_mysql zip"; \
     for ext in $bundledexts; do \
         docker-php-ext-install $ext; \
     done; \
@@ -70,7 +69,6 @@ RUN apk add --no-cache \
     fish \
     git \
     libpng \
-    libpq \
     libzip \
     nodejs \
     npm \
