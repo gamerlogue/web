@@ -17,6 +17,7 @@
     "laravel/horizon": "^5.33",
     "laravel/octane": "^2.5",
     "laravel/pulse": "^1.2",
+    "laravel/sanctum": "^4.0",
     "laravel/telescope": "^5",
     "laravel/tinker": "^2.9",
     "laravel/wayfinder": "^0.1.4",

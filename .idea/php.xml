@@ -218,6 +218,7 @@
       <path value="$PROJECT_DIR$/vendor/cse/helpers-session" />
       <path value="$PROJECT_DIR$/vendor/web-token/jwt-library" />
       <path value="$PROJECT_DIR$/vendor/maicol07/oidc-client" />
+      <path value="$PROJECT_DIR$/vendor/laravel/sanctum" />
     </include_path>
   </component>
   <component name="PhpInterpreters">
