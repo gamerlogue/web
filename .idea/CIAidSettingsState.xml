@@ -3,8 +3,8 @@
   <component name="CIAidSettingsState">
     <option name="yamlToUserMarkings">
       <map>
-        <entry key="$PROJECT_DIR$/docker-compose.prod.yml" value="true" />
-        <entry key="$PROJECT_DIR$/docker-compose.yml" value="true" />
+        <entry key="$PROJECT_DIR$/compose.yml" value="true" />
+        <entry key="$PROJECT_DIR$/compose.prod.yml" value="true" />
       </map>
     </option>
   </component>
