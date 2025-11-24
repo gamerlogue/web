@@ -40,7 +40,7 @@ precheck_tag_on_main:
       fi
 
 build:
-  image: quay.io/buildah/upstream
+  image: docker:latest
   stage: build
   needs:
     - job: precheck_tag_on_main
@@ -57,51 +57,51 @@ build:
         AWS_ACCESS_KEY: '$AWS_ACCESS_KEY_DEV'
         AWS_SECRET_KEY: '$AWS_SECRET_KEY_DEV'
         ECR_REPO_PREFIX: '$ECR_REPO_PREFIX_DEV'
+  services:
+    - docker:dind
   before_script:
-    - buildah info
+    - docker info
+    - echo $CI_REGISTRY_PASSWORD | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   variables:
-    DOCKER_IMAGE_TAG: "${CI_PROJECT_NAME}:latest-${CI_COMMIT_TAG}"
     ECR_REPO_NAME: ${CI_PROJECT_NAME}
-    # Use vfs with buildah. Docker offers overlayfs as a default, but Buildah
-    # cannot stack overlayfs on top of another overlayfs filesystem.
-    #    STORAGE_DRIVER: vfs
-    # Write all image metadata in the docker format, not the standard OCI format.
-    # Newer versions of docker can handle the OCI format, but older versions, like
-    # the one shipped with Fedora 30, cannot handle the format.
-    BUILDAH_FORMAT: docker
+    ECR_REGISTRY: ${ECR_REPO_PREFIX}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
+    DOCKER_IMAGE_TAG: $ECR_REGISTRY/${ECR_REPO_NAME}:${CI_COMMIT_TAG}
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_DRIVER: overlay2
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_KEY}
   script:
-    - echo "Version ${VERSION}"
-    - dnf install -y curl unzip awscli2
+    - apk add docker-credential-ecr-login jq
 
-    - echo "********************************************************"
-    - echo "AWS CLI CONFIGURATION"
-    - aws configure set aws_access_key_id ${AWS_ACCESS_KEY}
-    - aws configure set aws_secret_access_key ${AWS_SECRET_KEY}
-    - aws configure set region ${AWS_DEFAULT_REGION}
+    - cat /root/.docker/config.json
+    - tmp=$(mktemp)
+    - jq --arg host "$ECR_REGISTRY" '
+      .credHelpers =
+      (.credHelpers // {}) |
+      .credHelpers[$host] = "ecr-login"
+      ' /root/.docker/config.json > "$tmp" && mv "$tmp" /root/.docker/config.json
+    - cat /root/.docker/config.json
 
-    - echo "********************************************************"
-    - echo "Create the AWS ECR repository if it does not exists" # Create the AWS ECR repository
-    - aws ecr describe-repositories --repository-names ${ECR_REPO_NAME}
-
-    - echo "********************************************************"
     - echo "BUILDING THE IMAGE FOR ${CI_PROJECT_NAME} " # BUILD THE IMAGE AND PUSH IT
-    - aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | buildah login --username AWS --password-stdin ${ECR_REPO_PREFIX}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
-    - buildah build --target prod -t ${DOCKER_IMAGE_TAG} --secret=id=gitlab-ci-token,env=CI_JOB_TOKEN --layers=true
-    - buildah tag ${DOCKER_IMAGE_TAG} ${ECR_REPO_PREFIX}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPO_NAME}:${CI_COMMIT_TAG}
-    - buildah push ${ECR_REPO_PREFIX}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPO_NAME}:${CI_COMMIT_TAG}
-    - buildah prune -a -f
+    - docker context create my-builder
+    - docker buildx create my-builder --driver docker-container --use
+    - docker buildx build --push -t ${DOCKER_IMAGE_TAG}
+      --target prod
+      --secret=id=gitlab-ci-token,env=CI_JOB_TOKEN
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/cache,mode=max
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache .
+
+    - docker system prune -a -f
 
 create_template:
   stage: create_template
-  image: gitlab/glab:latest
+  image: alpine:latest
   variables:
     APP_NAME: ${CI_PROJECT_NAME}
     DOCKER_IMAGE_TAG: "${CI_COMMIT_TAG}"
     ECR_REPO_NAME: "${ECR_REPO_PREFIX}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${CI_PROJECT_NAME}"
-    HOST: "${AWS_WEB_HOST_PROD}"
-    # Prefer GLAB_TOKEN but also set GITLAB_TOKEN for compatibility
-    GLAB_TOKEN: "$CI_JOB_TOKEN"
     GITLAB_TOKEN: "$CI_JOB_TOKEN"
+    APP_FILES_DIR: /var/www/html/storage/app
   rules:
     # Tag on main ending with -prod -> production host
     - if: '$CI_COMMIT_TAG =~ /-prod$/'
@@ -109,6 +109,7 @@ create_template:
         AWS_ACCESS_KEY: '$AWS_ACCESS_KEY_PROD'
         AWS_SECRET_KEY: '$AWS_SECRET_KEY_PROD'
         ECR_REPO_PREFIX: '$ECR_REPO_PREFIX_PROD'
+        HOST: "${AWS_WEB_HOST_PROD}"
         APP_ENV: 'prod'
     # Any other tag on main -> development host
     - if: '$CI_COMMIT_TAG'
@@ -116,6 +117,7 @@ create_template:
         AWS_ACCESS_KEY: '$AWS_ACCESS_KEY_DEV'
         AWS_SECRET_KEY: '$AWS_SECRET_KEY_DEV'
         ECR_REPO_PREFIX: '$ECR_REPO_PREFIX_DEV'
+        HOST: "${AWS_WEB_HOST_DEV}"
         APP_ENV: 'dev'
   needs:
     - job: precheck_tag_on_main
@@ -123,11 +125,11 @@ create_template:
       optional: true
   when: on_success
   script:
-    - glab auth login --hostname $CI_SERVER_HOST --job-token $CI_JOB_TOKEN
-    # Download sitekit latest release from GitLab
-    - glab release download -R websites/utils/sitekit --asset-name "linux-x64"
-    - chmod +x ./linux-x64
-    - mv ./linux-x64 /usr/local/bin/sitekit
+    - apk add --no-cache git curl
+    - |
+      curl --location --header "PRIVATE-TOKEN: glpat-xQnpeUnwxGet4kMhWq13" https://gitlab.trust-itservices.com/api/v4/projects/419/jobs/artifacts/main/raw/builds/binaries/linux/linux-x64?job=build --output sitekit
+    - chmod +x ./sitekit
+    - mv ./sitekit /usr/local/bin/sitekit
     - sitekit --version
 
     # Set git config to push changes
@@ -136,4 +138,5 @@ create_template:
     # clone the repository
     # install dependencies
     # run the script with the correct input parameters
-    - sitekit ci:helm ${ECR_REPO_NAME} ${DOCKER_IMAGE_TAG} ${APP_ENV} ${WEBSITE_NAME} ${HOST} ${APP_FILES_DIR}
+    - echo "${ECR_REPO_NAME} ${DOCKER_IMAGE_TAG} ${APP_ENV} ${APP_NAME} ${APP_FILES_DIR} ${HOST}"
+    - sitekit ci:helm ${ECR_REPO_NAME} ${DOCKER_IMAGE_TAG} ${APP_ENV} ${APP_NAME} ${APP_FILES_DIR} ${HOST}
