@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Maicol07\OIDCClient\Models\OidcAuthMapping;
 use Maicol07\OIDCClient\Models\Traits\LogsInWithOidc;
 use Maicol07\OpenIDConnect\UserInfo;
@@ -19,7 +20,7 @@ use Spatie\Activitylog\Traits\CausesActivity;
 class User extends Authenticatable implements MustVerifyEmail, PortableContract
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use CausesActivity, HasFactory, HasUuids, LogsInWithOidc, Notifiable, Portable, SoftDeletes;
+    use CausesActivity, HasApiTokens, HasFactory, HasUuids, LogsInWithOidc, Notifiable, Portable, SoftDeletes;
 
     protected $keyType = 'uuid';
 
