@@ -21,11 +21,6 @@ services:
       file: compose.common.yaml
       service: redis
 
-  memcached:
-    extends:
-      file: compose.common.yaml
-      service: memcached
-
 volumes:
   mysql:
     driver: local
