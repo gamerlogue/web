@@ -271,6 +271,8 @@ COPY --link package.json pnpm-*.yaml ./
 RUN npm install -g corepack && corepack enable pnpm
 
 FROM build-base AS build
+COPY --link --parents patches ./
+
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 COPY --link --parents resources vite.config.ts tsconfig.json ./
