@@ -23,23 +23,65 @@ RUN CGO_ENABLED=1 \
         --with github.com/dunglas/caddy-cbrotli \
         --with github.com/caddyserver/transform-encoder
 
-FROM php:${PHP_VERSION}-cli-alpine AS dev
+FROM php:${PHP_VERSION}-zts-alpine AS ext-builder
+# Install build dependencies
+RUN apk add --no-cache \
+    autoconf \
+    automake \
+    g++ \
+    git \
+    icu-dev \
+    linux-headers \
+    libpng-dev \
+    libtool \
+    make \
+    m4 \
+    oniguruma-dev \
+    pkgconf \
+    libzip-dev \
+    wget
+
+COPY --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
+
+RUN set -eux; \
+    exts="apcu/apcu phpredis/phpredis"; \
+    for ext in $exts; do \
+        pie install $ext; \
+    done;
+
+# Install and enable bundled extensions
+RUN set -eux; \
+    bundledexts="bcmath intl exif gd mbstring opcache pcntl pdo_mysql zip"; \
+    for ext in $bundledexts; do \
+        docker-php-ext-install $ext; \
+    done; \
+    docker-php-source delete
+
+FROM ext-builder AS ext-dev
+RUN pie install xdebug/xdebug
+
+FROM php:${PHP_VERSION}-zts-alpine AS dev
 
 # Install helpers
 RUN apk add --no-cache \
+    expect \
+    fish \
     git \
-    wget \
-    supervisor \
-    supercronic \
+    libpng \
+    libzip \
     nodejs \
     npm \
-    fish \
-    expect \
+    supervisor \
+    supercronic \
     pnpm-fish-completion \
-    pnpm-bash-completion
+    pnpm-bash-completion \
+    wget
 
-ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions @composer apcu xdebug imagick gd imap zip bcmath intl exif redis opcache memcached pcntl pdo_mysql
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copy PHP extensions from ext-dev
+COPY --from=ext-dev /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=ext-dev /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
 ARG WWWUSER=sail
 ARG WWWGROUP=sail
@@ -129,43 +171,31 @@ RUN apk update; \
     wget \
     fish \
     expect \
-    doas \
-    doas-sudo-shim \
+    icu \
     iputils \
+    libjpeg-turbo \
+    libpng \
+    libzip \
     micro \
-    mycli \
     nss-tools \
     vim \
     tzdata \
     git \
-    ncdu \
+    ncurses \
     procps \
     unzip \
+    mycli \
     ca-certificates \
-    supervisor \
     supercronic \
+    supervisor \
     libsodium-dev \
     brotli \
-    # Install PHP extensions (included with dunglas/frankenphp) \
-    && install-php-extensions \
-    apcu \
-    bz2 \
-    pcntl \
-    mbstring \
-    bcmath \
-    sockets \
-    opcache \
-    exif \
-    pdo_mysql \
-    zip \
-    uv \
-    vips \
-    intl \
-    gd \
-    redis \
-    igbinary \
-    && docker-php-source delete \
     && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
+
+
+# Copy PHP extensions from ext-builder
+COPY --from=ext-builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=ext-builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
 RUN mkdir -p /etc/supercronic \
     && echo "*/1 * * * * php ${ROOT}/artisan schedule:run --no-interaction" > /etc/supercronic/laravel
