@@ -19,7 +19,6 @@ services:
     depends_on:
       - mysql
       - redis
-      - memcached
     healthcheck:
       test: [ CMD, curl, '-o', '-', '-I', '-k', '--silent', '--fail', 'https://localhost/up' ]
       retries: 3
@@ -53,15 +52,6 @@ services:
       test: [ CMD, redis-cli, ping ]
       retries: 3
       timeout: 5s
-  memcached:
-    image: 'memcached:alpine'
-    ports:
-      - '${FORWARD_MEMCACHED_PORT:-11211}:11211'
-    healthcheck:
-      test: [ CMD, nc, '-z', '127.0.0.1', '11211' ]
-      timeout: 2s
-      start_period: 3s
-      interval: 10s
 
 volumes:
   mysql:
