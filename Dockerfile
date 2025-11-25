@@ -235,7 +235,7 @@ RUN chmod +x /usr/local/bin/start-container /usr/local/bin/healthcheck
 
 COPY --link --chown=${UID}:${GID} . .
 
-RUN --mount=type=cache,target=.composer/cache composer install \
+RUN --mount=type=cache,target=/home/sail/.composer/cache,uid=${UID},gid=${GID} composer install \
     --no-dev \
     --no-interaction \
     --optimize-autoloader \
