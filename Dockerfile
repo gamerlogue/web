@@ -154,8 +154,6 @@ ENV TERM=xterm-color \
     APP_ENV=production \
     COMPOSER_FUND=0 \
     COMPOSER_MAX_PARALLEL_HTTP=24 \
-    XDG_CONFIG_HOME=${APP_DIR}/.config \
-    XDG_DATA_HOME=${APP_DIR}/.data \
     PHP_INI_SCAN_DIR="$PHP_INI_SCAN_DIR:${APP_DIR}/deployment"
 WORKDIR ${ROOT}
 

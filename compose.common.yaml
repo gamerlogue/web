@@ -12,10 +12,6 @@ services:
       - '443:443/udp'
     env_file:
       -   .env
-    environment:
-      XDG_CACHE_HOME: /var/www/html/.cache
-      XDG_CONFIG_HOME: /var/www/html/.config
-      XDG_DATA_HOME: /var/www/html/.data
     depends_on:
       - mysql
       - redis

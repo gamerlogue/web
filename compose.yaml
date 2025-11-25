@@ -28,7 +28,7 @@ services:
       - '.:/var/www/html'
       - ~/.cache/composer:/home/sail/.composer/cache:rw
       - ~/.cache/node:/home/sail/.cache/node:rw
-      - ~/.caddy/ca:/var/www/html/.data/caddy/pki/authorities/local
+      - ~/.caddy/ca:/home/sail/.local/share/caddy/pki/authorities/local
       - ~/.config/composer/auth.json:/home/sail/.composer/auth.json:rw
     depends_on:
       mailpit:
