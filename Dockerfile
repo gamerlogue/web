@@ -90,15 +90,16 @@ ARG GID=1000
 
 # Change ${WWWUSER} and ${WWWGROUP} ids to ${UID} and ${GID}
 RUN adduser -s /usr/bin/fish -H -D -g ${WWWGROUP} -u ${UID} ${WWWUSER}
-# Create home directory for sail
-RUN mkdir -p /home/${WWWUSER} && chown -R ${WWWUSER}:${WWWGROUP} /home/${WWWUSER}
+# Create /home/${WWWUSER} and subfolders (so they are not owned by root when using volumes)
+RUN mkdir -p /home/${WWWUSER} /home/${WWWUSER}/.cache /home/${WWWUSER}/.composer /home/${WWWUSER}/.local/share/caddy/pki/authorities \
+    && chown -R ${WWWUSER}:${WWWGROUP} /home/${WWWUSER}
 
 # Allow installing certs for sail to /etc/ssl/certs and /usr/local/share/ca-certificates
-RUN mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates \
-    && chown -R ${UID}:${GID} /etc/ssl/certs /usr/local/share/ca-certificates
+RUN mkdir -p /etc/ssl/certs \
+    && mkdir -p /usr/local/share/ca-certificates \
+    && chown -R ${WWWUSER}:${WWWGROUP} /etc/ssl/certs \
+    && chown -R ${WWWUSER}:${WWWGROUP} /usr/local/share/ca-certificates
 
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install --global corepack@latest && corepack enable pnpm
 
 ENV ROOT=/var/www/html \
@@ -110,7 +111,8 @@ ENV PHP_INI_SCAN_DIR=$ROOT/deployment
 # Allow writing supervisor logs and pid file
 RUN mkdir -p /var/log/supervisor \
     && touch /var/run/supervisord.pid \
-    && chown -R ${UID}:${GID} /var/log/supervisor /var/run/supervisord.pid
+    && chown -R ${WWWUSER}:${WWWGROUP} /var/log/supervisor \
+    && chown -R ${WWWUSER}:${WWWGROUP} /var/run/supervisord.pid
 
 # Setup supercronic for Laravel scheduler in dev
 RUN mkdir -p /etc/supercronic \
@@ -132,7 +134,7 @@ EXPOSE 80/tcp
 ENTRYPOINT ["start-container"]
 HEALTHCHECK --start-period=5s --interval=2s --timeout=5s --retries=8 CMD healthcheck || exit 1
 
-USER ${UID}
+USER ${WWWUSER}
 WORKDIR ${ROOT}
 
 ###########################################
