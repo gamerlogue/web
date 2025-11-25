@@ -263,7 +263,6 @@ FROM node:24-alpine AS build-base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV ROOT=/var/www/html
-ENV WAYFINDER_WORKAROUND=true
 
 WORKDIR /app
 COPY --link package.json pnpm-*.yaml ./
