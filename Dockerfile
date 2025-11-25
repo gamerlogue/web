@@ -243,6 +243,8 @@ RUN --mount=type=cache,target=/home/sail/.composer/cache,uid=${UID},gid=${GID} c
     --no-scripts \
     --audit
 
+RUN composer clear-cache
+
 RUN mkdir -p \
     storage/framework/sessions \
     storage/framework/views \
