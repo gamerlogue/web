@@ -233,7 +233,7 @@ COPY --link --chown=${UID}:${GID} deployment/php.ini ${PHP_INI_DIR}/conf.d/99-oc
 
 RUN chmod +x /usr/local/bin/start-container /usr/local/bin/healthcheck
 
-COPY --link --chown=${UID}:${GID} composer.json composer.lock ./
+COPY --link --chown=${UID}:${GID} . .
 
 RUN --mount=type=cache,target=.composer/cache composer install \
     --no-dev \
