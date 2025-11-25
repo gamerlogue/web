@@ -32,9 +32,12 @@ if (process.env.APP_ENV === 'local') {
     attempts++;
   }
 
-  additionalPlugins.push(wayfinder({
-    path: 'resources/ts'
-  }));
+  // Don't do it in production
+  if (process.env.APP_ENV === 'local') {
+    additionalPlugins.push(wayfinder({
+      path: 'resources/ts'
+    }));
+  }
 }
 
 // noinspection JSUnusedGlobalSymbols (Removes the false positive on "isCustomElement")
