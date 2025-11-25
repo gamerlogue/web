@@ -1,10 +1,11 @@
+import type {PluginOption} from 'vite';
+
 import fs from 'node:fs';
 import process from 'node:process';
 import timer from 'node:timers/promises';
-
 import {wayfinder} from '@laravel/vite-plugin-wayfinder';
 import laravel from 'laravel-vite-plugin';
-import {defineConfig, PluginOption} from 'vite';
+import {defineConfig} from 'vite';
 import VitePluginRestart from 'vite-plugin-restart';
 
 const SERVER_NAME = process.env.SERVER_NAME;
@@ -53,10 +54,10 @@ export default defineConfig({
       input: ['resources/scss/app.scss', 'resources/ts/app.ts'],
       refresh: true
     }),
-    ...additionalPlugins,
     VitePluginRestart({
       restart: [ssl.key, ssl.cert]
-    })
+    }),
+    ...additionalPlugins
   ],
   server: {
     https: {
