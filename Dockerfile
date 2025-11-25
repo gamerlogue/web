@@ -106,7 +106,7 @@ ENV ROOT=/var/www/html \
     WITH_SCHEDULER=true \
     WITH_HORIZON=false
 
-ENV PHP_INI_SCAN_DIR=$ROOT/deployment
+ENV PHP_INI_SCAN_DIR="$PHP_INI_SCAN_DIR:$ROOT/deployment"
 
 # Allow writing supervisor logs and pid file
 RUN mkdir -p /var/log/supervisor \
@@ -155,7 +155,8 @@ ENV TERM=xterm-color \
     COMPOSER_FUND=0 \
     COMPOSER_MAX_PARALLEL_HTTP=24 \
     XDG_CONFIG_HOME=${APP_DIR}/.config \
-    XDG_DATA_HOME=${APP_DIR}/.data
+    XDG_DATA_HOME=${APP_DIR}/.data \
+    PHP_INI_SCAN_DIR="$PHP_INI_SCAN_DIR:${APP_DIR}/deployment"
 WORKDIR ${ROOT}
 
 # Replace the official binary by the one contained your custom modules
