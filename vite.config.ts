@@ -10,8 +10,8 @@ import VitePluginRestart from 'vite-plugin-restart';
 
 const SERVER_NAME = process.env.SERVER_NAME;
 const ssl = {
-  key: `.data/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.key`,
-  cert: `.data/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.crt`
+  key: `${process.env.HOME}/.local/share/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.key`,
+  cert: `${process.env.HOME}/.local/share/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.crt`
 };
 
 const additionalPlugins: PluginOption[] = [];
