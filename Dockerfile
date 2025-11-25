@@ -293,6 +293,7 @@ ENV WITH_HORIZON=false \
     WITH_REVERB=false
 
 COPY --link --chown=${UID}:${GID} --from=build /app/public public
+RUN php artisan vendor:publish --tag=log-viewer-assets --force
 
 EXPOSE 80
 EXPOSE 2019
