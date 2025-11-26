@@ -1,7 +1,7 @@
 services:
   laravel:
     extends:
-      file: compose.common.yml
+      file: compose.common.yaml
       service: laravel
     build:
       target: dev
@@ -36,14 +36,14 @@ services:
 
   mariadb:
     extends:
-      file: compose.common.yml
+      file: compose.common.yaml
       service: mariadb
     volumes:
       - './vendor/laravel/sail/database/mariadb/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
 
   redis:
     extends:
-      file: compose.common.yml
+      file: compose.common.yaml
       service: redis
 
   mailpit:
