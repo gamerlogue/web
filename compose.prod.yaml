@@ -2,7 +2,7 @@ services:
   laravel:
     user: octane
     extends:
-      file: compose.common.yml
+      file: compose.common.yaml
       service: laravel
     depends_on:
       mariadb:
@@ -12,12 +12,12 @@ services:
 
   mariadb:
     extends:
-      file: compose.common.yml
+      file: compose.common.yaml
       service: mariadb
 
   redis:
     extends:
-      file: compose.common.yml
+      file: compose.common.yaml
       service: redis
 
 volumes:
