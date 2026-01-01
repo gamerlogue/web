@@ -3,6 +3,10 @@
 
     admin {$CADDY_SERVER_ADMIN_HOST}:{$CADDY_SERVER_ADMIN_PORT}
 
+    auto_https off
+
+    skip_install_trust
+
     frankenphp {
         worker "{$APP_PUBLIC_PATH}/frankenphp-worker.php" {$CADDY_SERVER_WORKER_COUNT}
     }
@@ -60,7 +64,6 @@
         error @rejected 401
 
         php_server {
-            index frankenphp-worker.php
             try_files {path} frankenphp-worker.php
             resolve_root_symlink
         }

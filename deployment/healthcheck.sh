@@ -11,7 +11,7 @@ health_fail() {
 
 supervisor_is_running() {
   name="$1"
-  # Estrae lo stato (2a colonna), lo normalizza in minuscolo e confronta con "running"
+  # Extract the status (2nd column), normalize it to lowercase and compare with "running"
   status=$(supervisorctl status "$name" | awk '{print tolower($2)}')
   [ "$status" = "running" ]
 }
