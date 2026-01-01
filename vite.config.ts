@@ -89,7 +89,8 @@ export default defineConfig({
     watch: {
       ignored: [
         '**/.config/**',
-        '**/.data/**'
+        '**/.data/**',
+        '**/storage/framework/views/**'
       ]
     }
   }
