@@ -2,6 +2,13 @@
 
 namespace App\Providers;
 
+use ApiPlatform\JsonApi\Serializer\ErrorNormalizer;
+use ApiPlatform\JsonApi\Serializer\ItemNormalizer;
+use ApiPlatform\Laravel\Eloquent\Filter\FilterInterface;
+use App\Filter\CurrentUserFilter;
+use App\Serializer\JsonApiPlainIdNormalizer;
+use App\Serializer\JsonApiStringStatusErrorNormalizer;
+use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Request;
@@ -38,9 +45,20 @@ class AppServiceProvider extends ServiceProvider
         // Rate limiter per proxy IGDB (per IP)
         RateLimiter::for('igdb', function (Request $request) {
             $limit = (int) config('services.igdb.rate_limit', 30);
+
             return [
                 Limit::perMinute($limit)->by($request->ip()),
             ];
         });
+
+        Authenticate::redirectUsing(static function (Request $request) {
+            return route('oidc.login');
+        });
+
+        // Estendiamo il normalizzatore di item JSON:API
+        $this->app->extend(ItemNormalizer::class, fn ($service, $app) => new JsonApiPlainIdNormalizer($service));
+        $this->app->extend(ErrorNormalizer::class, fn ($service, $app) => new JsonApiStringStatusErrorNormalizer($service));
+
+        $this->app->tag(CurrentUserFilter::class, FilterInterface::class);
     }
 }

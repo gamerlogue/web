@@ -1,13 +1,12 @@
 <?php
 
+use App\Http\Middleware\DenormalizeIriMiddleware;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LocaleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -33,21 +32,5 @@ return Application::configure(basePath: dirname(__DIR__))
             Request::HEADER_X_FORWARDED_PROTO
         );
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-//        $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
-//            if (! app()->environment(['local', 'testing']) && in_array($response->getStatusCode(), [500, 503, 404, 403], true)) {
-//                return Inertia::render('ErrorPage', ['status' => $response->getStatusCode()])
-//                    ->toResponse($request)
-//                    ->setStatusCode($response->getStatusCode());
-//            }
-//
-//            if ($response->getStatusCode() === 419) {
-//                return back()->with([
-//                    'status' => __('The page expired, please try again.'),
-//                ]);
-//            }
-//
-//            return $response;
-//        });
-    })
+    ->withExceptions(function (Exceptions $exceptions): void {})
     ->create();
