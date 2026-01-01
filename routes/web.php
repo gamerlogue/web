@@ -18,7 +18,15 @@ Route::get('/sanctum/token', static function (Request $request) {
 
     $token = $request->user()->createToken($request->query('token_name'));
 
-    return ['token' => $token->plainTextToken];
+    $redirectUri = $request->query('redirect_uri', 'gamerlogue://auth/callback');
+
+    $encoded_token = urlencode($token->plainTextToken);
+    // Build query string
+    $queryString = http_build_query([
+        'token' => $encoded_token,
+        'user_id' => $request->user()->id,
+    ]);
+    return redirect()->away("$redirectUri?$queryString");
 })->middleware('auth');
 
 /**
