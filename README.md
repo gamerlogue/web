@@ -13,7 +13,7 @@
 ## Running
 ### Production
 ```bash
-docker compose -f compose.prod.yml up -d
+docker compose -f compose.prod.yaml up -d
 ```
 
 ### Development
