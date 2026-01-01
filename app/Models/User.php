@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -17,12 +21,19 @@ use Soved\Laravel\Gdpr\Contracts\Portable as PortableContract;
 use Soved\Laravel\Gdpr\Portable;
 use Spatie\Activitylog\Traits\CausesActivity;
 
+// TODO: Authorize PATCH only for the user themselves
+#[ApiResource(
+    description: 'A user of the application.',
+    operations: [
+        new GetCollection,
+        new Get,
+        new Patch
+    ]
+)]
 class User extends Authenticatable implements MustVerifyEmail, PortableContract
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use CausesActivity, HasApiTokens, HasFactory, HasUuids, LogsInWithOidc, Notifiable, Portable, SoftDeletes;
-
-    protected $keyType = 'uuid';
 
     /**
      * The relations to include in the downloadable data.
@@ -56,7 +67,9 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
      * @var list<string>
      */
     protected $hidden = [
+        'id',
         'password',
+        'email',
         'remember_token',
     ];
 
