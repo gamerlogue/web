@@ -15,13 +15,12 @@ initial_setup() {
   fi
 
   php artisan storage:link
-  php artisan optimize:clear
   php artisan optimize
 }
 
 run_supervisord() {
   conf_basename="$1"
-  exec /usr/bin/supervisord -c "/etc/supervisor/conf.d/supervisord.${conf_basename}.conf"
+  exec /usr/bin/supervisord -n -c "/etc/supervisor/conf.d/supervisord.${conf_basename}.conf"
 }
 
 start_http() {

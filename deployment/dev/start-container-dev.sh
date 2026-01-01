@@ -23,7 +23,7 @@ ADMIN_PORT="${ADMIN_PORT:-2019}"
 WEBSERVER="${WEBSERVER:-cli}"
 
 PHP_BIN="/usr/bin/php"
-ARTISAN="/var/www/html/artisan"
+ARTISAN="$ROOT/artisan"
 PHP_INI_FLAGS="-d variables_order=EGPCS"
 
 case "$WEBSERVER" in
