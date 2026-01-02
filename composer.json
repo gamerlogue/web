@@ -5,9 +5,9 @@
   "license": "proprietary",
   "require": {
     "php": ">=8.5",
-    "ext-pdo": "*",
     "ext-fileinfo": "*",
     "ext-intl": "*",
+    "ext-pdo": "*",
     "api-platform/laravel": "^4.2",
     "emargareten/inertia-modal": "^1.5",
     "fakerphp/faker": "^1.23",
