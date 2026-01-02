@@ -26,6 +26,7 @@
     "maicol07/laravel-oidc-client": "^1.1",
     "marcreichel/igdb-laravel": "^5.3",
     "opcodesio/log-viewer": "^3.10",
+    "phpdocumentor/type-resolver": "^1.12",
     "soved/laravel-gdpr": "^1.9",
     "spatie/laravel-activitylog": "^4.10"
   },
