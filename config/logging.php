@@ -130,6 +130,10 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'deprecations' => [
+            'driver' => 'stack',
+            'channels' => explode(',', (string) env('LOG_STACK', env('SERVER_NAME', false) ? 'docker' : 'single')),
+        ],
     ],
 
 ];
