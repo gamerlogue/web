@@ -22,7 +22,7 @@ PORT="${PORT:-443}"
 ADMIN_PORT="${ADMIN_PORT:-2019}"
 WEBSERVER="${WEBSERVER:-cli}"
 
-PHP_BIN="/usr/bin/php"
+PHP_BIN=$(which php)
 ARTISAN="$ROOT/artisan"
 PHP_INI_FLAGS="-d variables_order=EGPCS"
 
@@ -42,6 +42,8 @@ octane|octane-watch)
   exit 1
   ;;
 esac
+
+echo "RUNNING WEBSERVER: ${SUPERVISOR_PHP_COMMAND}"
 
 if [ "$#" -gt 0 ]; then
   exec "$@"

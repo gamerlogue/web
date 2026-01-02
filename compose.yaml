@@ -5,6 +5,8 @@ services:
       service: laravel
     build:
       target: dev
+      args:
+        USER: "${WWWUSER-sail}"
     depends_on:
       - mailpit
     user: "${WWWUSER-sail}"
@@ -21,10 +23,10 @@ services:
       XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal log=/tmp/xdebug.log}'
       PHP_IDE_CONFIG: '${PHP_IDE_CONFIG:-serverName=Sail}'
       IGNITION_EDITOR: '${IGNITION_EDITOR:-vscode}'
-      IGNITION_REMOTE_SITES_PATH: '/app'
-      SUPERVISOR_USER: sail
-      SUPERVISOR_PHP_USER: sail
-      SUPERVISOR_VITE_USER: sail
+      IGNITION_REMOTE_SITES_PATH: '/var/www/html'
+      SUPERVISOR_USER: ${WWWUSER-sail}
+      SUPERVISOR_PHP_USER: ${WWWUSER-sail}
+      SUPERVISOR_VITE_USER: ${WWWUSER-sail}
       TERMINAL_EMULATOR: ${TERMINAL_EMULATOR:-Jetbrains-JediTerm}
     #            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --host=localhost --port=443 --admin-port=2019 --https"
     volumes:

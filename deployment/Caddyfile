@@ -11,6 +11,10 @@
         worker "{$APP_PUBLIC_PATH}/frankenphp-worker.php" {$CADDY_SERVER_WORKER_COUNT}
     }
 
+    log file {
+        output file /var/log/frankenphp/frankenphp.log
+    }
+
     metrics {
         per_host
     }
@@ -34,6 +38,11 @@
                 }
             }
         }
+    }
+
+    log file {
+        format json
+        output file /var/log/frankenphp/access.log
     }
 
     route {
