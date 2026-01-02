@@ -6,6 +6,8 @@
       <sourceFolder url="file://$MODULE_DIR$/database/factories" isTestSource="false" packagePrefix="Database\Factories\" />
       <sourceFolder url="file://$MODULE_DIR$/database/seeders" isTestSource="false" packagePrefix="Database\Seeders\" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" packagePrefix="Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/Feature" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/Unit" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/storage/app" />
       <excludeFolder url="file://$MODULE_DIR$/storage/debugbar" />
       <excludeFolder url="file://$MODULE_DIR$/storage/framework" />
@@ -89,10 +91,8 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/opcodesio/log-viewer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/opcodesio/mail-parser" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/paragonie/constant_time_encoding" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/paragonie/random_compat" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phar-io/manifest" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phar-io/version" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/phiki/phiki" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/php-debugbar/php-debugbar" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpoption/phpoption" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpstan/phpdoc-parser" />
@@ -109,8 +109,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/http-client" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/http-factory" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/http-message" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/psr/http-server-handler" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/psr/http-server-middleware" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/log" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/simple-cache" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psy/psysh" />
@@ -131,12 +129,8 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/type" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/version" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/soved/laravel-gdpr" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/backtrace" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/error-solutions" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/laravel-activitylog" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/laravel-error-solutions" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/laravel-package-tools" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/laravel-passkeys" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/staabm/side-effects-detector" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/clock" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/console" />
@@ -182,7 +176,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/webmozart/assert" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/sanctum" />
       <excludeFolder url="file://$MODULE_DIR$/storage/pail" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/_laravel_idea" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/api-platform/documentation" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/api-platform/hal" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/api-platform/hydra" />
@@ -201,6 +194,26 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/willdurand/negotiation" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/filesystem" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/pestphp/pest-plugin-profanity" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/brianium/paratest" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/codezero/browser-locale" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/cse/helpers-session" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/fidry/cpu-core-counter" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/jean85/pretty-package-versions" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/pail" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/maicol07/laravel-oidc-client" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/maicol07/oidc-client" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/marcreichel/igdb-laravel" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/pestphp/pest" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/pestphp/pest-plugin" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/pestphp/pest-plugin-arch" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/pestphp/pest-plugin-laravel" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/pestphp/pest-plugin-mutate" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/phpdocumentor/reflection-common" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/phpdocumentor/reflection-docblock" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/phpdocumentor/type-resolver" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/spomky-labs/pki-framework" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/ta-tikoma/phpunit-architecture-test" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-library" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
