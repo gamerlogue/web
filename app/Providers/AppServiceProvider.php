@@ -57,7 +57,7 @@ class AppServiceProvider extends ServiceProvider
             return route('oidc.login');
         });
 
-        Gate::define('viewLogViewer', static fn (?User $user) => $user?->email === config('app.admin_email'));
+        Gate::define('viewLogViewer', static fn (?User $user) => app()->isLocal() || $user?->email === config('app.admin_email'));
 
         // Estendiamo il normalizzatore di item JSON:API
         $this->app->extend(ItemNormalizer::class, fn ($service, $app) => new JsonApiPlainIdNormalizer($service));
