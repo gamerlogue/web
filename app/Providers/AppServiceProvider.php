@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use ApiPlatform\JsonApi\Serializer\ErrorNormalizer;
 use ApiPlatform\JsonApi\Serializer\ItemNormalizer;
+use ApiPlatform\JsonSchema\DefinitionNameFactory;
 use ApiPlatform\Laravel\Eloquent\Filter\FilterInterface;
 use App\Filter\CurrentUserFilter;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Serializer\JsonApiPlainIdNormalizer;
 use App\Serializer\JsonApiStringStatusErrorNormalizer;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -25,7 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Fix deprecation trigger
+        $this->app->singleton(DefinitionNameFactory::class, fn (Application $app) => new DefinitionNameFactory);
     }
 
     /**
