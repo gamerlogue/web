@@ -6,12 +6,14 @@ use ApiPlatform\JsonApi\Serializer\ErrorNormalizer;
 use ApiPlatform\JsonApi\Serializer\ItemNormalizer;
 use ApiPlatform\Laravel\Eloquent\Filter\FilterInterface;
 use App\Filter\CurrentUserFilter;
+use App\Models\User;
 use App\Serializer\JsonApiPlainIdNormalizer;
 use App\Serializer\JsonApiStringStatusErrorNormalizer;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -54,6 +56,8 @@ class AppServiceProvider extends ServiceProvider
         Authenticate::redirectUsing(static function (Request $request) {
             return route('oidc.login');
         });
+
+        Gate::define('viewLogViewer', static fn (?User $user) => $user?->email === config('app.admin_email'));
 
         // Estendiamo il normalizzatore di item JSON:API
         $this->app->extend(ItemNormalizer::class, fn ($service, $app) => new JsonApiPlainIdNormalizer($service));
