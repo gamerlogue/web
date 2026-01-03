@@ -20,11 +20,8 @@ class LocaleMiddleware
         );
         $locale = $request->session()->get('locale', $request->getPreferredLanguage($available_locales));
         if (is_string($locale)) {
-            // We can't use the standard App::setLocale($locale) here because it would fire the LocaleUpdated event,
-            // which would result in a crash due to Carbon trying to load the Laravel config service.
-            app('translator')->setLocale($locale);
+            app()->setLocale($locale);
             Carbon::setLocale($locale);
-            config(['app.locale' => $locale]);
         }
         return $next($request);
     }
