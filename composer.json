@@ -13,7 +13,7 @@
     "fakerphp/faker": "^1.23",
     "inertiajs/inertia-laravel": "^2.0",
     "kiwilan/typescriptable-laravel": "^3.1",
-    "laravel-lang/common": "^6.4",
+    "laravel-lang/locales": "^2.10",
     "laravel/fortify": "^1.23",
     "laravel/framework": "^12.0",
     "laravel/horizon": "^5.33",
@@ -34,6 +34,8 @@
   "require-dev": {
     "amirami/localizator": "^0.14@alpha",
     "barryvdh/laravel-debugbar": "^3.13",
+    "laravel-lang/lang": "^15.26",
+    "laravel-lang/publisher": "^16.7",
     "laravel/pint": "^1.13",
     "laravel/sail": "^1.26",
     "mockery/mockery": "^1.6",
