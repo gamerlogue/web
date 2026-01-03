@@ -132,7 +132,7 @@ return [
 
         'deprecations' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', env('SERVER_NAME', false) ? 'docker' : 'single')),
+            'path' => storage_path('logs/php-deprecation-warnings.log'),
         ],
     ],
 
