@@ -193,7 +193,6 @@ return [
         'routes',
         'composer.lock',
         '.env',
-        'vendor/**/*.php',
     ],
 
     /*
