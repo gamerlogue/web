@@ -28,7 +28,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewHorizon', static function ($user = null) {
-            return optional($user)->email === env('ADMIN_EMAIL');
+            return optional($user)->email === config('app.admin_email');
         });
     }
 }
