@@ -12,6 +12,7 @@
     "emargareten/inertia-modal": "^1.5",
     "fakerphp/faker": "^1.23",
     "inertiajs/inertia-laravel": "^2.0",
+    "itsgoingd/clockwork": "^5.3",
     "kiwilan/typescriptable-laravel": "^3.1",
     "laravel-lang/locales": "^2.10",
     "laravel/fortify": "^1.23",
@@ -33,7 +34,6 @@
   },
   "require-dev": {
     "amirami/localizator": "^0.14@alpha",
-    "barryvdh/laravel-debugbar": "^3.13",
     "laravel-lang/lang": "^15.26",
     "laravel-lang/publisher": "^16.7",
     "laravel/pint": "^1.13",
