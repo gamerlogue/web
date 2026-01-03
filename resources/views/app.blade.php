@@ -38,6 +38,10 @@
         src="https://embed.launchnotes.io/embed_v2/latest/embed.js"
         type="text/javascript"
 ></script>
+@if(app()->isLocal())
+    <script src="https://cdn.jsdelivr.net/gh/underground-works/clockwork-browser@1/dist/toolbar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/underground-works/clockwork-browser@1/dist/metrics.js"></script>
+@endif
 <script type="text/javascript" charset="UTF-8" src="//cdn.cookie-script.com/s/8a5df0c415c5c4034133586baeb1d872.js"></script>
 <script type="text/javascript" id="zsiqchat">var $zoho=$zoho || {};$zoho.salesiq = $zoho.salesiq || {widgetcode: "siq1e91335b4a1aa070a5173b6d2b4e267f6cce11e4485a82255602d7a7a0604e9f", values:{},ready:function(){}};var d=document;s=d.createElement("script");s.type="text/javascript";s.id="zsiqscript";s.defer=true;s.src="https://salesiq.zohopublic.eu/widget";t=d.getElementsByTagName("script")[0];t.parentNode.insertBefore(s,t);</script>
 </body>
