@@ -111,7 +111,6 @@ RUN set -eux; \
     adduser -D -h ${ROOT} -G ${USER} -u ${USER_ID} -s /usr/bin/fish ${USER}; \
     mkdir -p /etc/supercronic /var/log/supervisor /var/run/supervisor /tmp/opcache-file-cache; \
     echo "*/1 * * * * php ${ROOT}/artisan schedule:run --no-interaction" > /etc/supercronic/laravel; \
-    chmod 1777 /tmp; \
     chown -R ${USER}:${USER} /var/log /var/run /tmp/opcache-file-cache; \
     chmod -R 775 /var/log /var/run;
 
@@ -166,6 +165,8 @@ COPY deployment/dev/supervisord.dev.conf /etc/supervisor/conf.d/supervisord.conf
 COPY deployment/supervisord.conf /etc/supervisord.conf
 COPY deployment/supervisord.scheduler.conf /etc/supervisor/conf.d/supervisord.scheduler.conf
 COPY deployment/supervisord.horizon.conf /etc/supervisor/conf.d/supervisord.horizon.conf
+
+RUN rm -rf /tmp/* && chmod 1777 /tmp && mkdir -p /tmp/opcache-file-cache && chown ${USER_ID}:${GROUP_ID} /tmp/opcache-file-cache
 
 USER ${USER}
 WORKDIR ${ROOT}
@@ -258,6 +259,9 @@ RUN pnpm run build
 # Production Final
 ###########################################
 FROM prod-base AS prod
+
+USER root
+RUN rm -rf /tmp/* && chmod 1777 /tmp && mkdir -p /tmp/opcache-file-cache && chown ${USER_ID}:${GROUP_ID} /tmp/opcache-file-cache
 
 USER ${USER}
 
