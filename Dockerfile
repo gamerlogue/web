@@ -191,9 +191,11 @@ COPY --link deployment/php.ini ${PHP_INI_DIR}/conf.d/99-php.ini
 COPY --link deployment/supervisord.*.conf /etc/supervisor/conf.d/
 COPY --link deployment/supervisord.frankenphp.conf /etc/supervisor/conf.d/
 
-COPY --link composer.* ./
+USER ${USER}
 
-RUN --mount=type=cache,target=/home/${USER}/.composer/cache,uid=${USER_ID},gid=${GROUP_ID} composer install \
+COPY --link --chown=${USER_ID}:${GROUP_ID} composer.json composer.lock ./
+
+RUN composer install \
     --no-dev \
     --no-interaction \
     --no-autoloader \
@@ -202,7 +204,13 @@ RUN --mount=type=cache,target=/home/${USER}/.composer/cache,uid=${USER_ID},gid=$
     --no-progress \
     --audit
 
-COPY --link . .
+COPY --link --chown=${USER_ID}:${GROUP_ID} . .
+
+RUN composer dump-autoload \
+        --optimize \
+        --apcu \
+        --no-dev \
+        --no-scripts
 
 RUN mkdir -p \
     storage/framework/sessions \
@@ -210,8 +218,7 @@ RUN mkdir -p \
     storage/framework/cache \
     storage/framework/testing \
     storage/logs \
-    bootstrap/cache \
-    && chown -R ${USER_ID}:${GROUP_ID} ${ROOT}
+    bootstrap/cache
 
 USER ${USER}
 
