@@ -4,6 +4,8 @@ services:
     extends:
       file: compose.common.yaml
       service: laravel
+    ports:
+      - "8000:8000"
     depends_on:
       mariadb:
         condition: service_healthy
