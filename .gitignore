@@ -9,6 +9,7 @@ auth.json
 resources/views/vendor
 
 ### Laravel Sail ###
+.ash_history
 .cache
 .config/caddy
 .config/composer
