@@ -124,6 +124,8 @@ COPY --link --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY --link deployment/supervisord.conf /etc/
 COPY --link deployment/healthcheck.sh /usr/local/bin/healthcheck
 COPY --link deployment/scripts/* /usr/local/bin/
+# Remove .sh extensions from scripts and chmod +x them
+RUN for f in /usr/local/bin/*.sh; do mv "$f" "${f%.sh}"; chmod +x "${f%.sh}"; done;
 
 RUN chmod +x /usr/local/bin/healthcheck
 # Allow opcache file cache
