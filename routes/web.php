@@ -26,6 +26,7 @@ Route::get('/sanctum/token', static function (Request $request) {
         'token' => $encoded_token,
         'user_id' => $request->user()->id,
     ]);
+
     return redirect()->away("$redirectUri?$queryString");
 })->middleware('auth');
 
