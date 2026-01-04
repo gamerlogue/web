@@ -220,16 +220,17 @@ RUN mkdir -p \
     storage/logs \
     bootstrap/cache
 
-USER ${USER}
-
+# Dummy DB for artisan commands that need it (i.e. API Platform)
 RUN touch database/database.sqlite
 
-RUN composer dump-autoload \
-    --optimize \
-    --apcu \
-    --no-dev
+RUN DB_CONNECTION=sqlite php artisan migrate --force
+
+RUN composer run post-autoload-dump
 
 RUN php artisan wayfinder:generate --path=resources/ts
+
+# Remove Laravel cache and file cache (otherwise API Platform will be messed up)
+RUN php artisan optimize:clear && php artisan cache:clear file
 
 ###########################################
 # Build frontend assets with PNPM
@@ -263,7 +264,11 @@ USER ${USER}
 
 COPY --link --chown=${USER_ID}:${GROUP_ID} --from=build /app/public public
 
-RUN php artisan vendor:publish --tag=log-viewer-assets --force
+RUN php artisan vendor:publish --tag=log-viewer-assets --force && \
+  php artisan vendor:publish --tag=api-platform-assets
+
+# Remove dummy DB
+RUN rm -f database/database.sqlite
 
 EXPOSE 80
 EXPOSE 2019
