@@ -238,6 +238,7 @@
       <path value="$PROJECT_DIR$/vendor/laravel/mcp" />
       <path value="$PROJECT_DIR$/vendor/laravel/boost" />
       <path value="$PROJECT_DIR$/vendor/laravel/roster" />
+      <path value="$PROJECT_DIR$/vendor/_laravel_idea" />
     </include_path>
   </component>
   <component name="PhpInterpreters">
