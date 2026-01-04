@@ -36,6 +36,7 @@
     "amirami/localizator": "^0.14@alpha",
     "laravel-lang/lang": "^15.26",
     "laravel-lang/publisher": "^16.7",
+    "laravel/boost": "^1.8",
     "laravel/pint": "^1.13",
     "laravel/sail": "^1.26",
     "mockery/mockery": "^1.6",
