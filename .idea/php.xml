@@ -235,6 +235,9 @@
       <path value="$PROJECT_DIR$/vendor/laravel-lang/config" />
       <path value="$PROJECT_DIR$/vendor/laravel-lang/native-currency-names" />
       <path value="$PROJECT_DIR$/vendor/laravel-lang/native-country-names" />
+      <path value="$PROJECT_DIR$/vendor/laravel/mcp" />
+      <path value="$PROJECT_DIR$/vendor/laravel/boost" />
+      <path value="$PROJECT_DIR$/vendor/laravel/roster" />
     </include_path>
   </component>
   <component name="PhpInterpreters">
