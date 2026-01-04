@@ -5,10 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', static function () {
-    return "OK";
-//    return redirect()
-//        // Resend the session data to the frontend to avoid losing it
-//        ->with(request()->session()->all());
+    return 'OK. You are logged in as '.(auth()->check() ? auth()->user()->name : 'Guest');
 });
 
 Route::get('/sanctum/token', static function (Request $request) {
