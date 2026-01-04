@@ -14,13 +14,14 @@ class LocaleMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
+        /** @var Collection<LocaleData> $available_locales */
         $available_locales = cache()->rememberForever(
             'available_locales',
             static fn () =>
             /** @var Collection<LocaleData> $langs */
             Locales::available()->map(fn (LocaleData $lang) => $lang->locale->value)
         );
-        $locale = $request->session()->get('locale', $request->getPreferredLanguage($available_locales));
+        $locale = $request->session()->get('locale', $request->getPreferredLanguage($available_locales->all()));
         if (is_string($locale)) {
             app()->setLocale($locale);
             Carbon::setLocale($locale);
