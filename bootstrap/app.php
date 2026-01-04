@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\DenormalizeIriMiddleware;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LocaleMiddleware;
 use Illuminate\Foundation\Application;
