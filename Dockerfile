@@ -64,7 +64,8 @@ ENV TERM=xterm-color \
     COMPOSER_MAX_PARALLEL_HTTP=48 \
     WITH_HORIZON=true \
     WITH_SCHEDULER=true \
-    WITH_REVERB=false
+    WITH_REVERB=false \
+    WITH_SSR=false
 
 WORKDIR ${ROOT}
 SHELL ["/bin/sh", "-eou", "pipefail", "-c"]
