@@ -35,7 +35,7 @@ resources/ts/wayfinder
 resources/ts/typings/typescriptable
 
 ### IntelliJ Github Copilot ###
-.idea/copilotDiffState.xml
+.idea/copilot*.xml
 
 # Created by https://www.toptal.com/developers/gitignore/api/git,node,linux,macos,windows,phpstorm,composer,laravel,vue,vuejs
 # Edit at https://www.toptal.com/developers/gitignore?templates=git,node,linux,macos,windows,phpstorm,composer,laravel,vue,vuejs
