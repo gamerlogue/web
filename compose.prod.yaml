@@ -1,5 +1,6 @@
 services:
   laravel:
+    user: laravel
     extends:
       file: compose.common.yaml
       service: laravel

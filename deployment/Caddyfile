@@ -3,26 +3,46 @@
 
     admin {$CADDY_SERVER_ADMIN_HOST}:{$CADDY_SERVER_ADMIN_PORT}
 
+    auto_https off
+
+    skip_install_trust
+
     frankenphp {
         worker "{$APP_PUBLIC_PATH}/frankenphp-worker.php" {$CADDY_SERVER_WORKER_COUNT}
     }
 
-    log {
-        output file /var/log/frankenphp/server.log
-        format console
+    log file {
+        output file /var/log/frankenphp/frankenphp.log
     }
 
-    # https://caddyserver.com/docs/caddyfile/directives#sorting-algorithm
-    order php_server before file_server
-    order php before file_server
+    metrics {
+        per_host
+    }
+
+    servers {
+        protocols h1
+    }
 }
 
 {$CADDY_EXTRA_CONFIG}
 
 {$CADDY_SERVER_SERVER_NAME} {
     log {
+        level WARN
+
+        format filter {
+            wrap {$CADDY_SERVER_LOGGER}
+            fields {
+                uri query {
+                    replace authorization REDACTED
+                }
+            }
+        }
+    }
+
+    log file {
+        format json
         output file /var/log/frankenphp/access.log
-        format transform "{common_log}"
     }
 
     route {
@@ -52,10 +72,7 @@
         @rejected `path('*.bak', '*.conf', '*.dist', '*.fla', '*.ini', '*.inc', '*.inci', '*.log', '*.orig', '*.psd', '*.sh', '*.sql', '*.swo', '*.swp', '*.swop', '*/.*') && !path('*/.well-known/*')`
         error @rejected 401
 
-        respond /health "OK" 200
-
         php_server {
-            index frankenphp-worker.php
             try_files {path} frankenphp-worker.php
             resolve_root_symlink
         }

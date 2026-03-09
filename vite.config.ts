@@ -10,8 +10,8 @@ import VitePluginRestart from 'vite-plugin-restart';
 
 const SERVER_NAME = process.env.SERVER_NAME;
 const ssl = {
-  key: `${process.env.HOME}/.local/share/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.key`,
-  cert: `${process.env.HOME}/.local/share/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.crt`
+  key: `${process.env.XDG_DATA_HOME}/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.key`,
+  cert: `${process.env.XDG_DATA_HOME}/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.crt`
 };
 
 const additionalPlugins: PluginOption[] = [];
@@ -39,7 +39,6 @@ if (process.env.APP_ENV === 'local') {
     }));
   }
 }
-
 // noinspection JSUnusedGlobalSymbols (Removes the false positive on "isCustomElement")
 export default defineConfig({
   assetsInclude: [
@@ -73,7 +72,8 @@ export default defineConfig({
     watch: {
       ignored: [
         '**/.config/**',
-        '**/.data/**'
+        '**/.data/**',
+        '**/storage/framework/views/**'
       ]
     }
   }

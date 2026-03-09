@@ -4,32 +4,36 @@ set -e
 
 container_mode=${CONTAINER_MODE:-"http"}
 
-if [ "${container_mode}" = "http" ]; then
-  php "${ROOT}/artisan" octane:status
-elif [ "${container_mode}" = "horizon" ]; then
-  php "${ROOT}/artisan" horizon:status
-elif [ "${container_mode}" = "scheduler" ]; then
-  if [ "$(supervisorctl status scheduler:scheduler_0 | awk '{print tolower($2)}')" = "running" ]; then
-    exit 0
-  else
+health_fail() {
     echo "Healthcheck failed."
     exit 1
-  fi
-elif [ "${container_mode}" = "reverb" ]; then
-  if [ "$(supervisorctl status reverb:reverb_0 | awk '{print tolower($2)}')" = "running" ]; then
-    exit 0
-  else
-    echo "Healthcheck failed."
+}
+
+supervisor_is_running() {
+    name="$1"
+    # Extract the status (2nd column), normalize it to lowercase and compare with "running"
+    status=$(supervisorctl status "$name" | awk '{print tolower($2)}')
+    [ "$status" = "running" ]
+}
+
+case "${container_mode}" in
+http)
+    php "${ROOT}/artisan" octane:status
+    ;;
+horizon)
+    php "${ROOT}/artisan" horizon:status
+    ;;
+scheduler)
+    supervisor_is_running "scheduler:scheduler_0" || health_fail
+    ;;
+reverb)
+    supervisor_is_running "reverb:reverb_0" || health_fail
+    ;;
+worker)
+    supervisor_is_running "worker:worker_0" || health_fail
+    ;;
+*)
+    echo "Container mode mismatched."
     exit 1
-  fi
-elif [ "${container_mode}" = "worker" ]; then
-  if [ "$(supervisorctl status worker:worker_0 | awk '{print tolower($2)}')" = "running" ]; then
-    exit 0
-  else
-    echo "Healthcheck failed."
-    exit 1
-  fi
-else
-  echo "Container mode mismatched."
-  exit 1
-fi
+    ;;
+esac
