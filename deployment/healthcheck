@@ -23,6 +23,9 @@ http)
 horizon)
     php "${ROOT}/artisan" horizon:status
     ;;
+ssr)
+    supervisor_is_running "ssr:ssr_0" || health_fail
+    ;;
 scheduler)
     supervisor_is_running "scheduler:scheduler_0" || health_fail
     ;;
