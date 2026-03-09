@@ -10,24 +10,23 @@ initial_setup() {
 
     if [ "$running_migrations_and_seeders" = "true" ]; then
         echo "Running migrations and seeding database ..."
-        php artisan migrate --isolated --seed --force --no-interaction ||
+        php artisan migrate --isolated --seed --force --no-interaction || \
             php artisan migrate --seed --force --no-interaction
     fi
 
     php artisan storage:link
-    php artisan optimize:clear
     php artisan optimize
 }
 
 run_supervisord() {
     conf_basename="$1"
-    exec /usr/bin/supervisord -c "/etc/supervisor/conf.d/supervisord.${conf_basename}.conf"
+    exec /usr/bin/supervisord -n -c "/etc/supervisor/conf.d/supervisord.${conf_basename}.conf"
 }
 
 start_http() {
     echo "Octane Server: $octane_server"
     case "$octane_server" in
-    frankenphp | swoole | roadrunner)
+    frankenphp|swoole|roadrunner)
         run_supervisord "$octane_server"
         ;;
     *)
