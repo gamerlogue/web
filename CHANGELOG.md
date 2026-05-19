@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/laravel/compare/v13.6.0...13.x)
+## [Unreleased](https://github.com/laravel/laravel/compare/v13.7.0...13.x)
+
+## [v13.7.0](https://github.com/laravel/laravel/compare/v13.6.0...v13.7.0) - 2026-05-14
+
+**Full Changelog**: https://github.com/laravel/laravel/compare/v13.6.0...v13.7.0
 
 ## [v13.6.0](https://github.com/laravel/laravel/compare/v13.5.0...v13.6.0) - 2026-05-11
 
