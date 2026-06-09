@@ -88,8 +88,8 @@ build:
     - docker buildx build --push -t ${DOCKER_IMAGE_TAG}
       --target prod
       --secret=id=gitlab-ci-token,env=CI_JOB_TOKEN
-      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/cache-image,mode=max
-      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache-image .
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/cache,mode=max
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache .
 
     - docker system prune -a -f
 
