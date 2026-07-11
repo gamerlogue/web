@@ -1,0 +1,31 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Generic type Illuminate\\Database\\Eloquent\\Casts\\Attribute\<string\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Casts\\Attribute\: TGet, TSet$#'
+			identifier: generics.lessTypes
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Property App\\Models\\User\:\:\$email_verified_at \(string\|null\) does not accept Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Call to an undefined method App\\Providers\\AppServiceProvider\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Providers/AppServiceProvider.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:device\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/helpers.php
