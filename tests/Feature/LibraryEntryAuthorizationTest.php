@@ -45,12 +45,17 @@ test('a user can create their own library entry', function () {
                     'game_id' => 1,
                     'status' => LibraryEntryStatus::Playing->value,
                     'owned' => '1',
+                    'editions_ids' => [123, 456],
+                    'platforms_ids' => [48, 49],
                 ],
             ],
         ], jsonApiHeaders())
         ->assertCreated();
 
-    expect(LibraryEntry::where('user_id', $user->id)->where('game_id', 1)->exists())->toBeTrue();
+    $entry = LibraryEntry::where('user_id', $user->id)->where('game_id', 1)->first();
+    expect($entry)->not->toBeNull();
+    expect($entry->editions_ids)->toBe([123, 456]);
+    expect($entry->platforms_ids)->toBe([48, 49]);
 });
 
 test('a user cannot patch another user\'s library entry', function () {
