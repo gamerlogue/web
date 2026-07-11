@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use ApiPlatform\Laravel\Eloquent\Filter\EqualsFilter;
@@ -26,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LibraryEntry extends Model
 {
     protected $hidden = ['id'];
+
     protected $fillable = [
         'user_id',
         'game_id',
@@ -42,18 +45,26 @@ class LibraryEntry extends Model
         'review',
     ];
 
-    protected $casts = [
-        'game_id' => 'int',
-        'owned' => 'boolean',
-        'platforms_ids' => 'array',
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'played_time' => 'int',
-        'rating' => 'float',
-        'rating_details' => 'array',
-        'status' => LibraryEntryStatus::class,
-        'completion_status' => LibraryEntryCompletionStatus::class
-    ];
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'game_id' => 'int',
+            'owned' => 'boolean',
+            'platforms_ids' => 'array',
+            'start_date' => 'date',
+            'end_date' => 'date',
+            'played_time' => 'int',
+            'rating' => 'float',
+            'rating_details' => 'array',
+            'status' => LibraryEntryStatus::class,
+            'completion_status' => LibraryEntryCompletionStatus::class,
+        ];
+    }
 
     public function user(): BelongsTo
     {

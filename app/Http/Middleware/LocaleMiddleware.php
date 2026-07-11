@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -14,18 +16,19 @@ class LocaleMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        /** @var Collection<LocaleData> $available_locales */
-        $available_locales = cache()->rememberForever(
+        /** @var Collection<LocaleData> $availableLocales */
+        $availableLocales = cache()->rememberForever(
             'available_locales',
             static fn () =>
             /** @var Collection<LocaleData> $langs */
             Locales::available()->map(fn (LocaleData $lang) => $lang->locale->value)
         );
-        $locale = $request->session()->get('locale', $request->getPreferredLanguage($available_locales->all()));
+        $locale = $request->session()->get('locale', $request->getPreferredLanguage($availableLocales->all()));
         if (is_string($locale)) {
             app()->setLocale($locale);
             Carbon::setLocale($locale);
         }
+
         return $next($request);
     }
 }

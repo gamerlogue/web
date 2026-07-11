@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +18,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
         parent::boot();
 
         // Horizon::routeSmsNotificationsTo('15556667777');
-         Horizon::routeMailNotificationsTo('maicolbattistini@live.it');
+        Horizon::routeMailNotificationsTo('maicolbattistini@live.it');
         // Horizon::routeSlackNotificationsTo('slack-webhook-url', '#channel');
     }
 

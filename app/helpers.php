@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Spatie\Activitylog\Models\Activity;
 
 function add_ip_and_device_info_to_log(Activity $activity): void

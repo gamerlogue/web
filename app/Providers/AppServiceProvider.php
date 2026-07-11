@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use ApiPlatform\JsonApi\Serializer\ErrorNormalizer;
@@ -62,7 +64,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('viewLogViewer', static fn (?User $user) => app()->isLocal() || $user?->email === config('app.admin_email'));
 
-        // Estendiamo il normalizzatore di item JSON:API
+        // Extend the JSON:API item normalizer
         $this->app->extend(ItemNormalizer::class, fn ($service, $app) => new JsonApiPlainIdNormalizer($service));
         $this->app->extend(ErrorNormalizer::class, fn ($service, $app) => new JsonApiStringStatusErrorNormalizer($service));
 

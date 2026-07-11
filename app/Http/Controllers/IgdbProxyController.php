@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Client\RequestException;
@@ -13,21 +15,21 @@ class IgdbProxyController extends Controller
 {
     public function handle(Request $request, ?string $path = ''): Response
     {
-        $cache_lifetime = (int)config('igdb.cache_lifetime');
+        $cacheLifetime = (int) config('igdb.cache_lifetime');
 
         if (str_starts_with($path, '/events')) {
-            $cache_lifetime = 0;
+            $cacheLifetime = 0;
         }
 
         $query = $request->getContent();
 
-        $cache_key = config('igdb.cache_prefix', 'igdb_cache').'.'.md5($path.$query);
+        $cacheKey = config('igdb.cache_prefix', 'igdb_cache').'.'.md5($path.$query);
 
-        if ($cache_lifetime === 0) {
-            Cache::forget($cache_key);
+        if ($cacheLifetime === 0) {
+            Cache::forget($cacheKey);
         }
 
-        return Cache::remember($cache_key, $cache_lifetime, static function () use ($path, $query) {
+        return Cache::remember($cacheKey, $cacheLifetime, static function () use ($path, $query) {
             try {
                 $response = Http::withOptions([
                     'base_uri' => ApiHelper::IGDB_BASE_URI,
