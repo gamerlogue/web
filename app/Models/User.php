@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
+use App\Http\Requests\UserFormRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -21,14 +24,14 @@ use Soved\Laravel\Gdpr\Contracts\Portable as PortableContract;
 use Soved\Laravel\Gdpr\Portable;
 use Spatie\Activitylog\Traits\CausesActivity;
 
-// TODO: Authorize PATCH only for the user themselves
 #[ApiResource(
     description: 'A user of the application.',
     operations: [
         new GetCollection,
         new Get,
         new Patch
-    ]
+    ],
+    rules: UserFormRequest::class
 )]
 class User extends Authenticatable implements MustVerifyEmail, PortableContract
 {
