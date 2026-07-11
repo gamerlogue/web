@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Serializer;
 
+use App\Traits\DecoratesSerializer;
 use ArrayObject;
 use Illuminate\Support\Arr;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 readonly class JsonApiStringStatusErrorNormalizer implements NormalizerInterface, SerializerAwareInterface
 {
+    use DecoratesSerializer;
+
     public function __construct(
         private NormalizerInterface $decorated,
     ) {}
@@ -35,19 +39,5 @@ readonly class JsonApiStringStatusErrorNormalizer implements NormalizerInterface
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $this->decorated->supportsNormalization($data, $format, $context);
-    }
-
-    public function setSerializer(SerializerInterface $serializer): void
-    {
-        if ($this->decorated instanceof SerializerAwareInterface) {
-            $this->decorated->setSerializer($serializer);
-        }
-    }
-
-    public function getSupportedTypes(?string $format): array
-    {
-        return method_exists($this->decorated, 'getSupportedTypes')
-            ? $this->decorated->getSupportedTypes($format)
-            : ['*' => true];
     }
 }
