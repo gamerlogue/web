@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Traits;
 
 use ApiPlatform\Metadata\IriConverterInterface;
@@ -62,7 +64,8 @@ trait DenormalizesIris
                 return $resource->id;
             }
         } catch (\Exception $e) {
-            // If conversion fails, return the original IRI
+            // If conversion fails, log it and return the original IRI
+            logger()->debug('Failed to convert IRI to ID', ['iri' => $iri, 'exception' => $e]);
         }
 
         return $iri;
