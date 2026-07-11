@@ -14,7 +14,13 @@ use App\Filter\CurrentUserFilter;
 use App\Http\Requests\LibraryEntryFormRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Symfony\Component\TypeInfo\Type\BuiltinType;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 
+/**
+ * @property array $editions_ids
+ * @property array $platforms_ids
+ */
 #[ApiResource(
     shortName: 'LibraryEntry',
     description: "A user's entry in their game library, representing their interaction with a specific game.",
@@ -22,6 +28,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 )]
 #[ApiProperty(description: 'The unique identifier of the game associated with this library entry.', property: 'game_id')]
 #[ApiProperty(description: 'The unique identifier of the user who owns this library entry.', property: 'user_id')]
+#[ApiProperty(
+    description: 'The unique identifiers of the game editions associated with this library entry.',
+    property: 'editions_ids',
+    nativeType: new BuiltinType(TypeIdentifier::ARRAY)
+)]
+#[ApiProperty(
+    description: 'The unique identifiers of the platforms associated with this library entry.',
+    property: 'platforms_ids',
+    nativeType: new BuiltinType(TypeIdentifier::ARRAY)
+)]
 #[QueryParameter('current_user', filter: CurrentUserFilter::class, description: 'Filter library entries by the current authenticated user')]
 #[QueryParameter('filter[user_id]', filter: EqualsFilter::class, property: 'user_id', description: 'Filter library entries by the associated user ID')]
 #[QueryParameter('filter[game_id]', filter: EqualsFilter::class, property: 'game_id', description: 'Filter library entries by the associated game ID')]
@@ -35,7 +51,7 @@ class LibraryEntry extends Model
         'status',
         'completion_status',
         'owned',
-        'edition_id',
+        'editions_ids',
         'platforms_ids',
         'start_date',
         'end_date',
@@ -55,6 +71,7 @@ class LibraryEntry extends Model
         return [
             'game_id' => 'int',
             'owned' => 'boolean',
+            'editions_ids' => 'array',
             'platforms_ids' => 'array',
             'start_date' => 'date',
             'end_date' => 'date',
@@ -69,5 +86,45 @@ class LibraryEntry extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getEditionsIds(): ?array
+    {
+        return $this->getAttribute('editions_ids');
+    }
+
+    public function setEditionsIds(?array $editionsIds): void
+    {
+        $this->setAttribute('editions_ids', $editionsIds);
+    }
+
+    public function getEditions_ids(): ?array
+    {
+        return $this->getAttribute('editions_ids');
+    }
+
+    public function setEditions_ids(?array $editionsIds): void
+    {
+        $this->setAttribute('editions_ids', $editionsIds);
+    }
+
+    public function getPlatformsIds(): ?array
+    {
+        return $this->getAttribute('platforms_ids');
+    }
+
+    public function setPlatformsIds(?array $platformsIds): void
+    {
+        $this->setAttribute('platforms_ids', $platformsIds);
+    }
+
+    public function getPlatforms_ids(): ?array
+    {
+        return $this->getAttribute('platforms_ids');
+    }
+
+    public function setPlatforms_ids(?array $platformsIds): void
+    {
+        $this->setAttribute('platforms_ids', $platformsIds);
     }
 }
