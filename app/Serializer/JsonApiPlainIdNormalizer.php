@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Serializer;
 
+use App\Traits\DecoratesSerializer;
 use ArrayObject;
 use Illuminate\Support\Str;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 readonly class JsonApiPlainIdNormalizer implements DenormalizerInterface, NormalizerInterface, SerializerAwareInterface
 {
+    use DecoratesSerializer;
+
     private string $routePrefix;
 
     public function __construct(
@@ -159,23 +163,5 @@ readonly class JsonApiPlainIdNormalizer implements DenormalizerInterface, Normal
         }
 
         return $data;
-    }
-
-    // -------------------------------------------------------------------------
-    // BOILERPLATE SYMFONY SERIALIZER
-    // -------------------------------------------------------------------------
-
-    public function setSerializer(SerializerInterface $serializer): void
-    {
-        if ($this->decorated instanceof SerializerAwareInterface) {
-            $this->decorated->setSerializer($serializer);
-        }
-    }
-
-    public function getSupportedTypes(?string $format): array
-    {
-        return method_exists($this->decorated, 'getSupportedTypes')
-            ? $this->decorated->getSupportedTypes($format)
-            : ['*' => true];
     }
 }
