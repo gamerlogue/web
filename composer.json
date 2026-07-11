@@ -34,6 +34,7 @@
   },
   "require-dev": {
     "amirami/localizator": "^0.14@alpha",
+    "larastan/larastan": "^3.10",
     "laravel-lang/lang": "^15.26",
     "laravel-lang/publisher": "^16.7",
     "laravel/boost": "^1.8",

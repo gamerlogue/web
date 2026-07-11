@@ -48,5 +48,11 @@ jobs:
       - name: Generate app key
         run: php artisan key:generate
 
+      - name: Check code style (Pint)
+        run: ./vendor/bin/pint app --test
+
+      - name: Static analysis (PHPStan)
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G
+
       - name: Execute tests
         run: php artisan test
