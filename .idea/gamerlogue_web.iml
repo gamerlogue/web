@@ -6,8 +6,9 @@
       <sourceFolder url="file://$MODULE_DIR$/database/factories" isTestSource="false" packagePrefix="Database\Factories\" />
       <sourceFolder url="file://$MODULE_DIR$/database/seeders" isTestSource="false" packagePrefix="Database\Seeders\" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" packagePrefix="Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/Feature" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/Unit" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/storage/app" />
-      <excludeFolder url="file://$MODULE_DIR$/storage/debugbar" />
       <excludeFolder url="file://$MODULE_DIR$/storage/framework" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/amirami/localizator" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/archtechx/enums" />
@@ -40,21 +41,17 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/kiwilan/typescriptable-laravel" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-diactoros" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/config" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/lang" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/locale-list" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/locales" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/native-country-names" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/native-currency-names" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/native-locale-names" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/publisher" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/fortify" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/framework" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/horizon" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/octane" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/pint" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/prompts" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/pulse" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/sail" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/serializable-closure" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/telescope" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/tinker" />
@@ -204,9 +201,17 @@
       <excludeFolder url="file://$MODULE_DIR$/storage/logs" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/itsgoingd/clockwork" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/_laravel_idea" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/lang" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/publisher" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/boost" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/mcp" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/pint" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/roster" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/sail" />
+      <excludeFolder url="file://$MODULE_DIR$/bootstrap/cache" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/iamcal/sql-parser" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/larastan/larastan" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/phpstan/phpstan" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
