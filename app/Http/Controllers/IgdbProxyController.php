@@ -8,7 +8,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use MarcReichel\IGDBLaravel\ApiHelper;
+use MariusGelez\IGDBLaravel\ApiHelper;
 use Symfony\Component\HttpFoundation\Response;
 
 class IgdbProxyController extends Controller
@@ -29,7 +29,7 @@ class IgdbProxyController extends Controller
             Cache::forget($cacheKey);
         }
 
-        return Cache::remember($cacheKey, $cacheLifetime, static function () use ($path, $query) {
+        $cachedResponse = Cache::remember($cacheKey, $cacheLifetime, static function () use ($path, $query) {
             try {
                 $response = Http::withOptions([
                     'base_uri' => ApiHelper::IGDB_BASE_URI,
@@ -46,11 +46,17 @@ class IgdbProxyController extends Controller
                 $response = $exception->response;
             }
 
-            return new \Illuminate\Http\Response(
-                $response->body(),
-                $response->status(),
-                $response->headers()
-            );
+            return [
+                'body' => $response->body(),
+                'status' => $response->status(),
+                'headers' => $response->headers(),
+            ];
         });
+
+        return new \Illuminate\Http\Response(
+            $cachedResponse['body'],
+            $cachedResponse['status'],
+            $cachedResponse['headers']
+        );
     }
 }

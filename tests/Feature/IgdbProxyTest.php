@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 test('returns error if not configured', function () {
     config()->set('igdb.credentials.client_id');
@@ -13,6 +14,7 @@ test('returns error if not configured', function () {
 });
 
 test('caches successful get response', function () {
+    config()->set('igdb.cache_lifetime', 3600);
     Cache::flush();
 
     $count = 5;

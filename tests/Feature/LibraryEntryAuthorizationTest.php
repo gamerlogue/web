@@ -26,7 +26,7 @@ test('a user cannot create a library entry for another user', function () {
                     'user_id' => $other->id,
                     'game_id' => 1,
                     'status' => LibraryEntryStatus::Playing->value,
-                    'owned' => '1',
+                    'owned' => true,
                 ],
             ],
         ], jsonApiHeaders())
@@ -44,7 +44,7 @@ test('a user can create their own library entry', function () {
                     'user_id' => $user->id,
                     'game_id' => 1,
                     'status' => LibraryEntryStatus::Playing->value,
-                    'owned' => '1',
+                    'owned' => true,
                     'editions_ids' => [123, 456],
                     'platforms_ids' => [48, 49],
                 ],
@@ -65,7 +65,7 @@ test('a user cannot patch another user\'s library entry', function () {
         'user_id' => $other->id,
         'game_id' => 1,
         'status' => LibraryEntryStatus::Playing,
-        'owned' => '1',
+        'owned' => true,
     ]);
 
     $this->actingAs($user, 'sanctum')

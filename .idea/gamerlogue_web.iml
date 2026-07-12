@@ -38,7 +38,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/guzzlehttp/uri-template" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/hamcrest/hamcrest-php" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/inertiajs/inertia-laravel" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/kiwilan/typescriptable-laravel" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-diactoros" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/config" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel-lang/locale-list" />
