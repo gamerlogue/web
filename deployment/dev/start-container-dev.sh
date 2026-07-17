@@ -37,6 +37,17 @@ fi
 
 unbuffer pnpx concurrently \
     -c "#93c5fd,#fdba74" \
+# Run composer install if vendor directory does not exist
+if [ ! -d "$APP_BASE_DIR/vendor" ]; then
+    echo "Vendor directory not found. Running composer install..."
+    composer install --no-interaction --optimize-autoloader
+fi
+
+if [ ! -d "$APP_BASE_DIR/node_modules" ]; then
+    echo "Node modules directory not found. Running pnpm install..."
+    pnpm install
+fi
+
   "unbuffer php $PHP_INI_FLAGS $ARTISAN octane:start --host=$SERVER_NAME --port=$PORT $HTTPS --server=frankenphp --admin-port=$CADDY_ADMIN_PORT $WATCH $EXTRA_OCTANE_FLAGS" \
   "while ! nc -z localhost ${PORT}; do sleep 1; done && unbuffer pnpm dev" \
   --names=server,vite \
