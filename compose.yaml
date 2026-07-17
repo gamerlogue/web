@@ -6,36 +6,58 @@ services:
     build:
       target: dev
       args:
-        USER: "${WWWUSER-sail}"
+        USER: "${WWWUSER-www-data}"
     depends_on:
       - mailpit
-    user: "${WWWUSER-sail}"
+    user: "${WWWUSER-www-data}"
     ports:
       - "80:80"
       - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
     hostname: '${SERVER_NAME:-laravel.local}'
+    # Start Octane in worker mode
+    command: ["${APP_BASE_PATH:-/var/www/html}/deployment/dev/start-container-dev.sh"]
     environment:
-      WEBSERVER: octane-watch
-      #            WWWUSER: '${WWWUSER:-1000}'
-      #            WWWGROUP: '${WWWGROUP:-1000}'
-      LARAVEL_SAIL: 1
-      XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-debug,develop}'
-      XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal log=/tmp/xdebug.log}'
-      PHP_IDE_CONFIG: '${PHP_IDE_CONFIG:-serverName=Sail}'
+      # noinspection HttpUrlsUsage
+      CADDY_HTTP_SERVER_ADDRESS: "http://${SERVER_NAME:-laravel.localhost}"
+      CADDY_HTTPS_SERVER_ADDRESS: "https://${SERVER_NAME:-laravel.localhost}"
       IGNITION_EDITOR: '${IGNITION_EDITOR:-vscode}'
       IGNITION_REMOTE_SITES_PATH: '/var/www/html'
-      SUPERVISOR_USER: ${WWWUSER-sail}
-      SUPERVISOR_PHP_USER: ${WWWUSER-sail}
-      SUPERVISOR_VITE_USER: ${WWWUSER-sail}
+      LARAVEL_SAIL: 1
+      PHP_IDE_CONFIG: '${PHP_IDE_CONFIG:-serverName=Sail}'
       TERMINAL_EMULATOR: ${TERMINAL_EMULATOR:-Jetbrains-JediTerm}
-    #            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --host=localhost --port=443 --admin-port=2019 --https"
+      XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-debug,develop}'
+      XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal log=/tmp/xdebug.log}'
+      WEBSERVER: ${WEBSERVER:-octane-watch}
     volumes:
       - '.:/var/www/html'
-      - ~/.config/composer/auth.json:/home/sail/.composer/auth.json:rw
-      - ~/.cache/composer:/home/sail/.composer/cache:rw
-      - ~/.cache/node:/home/sail/.cache/node:rw
-      - ~/.caddy/ca:/home/sail/.local/share/caddy/pki/authorities/local:rw
+      - caddy_config:/config:rw
+      - caddy_data:/data:rw
+      - ~/.config/composer/auth.json:/composer/auth.json:rw
+      - ~/.cache/composer:/composer/cache:rw
+      - ~/.cache/node:/home/${WWWUSER:-www-data}/.cache/node:rw
+      - ~/.caddy/ca:/data/caddy/pki/authorities/local:rw
       - /tmp/sitekit:/tmp/sitekit
+
+  task:
+    extends:
+      file: compose.common.yaml
+      service: task
+    build:
+      target: dev
+    volumes:
+      - '.:/var/www/html'
+
+  queue:
+    extends:
+      file: compose.common.yaml
+      service: queue
+    build:
+      target: dev
+    volumes:
+      - '.:/var/www/html'
+    depends_on:
+      - mysql
+      - redis
 
   mysql:
     extends:
@@ -59,7 +81,7 @@ services:
       interval: 15s
 
 volumes:
+  caddy_config:
+  caddy_data:
   mysql:
-    driver: local
   redis:
-    driver: local

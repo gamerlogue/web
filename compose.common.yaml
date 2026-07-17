@@ -3,7 +3,7 @@ services:
     build:
       context: .
       target: prod
-    user: "${WWWUSER-web}:${WWWGROUP-1000}"
+    user: "${WWWUSER-www-data}"
     extra_hosts:
       - 'host.docker.internal:host-gateway'
       - '${SERVER_NAME}:0.0.0.0'
@@ -11,6 +11,72 @@ services:
       - '${APP_PORT:-80}:80'
       - '443:443'
       - '443:443/udp'
+    env_file:
+      - .env
+    # Set healthcheck to use our native healthcheck script for Octane
+    healthcheck:
+      test: ["CMD", "healthcheck-octane"]
+      start_period: 10s
+    environment:
+      CADDY_GLOBAL_OPTIONS: |
+        log file {
+            output file /var/log/frankenphp/frankenphp.log
+        }
+      CADDY_PHP_SERVER_OPTIONS: |
+        index frankenphp-worker.php
+        try_files {path} frankenphp-worker.php
+        # Required for the public/storage/ directory...
+        resolve_root_symlink
+      CADDY_SERVER_EXTRA_DIRECTIVES: |
+        log file {
+            format json
+            output file /var/log/frankenphp/access.log
+        }
+      FRANKENPHP_CONFIG: |
+        worker {
+          file "${APP_BASE_PATH:-/var/www/html}/frankenphp-worker.php"
+        }
+    depends_on:
+      - mysql
+      - redis
+
+  task:
+    build:
+      context: .
+      target: prod
+    command: ["unbuffer", "php", "/var/www/html/artisan", "schedule:work"]
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD", "healthcheck-schedule"]
+      start_period: 10s
+    env_file:
+      - .env
+
+  queue:
+    build:
+      context: .
+      target: prod
+    command: ["php", "/var/www/html/artisan", "queue:work", "--tries=3"]
+    stop_signal: SIGTERM
+    healthcheck:
+      # This is our native healthcheck script for the queue
+      test: ["CMD", "healthcheck-queue"]
+      start_period: 10s
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+      - redis
+
+  horizon:
+    build:
+      context: .
+      target: prod
+    command: ["php", "/var/www/html/artisan", "horizon"]
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD", "healthcheck-horizon"]
+      start_period: 10s
     env_file:
       - .env
     depends_on:
@@ -32,7 +98,7 @@ services:
       - 'mysql:/var/lib/mysql'
       - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
     healthcheck:
-      test: [ CMD, healthcheck.sh, '--connect', '--innodb_initialized' ]
+      test: [ CMD, mysqladmin, ping, '-p${DB_PASSWORD}' ]
       retries: 3
       timeout: 5s
 
@@ -48,7 +114,7 @@ services:
       timeout: 5s
 
 volumes:
+  caddy_config:
+  caddy_data:
   mysql:
-    driver: local
   redis:
-    driver: local

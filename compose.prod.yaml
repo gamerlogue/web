@@ -1,16 +1,30 @@
 services:
   laravel:
-    user: laravel
     extends:
       file: compose.common.yaml
       service: laravel
+    command: ["unbuffer", "php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=${PORT:-80}", "--admin-port=${CADDY_ADMIN_PORT:-2019}", "--workers=${OCTANE_WORKERS:-auto}"]
+    volumes:
+      - caddy_config:/config:rw
+      - caddy_data:/data:rw
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
-      memcached:
-        condition: service_healthy
+
+  task:
+    extends:
+      file: compose.common.yaml
+      service: task
+
+  queue:
+    extends:
+      file: compose.common.yaml
+      service: queue
+    depends_on:
+      - mysql
+      - redis
 
   mysql:
     extends:
@@ -23,7 +37,7 @@ services:
       service: redis
 
 volumes:
+  caddy_config:
+  caddy_data:
   mysql:
-    driver: local
   redis:
-    driver: local
