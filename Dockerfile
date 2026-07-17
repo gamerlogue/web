@@ -172,7 +172,6 @@ COPY --link package.json pnpm-*.yaml ./
 RUN npm install -g corepack && corepack enable pnpm
 
 FROM build-base AS build
-COPY --link --parents patches ./
 
 # Optimization: Use BuildKit cache mount for PNPM store
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
