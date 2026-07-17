@@ -90,22 +90,13 @@ ENV CADDY_AUTO_HTTPS=on \
     SSL_MODE=full
 
 # Install Dev specific helpers
-RUN apk add --no-cache \
-    nodejs \
-    npm \
-    pnpm-fish-completion \
-    pnpm-bash-completion
+COPY --from=oven/bun:alpine /usr/local/bin/bun /usr/local/bin/bunx /usr/local/bin/
 
-# Setup home directories (so they are not owned by root when using volumes)
-RUN mkdir -p /home/${USER} /home/${USER}/.cache \
-    && chown -R ${USER}:${GROUP_ID} /home/${USER} \
-    && touch /tmp/xdebug.log && chmod 666 /tmp/xdebug.log
+RUN touch /tmp/xdebug.log && chmod 666 /tmp/xdebug.log
 
 # SSL Certs permissions for Sail/Local dev
 RUN mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates \
     && chown -R ${USER}:${GROUP_ID} /etc/ssl/certs /usr/local/share/ca-certificates
-
-RUN npm install --global corepack@latest && corepack enable pnpm
 
 RUN rm -rf /tmp/* && chmod 1777 /tmp
 
@@ -165,16 +156,12 @@ RUN touch database/database.sqlite \
 ###########################################
 # Frontend Build
 ###########################################
-FROM node:24-alpine AS build-base
-ENV PNPM_HOME="/pnpm" PATH="$PNPM_HOME:$PATH" ROOT=/var/www/html
+FROM oven/bun:alpine AS build
 WORKDIR /app
-COPY --link package.json pnpm-*.yaml ./
-RUN npm install -g corepack && corepack enable pnpm
+COPY --link package.json bun.lock bunfig.toml ./
 
-FROM build-base AS build
-
-# Optimization: Use BuildKit cache mount for PNPM store
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# Optimization: Use BuildKit cache mount for Bun cache
+RUN --mount=type=cache,id=bun,target=/home/${USER}/.bun/install/cache bun install --frozen-lockfile
 
 COPY --link --parents resources lang vite.config.ts tsconfig.json ./
 # Copy only necessary files for frontend build from PHP stage
@@ -183,7 +170,7 @@ COPY --from=prod-base --link /var/www/html/resources/ts/routes  ./resources/ts/r
 COPY --from=prod-base --link /var/www/html/resources/ts/wayfinder  ./resources/ts/wayfinder
 #COPY --from=prod-base --link /var/www/html/vendor/emargareten/inertia-modal  ./vendor/emargareten/inertia-modal
 
-RUN pnpm run build
+RUN bun run build
 
 ###########################################
 # Production Final

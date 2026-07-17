@@ -1,9 +1,6 @@
 #!/bin/sh
 set -eu
 
-# Install project package manager
-corepack install
-
 # Common settings
 SERVER_NAME="${SERVER_NAME:-0.0.0.0}"
 # Extract port from CADDY_ADMIN if it is set, otherwise use default 2019
@@ -35,8 +32,6 @@ else
   WATCH=""
 fi
 
-unbuffer pnpx concurrently \
-    -c "#93c5fd,#fdba74" \
 # Run composer install if vendor directory does not exist
 if [ ! -d "$APP_BASE_DIR/vendor" ]; then
     echo "Vendor directory not found. Running composer install..."
@@ -44,11 +39,15 @@ if [ ! -d "$APP_BASE_DIR/vendor" ]; then
 fi
 
 if [ ! -d "$APP_BASE_DIR/node_modules" ]; then
-    echo "Node modules directory not found. Running pnpm install..."
-    pnpm install
+    echo "Node modules directory not found. Running bun install..."
+    bun install
 fi
 
+unbuffer bunx concurrently \
+    -c "red.bold,yellow.bold" \
   "unbuffer php $PHP_INI_FLAGS $ARTISAN octane:start --host=$SERVER_NAME --port=$PORT $HTTPS --server=frankenphp --admin-port=$CADDY_ADMIN_PORT $WATCH $EXTRA_OCTANE_FLAGS" \
-  "while ! nc -z localhost ${PORT}; do sleep 1; done && unbuffer pnpm dev" \
+  "while ! nc -z localhost ${PORT}; do sleep 1; done && unbuffer bun dev" \
   --names=server,vite \
   --kill-others
+
+tail -f /tmp/xdebug.log

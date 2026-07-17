@@ -36,7 +36,7 @@ function deactivate  -d "Exit virtual environment and return to normal shell env
     end
 
     # Unset sail aliases in one command
-    functions -e sail artisan php composer node npm pnpm mysql shell root-shell tinker share open
+    functions -e sail artisan php composer node npm bun mysql shell root-shell tinker share open
 end
 
 # Unset irrelevant variables.
@@ -55,7 +55,7 @@ alias php="./vendor/bin/sail php"
 alias composer="./vendor/bin/sail composer"
 alias node="./vendor/bin/sail node"
 alias npm="./vendor/bin/sail npm"
-alias pnpm="./vendor/bin/sail pnpm"
+alias bun="./vendor/bin/sail bun"
 alias mysql="./vendor/bin/sail mysql"
 alias shell="./vendor/bin/sail shell"
 alias root-shell="./vendor/bin/sail root-shell"
