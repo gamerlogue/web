@@ -14,15 +14,12 @@ resources/views/vendor
 .cache
 .config/caddy
 .config/composer
-.config/pnpm
 .config/psysh
 .config/fish
 .data/caddy
 .data/composer
 .data/fish/fish_history
 .data/lesshst
-.data/pnpm
-.pnpm-store
 
 ### Laravel Octane ###
 frankenphp
@@ -145,7 +142,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-.pnpm-debug.log*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

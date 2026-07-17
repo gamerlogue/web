@@ -34,7 +34,7 @@ services:
       - caddy_data:/data:rw
       - ~/.config/composer/auth.json:/composer/auth.json:rw
       - ~/.cache/composer:/composer/cache:rw
-      - ~/.cache/node:/home/${WWWUSER:-www-data}/.cache/node:rw
+      - ~/.bun/install/cache:/home/${WWWUSER:-www-data}/.bun/install/cache:rw
       - ~/.caddy/ca:/data/caddy/pki/authorities/local:rw
       - /tmp/sitekit:/tmp/sitekit
 
