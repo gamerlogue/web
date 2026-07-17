@@ -97,7 +97,7 @@ RUN apk add --no-cache \
     pnpm-bash-completion
 
 # Setup home directories (so they are not owned by root when using volumes)
-RUN mkdir -p /home/${USER} /home/${USER}/.cache /home/${USER}/.composer /home/${USER}/.local/share/caddy/pki/authorities \
+RUN mkdir -p /home/${USER} /home/${USER}/.cache \
     && chown -R ${USER}:${GROUP_ID} /home/${USER} \
     && touch /tmp/xdebug.log && chmod 666 /tmp/xdebug.log
 
