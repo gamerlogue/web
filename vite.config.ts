@@ -7,6 +7,7 @@ import {wayfinder} from '@laravel/vite-plugin-wayfinder';
 import laravel from 'laravel-vite-plugin';
 import {defineConfig} from 'vite';
 import VitePluginRestart from 'vite-plugin-restart';
+import {bunny} from "laravel-vite-plugin/fonts";
 
 const SERVER_NAME = process.env.SERVER_NAME;
 const ssl = {
@@ -54,7 +55,12 @@ export default defineConfig({
   plugins: [
     laravel({
       input: ['resources/scss/app.scss', 'resources/ts/app.ts'],
-      refresh: true
+      refresh: true,
+      fonts: [
+        bunny('Instrument Sans', {
+          weights: [400, 500, 600],
+        }),
+      ],
     }),
     VitePluginRestart({
       restart: [ssl.key, ssl.cert]
@@ -71,8 +77,6 @@ export default defineConfig({
     },
     watch: {
       ignored: [
-        '**/.config/**',
-        '**/.data/**',
         '**/storage/framework/views/**'
       ]
     }
