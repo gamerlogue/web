@@ -1,52 +1,43 @@
 #!/bin/sh
 set -eu
 
-# Validate SUPERVISOR_PHP_USER
-case "${SUPERVISOR_PHP_USER:-}" in
-root|sail) ;;
-*)
-    echo "You should set SUPERVISOR_PHP_USER to either 'sail' or 'root'."
-    exit 1
-    ;;
-esac
-
-# Ensure scheduler programs run as the same user as PHP in dev
-export USER="$SUPERVISOR_PHP_USER"
-
 # Install project package manager
 corepack install
 
 # Common settings
 SERVER_NAME="${SERVER_NAME:-0.0.0.0}"
-PORT="${PORT:-443}"
-ADMIN_PORT="${ADMIN_PORT:-2019}"
-WEBSERVER="${WEBSERVER:-cli}"
-
-PHP_BIN=$(which php)
-ARTISAN="$ROOT/artisan"
-PHP_INI_FLAGS="-d variables_order=EGPCS"
-
-case "$WEBSERVER" in
-cli)
-    export SUPERVISOR_PHP_COMMAND="${PHP_BIN} ${PHP_INI_FLAGS} $ARTISAN serve --host=\"${SERVER_NAME}\" --port=${PORT} --https"
-    ;;
-octane|octane-watch)
-    WATCH_FLAG=""
-    if [ "$WEBSERVER" = "octane-watch" ]; then
-        WATCH_FLAG="--watch"
-    fi
-    export SUPERVISOR_PHP_COMMAND="${PHP_BIN} ${PHP_INI_FLAGS} ${ARTISAN} octane:start ${WATCH_FLAG} --host=\"${SERVER_NAME}\" --port=${PORT} --admin-port=${ADMIN_PORT} --https --caddyfile=$ROOT/deployment/dev/Caddyfile"
-    ;;
-*)
-    echo "Unknown WEBSERVER='${WEBSERVER}'. Supported: cli, octane, octane-watch."
-    exit 1
-    ;;
-esac
-
-echo "RUNNING WEBSERVER: ${SUPERVISOR_PHP_COMMAND}"
-
-if [ "$#" -gt 0 ]; then
-    exec "$@"
+# Extract port from CADDY_ADMIN if it is set, otherwise use default 2019
+if [ -n "${CADDY_ADMIN:-}" ]; then
+    CADDY_ADMIN_PORT=$(echo "$CADDY_ADMIN" | awk -F: '{print $2}')
 else
-    exec /usr/bin/supervisord
+    CADDY_ADMIN_PORT=2019
 fi
+
+WEBSERVER="${WEBSERVER:-frankenphp}"
+
+ARTISAN="$APP_BASE_DIR/artisan"
+PHP_INI_FLAGS="-d variables_order=EGPCS"
+EXTRA_OCTANE_FLAGS="${EXTRA_OCTANE_FLAGS:-}"
+
+# HTTPS settings
+if [ "$SSL_MODE" = "off" ]; then
+    HTTPS=""
+    PORT="${CADDY_HTTP_PORT:-80}"
+else
+    HTTPS="--https"
+    PORT="${CADDY_HTTPS_PORT:-443}"
+fi
+
+# Enable watch if WEBSERVER ends with "-watch"
+if [ "${WEBSERVER}" = "${WEBSERVER%-watch}" ]; then
+  WATCH="--watch"
+else
+  WATCH=""
+fi
+
+unbuffer pnpx concurrently \
+    -c "#93c5fd,#fdba74" \
+  "unbuffer php $PHP_INI_FLAGS $ARTISAN octane:start --host=$SERVER_NAME --port=$PORT $HTTPS --server=frankenphp --admin-port=$CADDY_ADMIN_PORT $WATCH $EXTRA_OCTANE_FLAGS" \
+  "while [ ! nc -z localhost ${PORT} ]; do sleep 1; done & unbuffer pnpm dev" \
+  --names=server,vite \
+  --kill-others
