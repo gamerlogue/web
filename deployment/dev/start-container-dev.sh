@@ -38,6 +38,6 @@ fi
 unbuffer pnpx concurrently \
     -c "#93c5fd,#fdba74" \
   "unbuffer php $PHP_INI_FLAGS $ARTISAN octane:start --host=$SERVER_NAME --port=$PORT $HTTPS --server=frankenphp --admin-port=$CADDY_ADMIN_PORT $WATCH $EXTRA_OCTANE_FLAGS" \
-  "while [ ! nc -z localhost ${PORT} ]; do sleep 1; done & unbuffer pnpm dev" \
+  "while ! nc -z localhost ${PORT}; do sleep 1; done & unbuffer pnpm dev" \
   --names=server,vite \
   --kill-others
