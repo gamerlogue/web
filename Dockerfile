@@ -11,7 +11,7 @@ ARG PHP_VERSION=8.5
 FROM ghcr.io/maicol07/docker-php-dev:${PHP_VERSION}-frankenphp-alpine AS base
 
 USER root
-RUN install-php-extensions apcu bcmath exif intl gd redis
+RUN install-php-extensions apcu bcmath exif intl gd
 
 ARG TZ=Europe/Rome
 
