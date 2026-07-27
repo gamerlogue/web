@@ -3,6 +3,7 @@
 ### Laravel Vite ###
 public/build
 public/vendor
+public/fonts-manifest.dev.json
 
 .env.backup
 .env.production
