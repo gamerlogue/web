@@ -103,9 +103,7 @@ RUN rm -rf /tmp/* && chmod 1777 /tmp
 USER ${USER}
 WORKDIR ${APP_BASE_DIR}
 
-EXPOSE 443/tcp
-EXPOSE 443/udp
-EXPOSE 2019/tcp
+EXPOSE 443/tcp 443/udp 2019/tcp
 
 ###########################################
 # Production Base
