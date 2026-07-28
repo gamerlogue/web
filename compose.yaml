@@ -12,7 +12,7 @@ services:
     user: "${WWWUSER-www-data}"
     ports:
       - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
-    hostname: '${SERVER_NAME:-laravel.local}'
+    hostname: '${SERVER_NAME:-laravel.localhost}'
     # Start Octane in worker mode
     command: ["${APP_BASE_PATH:-/var/www/html}/deployment/dev/start-container-dev.sh"]
     environment:
