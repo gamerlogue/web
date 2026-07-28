@@ -1,5 +1,6 @@
 services:
   laravel:
+    restart: unless-stopped
     build:
       context: .
       target: prod
@@ -43,6 +44,7 @@ services:
         condition: service_healthy
 
   task:
+    restart: unless-stopped
     build:
       context: .
       target: prod
@@ -55,6 +57,7 @@ services:
       - .env
 
   queue:
+    restart: unless-stopped
     build:
       context: .
       target: prod
@@ -73,6 +76,7 @@ services:
         condition: service_healthy
 
   horizon:
+    restart: unless-stopped
     build:
       context: .
       target: prod
@@ -90,6 +94,7 @@ services:
         condition: service_healthy
 
   mysql:
+    restart: unless-stopped
     image: 'mysql'
     environment:
       MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
@@ -104,6 +109,7 @@ services:
       timeout: 5s
 
   redis:
+    restart: unless-stopped
     image: 'redis:alpine'
     volumes:
       - 'redis:/data'
