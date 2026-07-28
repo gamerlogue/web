@@ -37,8 +37,10 @@ services:
       - caddy_config:/config:rw
       - caddy_data:/data:rw
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   task:
     build:
@@ -65,8 +67,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   horizon:
     build:
@@ -80,8 +84,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   mysql:
     image: 'mysql'
