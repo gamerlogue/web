@@ -42,6 +42,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
 
   task:
     restart: unless-stopped
@@ -53,6 +58,11 @@ services:
     healthcheck:
       test: ["CMD", "healthcheck-schedule"]
       start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     env_file:
       - .env
 
@@ -67,6 +77,11 @@ services:
       # This is our native healthcheck script for the queue
       test: ["CMD", "healthcheck-queue"]
       start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     env_file:
       - .env
     depends_on:
@@ -85,6 +100,11 @@ services:
     healthcheck:
       test: ["CMD", "healthcheck-horizon"]
       start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     env_file:
       - .env
     depends_on:
@@ -107,6 +127,11 @@ services:
       test: [ CMD, mysqladmin, ping, '-p${DB_PASSWORD}' ]
       retries: 3
       timeout: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
 
   redis:
     restart: unless-stopped
@@ -117,6 +142,11 @@ services:
       test: [ CMD, redis-cli, ping ]
       retries: 3
       timeout: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
 
 volumes:
   caddy_config:
