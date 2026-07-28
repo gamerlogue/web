@@ -30,8 +30,6 @@ services:
       WEBSERVER: ${WEBSERVER:-octane-watch}
     volumes:
       - '.:/var/www/html'
-      - caddy_config:/config:rw
-      - caddy_data:/data:rw
       - ~/.config/composer/auth.json:/composer/auth.json:rw
       - ~/.cache/composer:/composer/cache:rw
       - ~/.bun/install/cache:/home/${WWWUSER:-www-data}/.bun/install/cache:rw

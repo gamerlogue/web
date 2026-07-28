@@ -36,6 +36,9 @@ services:
         worker {
           file "${APP_BASE_PATH:-/var/www/html}/frankenphp-worker.php"
         }
+    volumes:
+      - caddy_config:/config:rw
+      - caddy_data:/data:rw
     depends_on:
       - mysql
       - redis
