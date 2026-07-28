@@ -54,12 +54,6 @@ RUN apk add --no-cache --update \
 RUN set -eux; \
     ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime; \
     echo ${TZ} > /etc/timezone; \
-
-COPY --link deployment/scripts/* /tmp/scripts/
-RUN set -eux; \
-    for f in /tmp/scripts/*.sh; do mv "$f" "/usr/local/bin/$(basename "$f" .sh)"; done; \
-    chmod +x /usr/local/bin/*; \
-    rm -rf /tmp/scripts
     mkdir -p /var/log/frankenphp && \
     chown ${USER} /var/log/frankenphp;
 
