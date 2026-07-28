@@ -11,8 +11,12 @@ services:
       - mailpit
     user: "${WWWUSER-www-data}"
     ports:
+      - '443:443'
+      - '443:443/udp'
       - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
     hostname: '${SERVER_NAME:-laravel.localhost}'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     # Start Octane in worker mode
     command: ["${APP_BASE_PATH:-/var/www/html}/deployment/dev/start-container-dev.sh"]
     environment:
@@ -58,6 +62,11 @@ services:
     extends:
       file: compose.common.yaml
       service: mysql
+    ports:
+      - '${FORWARD_DB_PORT:-3306}:3306'
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_ROOT_HOST: '%'
     volumes:
       - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
 
@@ -65,6 +74,8 @@ services:
     extends:
       file: compose.common.yaml
       service: redis
+    ports:
+      - '${FORWARD_REDIS_PORT:-6379}:6379'
 
   mailpit:
     image: 'axllent/mailpit:latest'

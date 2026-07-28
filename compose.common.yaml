@@ -5,12 +5,9 @@ services:
       target: prod
     user: "${WWWUSER-www-data}"
     extra_hosts:
-      - 'host.docker.internal:host-gateway'
       - '${SERVER_NAME}:0.0.0.0'
     ports:
       - '${APP_PORT:-80}:80'
-      - '443:443'
-      - '443:443/udp'
     env_file:
       - .env
     # Set healthcheck to use our native healthcheck script for Octane
@@ -88,18 +85,13 @@ services:
 
   mysql:
     image: 'mysql'
-    ports:
-      - '${FORWARD_DB_PORT:-3306}:3306'
     environment:
       MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-      MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: '${DB_DATABASE}'
       MYSQL_USER: '${DB_USERNAME}'
       MYSQL_PASSWORD: '${DB_PASSWORD}'
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
     volumes:
       - 'mysql:/var/lib/mysql'
-      - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
     healthcheck:
       test: [ CMD, mysqladmin, ping, '-p${DB_PASSWORD}' ]
       retries: 3
@@ -107,8 +99,6 @@ services:
 
   redis:
     image: 'redis:alpine'
-    ports:
-      - '${FORWARD_REDIS_PORT:-6379}:6379'
     volumes:
       - 'redis:/data'
     healthcheck:
