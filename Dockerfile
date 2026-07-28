@@ -161,7 +161,7 @@ WORKDIR /app
 COPY --link package.json bun.lock bunfig.toml ./
 
 # Optimization: Use BuildKit cache mount for Bun cache
-RUN --mount=type=cache,id=bun,target=/home/${USER}/.bun/install/cache bun install --frozen-lockfile
+RUN --mount=type=cache,id=bun,target=/root/.bun/install/cache bun install --frozen-lockfile
 
 COPY --link --parents resources lang vite.config.ts tsconfig.json ./
 # Copy only necessary files for frontend build from PHP stage
