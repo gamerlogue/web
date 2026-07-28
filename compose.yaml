@@ -19,8 +19,6 @@ services:
       # noinspection HttpUrlsUsage
       CADDY_HTTP_SERVER_ADDRESS: "http://${SERVER_NAME:-laravel.localhost}"
       CADDY_HTTPS_SERVER_ADDRESS: "https://${SERVER_NAME:-laravel.localhost}"
-      IGNITION_EDITOR: '${IGNITION_EDITOR:-vscode}'
-      IGNITION_REMOTE_SITES_PATH: '/var/www/html'
       LARAVEL_SAIL: 1
       PHP_IDE_CONFIG: '${PHP_IDE_CONFIG:-serverName=Sail}'
       TERMINAL_EMULATOR: ${TERMINAL_EMULATOR:-Jetbrains-JediTerm}
