@@ -49,5 +49,3 @@ unbuffer bunx concurrently \
   "while ! nc -z localhost ${PORT}; do sleep 1; done && unbuffer bun dev" \
   --names=server,vite \
   --kill-others
-
-tail -f /tmp/xdebug.log
