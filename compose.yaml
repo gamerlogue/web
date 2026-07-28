@@ -5,8 +5,6 @@ services:
       service: laravel
     build:
       target: dev
-      args:
-        USER: "${WWWUSER-www-data}"
     depends_on:
       - mailpit
     user: "${WWWUSER-www-data}"
