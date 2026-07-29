@@ -12,7 +12,6 @@
       <excludeFolder url="file://$MODULE_DIR$/storage/debugbar" />
       <excludeFolder url="file://$MODULE_DIR$/storage/framework" />
       <excludeFolder url="file://$MODULE_DIR$/vendor" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/kiwilan/typescriptable-laravel" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/wayfinder" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/league/uri" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/league/uri-interfaces" />
