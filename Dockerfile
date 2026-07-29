@@ -23,8 +23,6 @@ ENV APP_ENV=production \
     PHP_DATE_TIMEZONE=${TZ} \
     PHP_INI_SCAN_DIR=":$APP_BASE_DIR/deployment" \
     PHP_OPCACHE_ENABLE=1 \
-    PHP_OPCACHE_JIT=tracing \
-    PHP_OPCACHE_JIT_BUFFER_SIZE=64M \
     PHP_OPCACHE_INTERNED_STRINGS_BUFFER=16 \
     PHP_OPCACHE_MAX_ACCELERATED_FILES=32531 \
     PHP_OPCACHE_MEMORY_CONSUMPTION=256 \
@@ -109,7 +107,9 @@ FROM base AS prod-base
 ARG USER_ID=82
 ARG GROUP_ID=82
 
-ENV AUTORUN_ENABLED=on
+ENV AUTORUN_ENABLED=on \
+    PHP_OPCACHE_JIT=tracing \
+    PHP_OPCACHE_JIT_BUFFER_SIZE=64M
 
 RUN mkdir -p /tmp/composer-cache /tmp/php-build \
     && chown -R ${USER} /tmp/composer-cache /tmp/php-build \
