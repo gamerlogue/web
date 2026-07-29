@@ -29,6 +29,8 @@ services:
       WEBSERVER: ${WEBSERVER:-octane-watch}
     volumes:
       - '.:/var/www/html'
+      # Terminates TLS for the Vite port: see the comment inside the file
+      - './deployment/dev/vite.caddyfile:/etc/frankenphp/caddyfile.d/vite.caddyfile:ro'
       - ~/.config/composer/auth.json:/composer/auth.json:rw
       - ~/.cache/composer:/composer/cache:rw
       - ~/.bun/install/cache:/home/${WWWUSER:-www-data}/.bun/install/cache:rw
