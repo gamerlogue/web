@@ -67,6 +67,13 @@ FROM base AS dev
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 
+ENV CADDY_AUTO_HTTPS=on \
+    CADDY_HTTPS_PORT=443 \
+    PHP_DISPLAY_ERRORS=1 \
+    PHP_DISPLAY_STARTUP_ERRORS=1 \
+    PHP_OPCACHE_REVALIDATE_FREQ=0 \
+    SSL_MODE=full
+
 USER root
 RUN install-php-extensions xdebug
 
@@ -77,13 +84,6 @@ RUN docker-php-serversideup-set-id www-data $USER_ID:$GROUP_ID && \
     \
     # Update the file permissions to match the new UID/GID \
     docker-php-serversideup-set-file-permissions --owner $USER_ID:$GROUP_ID
-
-ENV CADDY_AUTO_HTTPS=on \
-    CADDY_HTTPS_PORT=443 \
-    PHP_DISPLAY_ERRORS=1 \
-    PHP_DISPLAY_STARTUP_ERRORS=1 \
-    PHP_OPCACHE_REVALIDATE_FREQ=0 \
-    SSL_MODE=full
 
 # Install Dev specific helpers
 COPY --from=oven/bun:alpine /usr/local/bin/bun /usr/local/bin/bunx /usr/local/bin/
