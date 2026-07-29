@@ -36,6 +36,9 @@ services:
                 roll_keep 5
             }
         }
+      # Overridden in dev by deployment/dev/start-container-dev.sh, which appends the `watch`
+      # directives. Needed here because /etc/frankenphp/Caddyfile takes the worker block from
+      # this variable and nowhere else.
       FRANKENPHP_CONFIG: |
         worker {
           file "${APP_PUBLIC_PATH:-/var/www/html/public}/frankenphp-worker.php"
