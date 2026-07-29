@@ -21,7 +21,7 @@ ENV APP_ENV=production \
     COMPOSER_FUND=0 \
     OCTANE_SERVER=frankenphp \
     PHP_DATE_TIMEZONE=${TZ} \
-    PHP_INI_SCAN_DIR="$PHP_INI_SCAN_DIR:$APP_BASE_DIR/deployment" \
+    PHP_INI_SCAN_DIR=":$APP_BASE_DIR/deployment" \
     PHP_OPCACHE_ENABLE=1 \
     PHP_OPCACHE_JIT=tracing \
     PHP_OPCACHE_JIT_BUFFER_SIZE=64M \
@@ -83,7 +83,8 @@ RUN install-php-extensions xdebug
 RUN docker-php-serversideup-set-id www-data $USER_ID:$GROUP_ID && \
     \
     # Update the file permissions to match the new UID/GID \
-    docker-php-serversideup-set-file-permissions --owner $USER_ID:$GROUP_ID
+    docker-php-serversideup-set-file-permissions --owner $USER_ID:$GROUP_ID && \
+    chown ${USER} /var/log/frankenphp
 
 # Install Dev specific helpers
 COPY --from=oven/bun:alpine /usr/local/bin/bun /usr/local/bin/bunx /usr/local/bin/
