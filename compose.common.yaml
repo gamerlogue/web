@@ -18,7 +18,10 @@ services:
     environment:
       CADDY_GLOBAL_OPTIONS: |
         log file {
-            output file /var/log/frankenphp/frankenphp.log
+            output file /var/log/frankenphp/frankenphp.log {
+                roll_size 10MiB
+                roll_keep 5
+            }
         }
       CADDY_PHP_SERVER_OPTIONS: |
         index frankenphp-worker.php
@@ -28,7 +31,10 @@ services:
       CADDY_SERVER_EXTRA_DIRECTIVES: |
         log file {
             format json
-            output file /var/log/frankenphp/access.log
+            output file /var/log/frankenphp/access.log {
+                roll_size 10MiB
+                roll_keep 5
+            }
         }
       FRANKENPHP_CONFIG: |
         worker {
