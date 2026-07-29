@@ -38,7 +38,7 @@ services:
         }
       FRANKENPHP_CONFIG: |
         worker {
-          file "${APP_BASE_PATH:-/var/www/html}/frankenphp-worker.php"
+          file "${APP_PUBLIC_PATH:-/var/www/html/public}/frankenphp-worker.php"
         }
     volumes:
       - caddy_config:/config:rw
