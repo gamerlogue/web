@@ -29,7 +29,7 @@ services:
         # Required for the public/storage/ directory...
         resolve_root_symlink
       CADDY_SERVER_EXTRA_DIRECTIVES: |
-        log file {
+        log access {
             format json
             output file /var/log/frankenphp/access.log {
                 roll_size 10MiB
