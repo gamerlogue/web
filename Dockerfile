@@ -112,8 +112,7 @@ ENV AUTORUN_ENABLED=on \
     PHP_OPCACHE_JIT_BUFFER_SIZE=64M
 
 RUN mkdir -p /tmp/composer-cache /tmp/php-build \
-    && chown -R ${USER} /tmp/composer-cache /tmp/php-build \
-    && chmod 777 /tmp/composer-cache /tmp/php-build
+    && chown -R ${USER} /tmp/composer-cache /tmp/php-build
 
 USER ${USER}
 
@@ -135,18 +134,13 @@ RUN --mount=type=cache,target=/tmp/composer-cache,uid=${USER_ID},gid=${GROUP_ID}
 
 COPY --chown=${USER} . .
 
-RUN composer dump-autoload --optimize --apcu --no-dev --no-scripts
+RUN composer dump-autoload --optimize --apcu --no-dev
 
 RUN mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Build-time operations (needs dummy DB)
-RUN touch database/database.sqlite \
-    && DB_CONNECTION=sqlite php artisan migrate --force \
-    && composer run post-autoload-dump \
-    && php artisan wayfinder:generate --path=resources/ts \
-    && php artisan optimize:clear \
-    && php artisan cache:clear file
+# Build-time operations
+RUN php artisan wayfinder:generate --path=resources/ts
 
 ###########################################
 # Frontend Build
@@ -172,16 +166,6 @@ RUN bun run build
 ###########################################
 FROM prod-base AS prod
 
-USER root
-RUN rm -rf /tmp/* && chmod 1777 /tmp
-
-USER ${USER}
-
 COPY --chown=${USER} --from=build /app/public public
-
-# Final cleanup and asset publishing
-RUN php artisan vendor:publish --tag=log-viewer-assets --force && \
-    php artisan vendor:publish --tag=api-platform-assets --force && \
-    rm -f database/database.sqlite
 
 EXPOSE 80
