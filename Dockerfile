@@ -91,7 +91,7 @@ RUN touch /tmp/xdebug.log && chmod 666 /tmp/xdebug.log
 
 # SSL Certs permissions for Sail/Local dev
 RUN mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates \
-    && chown -R ${USER}:${GROUP_ID} /etc/ssl/certs /usr/local/share/ca-certificates
+    && chown -R ${USER_ID}:${GROUP_ID} /etc/ssl/certs /usr/local/share/ca-certificates
 
 RUN rm -rf /tmp/* && chmod 1777 /tmp
 
