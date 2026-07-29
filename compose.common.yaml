@@ -154,6 +154,7 @@ services:
   redis:
     restart: unless-stopped
     image: 'redis:alpine'
+    command: ["redis-server", "--maxmemory", "${REDIS_MAXMEMORY:-384mb}", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - 'redis:/data'
     healthcheck:
