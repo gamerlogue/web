@@ -234,4 +234,13 @@ return [
     */
 
     'state_file' => env('OCTANE_STATE_FILE', storage_path('logs/octane-server-state.json')),
+
+    'caddy' => [
+        'env' => [
+            'CADDY_GLOBAL_OPTIONS' => env('CADDY_GLOBAL_OPTIONS', ''),
+            'CADDY_PHP_SERVER_OPTIONS' => env('CADDY_PHP_SERVER_OPTIONS', ''),
+            'CADDY_SERVER_EXTRA_DIRECTIVES' => env('CADDY_SERVER_EXTRA_DIRECTIVES', ''),
+            'FRANKENPHP_CONFIG' => env('FRANKENPHP_CONFIG', '')
+        ]
+    ]
 ];
