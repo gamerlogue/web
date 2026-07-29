@@ -1,9 +1,10 @@
-### GENERATED WITH pnpx gitignore-to-dockerignore ###
-
 .git/
+**/.idea/claudeCodeEditorTabs.xml
+
 ### Laravel Vite ###
 **/public/build
 **/public/vendor
+**/public/fonts-manifest.dev.json
 
 **/.env.backup
 **/.env.production
@@ -35,7 +36,7 @@
 **/resources/ts/typings/typescriptable
 
 ### IntelliJ Github Copilot ###
-**/.idea/copilotDiffState.xml
+**/.idea/copilot*.xml
 
 # Created by https://www.toptal.com/developers/gitignore/api/git,node,linux,macos,windows,phpstorm,composer,laravel,vue,vuejs
 # Edit at https://www.toptal.com/developers/gitignore?templates=git,node,linux,macos,windows,phpstorm,composer,laravel,vue,vuejs
@@ -439,6 +440,10 @@ vendor/
 .idea/dataSources/
 .idea/dataSources.local.xml
 
+# From .serena/.gitignore
+.serena/cache
+.serena/project.local.yml
+
 # From bootstrap/cache/.gitignore
 bootstrap/cache/**/*
 !bootstrap/cache/**/.gitignore
@@ -448,12 +453,22 @@ database/**/*.sqlite*
 
 # From storage/app/.gitignore
 storage/app/**/*
+!storage/app/**/private/
 !storage/app/**/public/
 !storage/app/**/.gitignore
+
+# From storage/app/private/.gitignore
+storage/app/private/**/*
+!storage/app/private/**/.gitignore
 
 # From storage/app/public/.gitignore
 storage/app/public/**/*
 !storage/app/public/**/.gitignore
+
+# From storage/clockwork/.gitignore
+storage/clockwork/**/*.json
+storage/clockwork/**/*.json.gz
+storage/clockwork/**/index
 
 # From storage/debugbar/.gitignore
 storage/debugbar/**/*
@@ -490,3 +505,4 @@ storage/framework/testing/**/*
 # From storage/framework/views/.gitignore
 storage/framework/views/**/*
 !storage/framework/views/**/.gitignore
+
