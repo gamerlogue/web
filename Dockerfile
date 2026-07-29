@@ -16,7 +16,7 @@ RUN install-php-extensions apcu bcmath exif intl gd
 ARG TZ=Europe/Rome
 
 ENV APP_ENV=production \
-    CADDY_ADMIN=":2019" \
+    CADDY_ADMIN="localhost:2019" \
     CADDY_HTTP_PORT=80 \
     COMPOSER_FUND=0 \
     OCTANE_SERVER=frankenphp \
@@ -98,7 +98,7 @@ RUN rm -rf /tmp/* && chmod 1777 /tmp
 USER ${USER}
 WORKDIR ${APP_BASE_DIR}
 
-EXPOSE 443/tcp 443/udp 2019/tcp
+EXPOSE 443/tcp 443/udp
 
 ###########################################
 # Production Base
@@ -184,4 +184,4 @@ RUN php artisan vendor:publish --tag=log-viewer-assets --force && \
     php artisan vendor:publish --tag=api-platform-assets --force && \
     rm -f database/database.sqlite
 
-EXPOSE 80 2019
+EXPOSE 80
