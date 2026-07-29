@@ -47,6 +47,8 @@ services:
       options:
         max-size: 10m
         max-file: 3
+    security_opt:
+      - no-new-privileges:true
 
   task:
     restart: unless-stopped
@@ -65,6 +67,8 @@ services:
         max-file: 3
     env_file:
       - .env
+    security_opt:
+      - no-new-privileges:true
 
   queue:
     restart: unless-stopped
@@ -89,6 +93,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
 
   horizon:
     restart: unless-stopped
@@ -112,6 +118,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
 
   mysql:
     restart: unless-stopped
@@ -132,6 +140,10 @@ services:
       options:
         max-size: 10m
         max-file: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE]
 
   redis:
     restart: unless-stopped
@@ -147,6 +159,10 @@ services:
       options:
         max-size: 10m
         max-file: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE]
 
 volumes:
   caddy_config:
