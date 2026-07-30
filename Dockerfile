@@ -19,6 +19,7 @@ ENV APP_ENV=production \
     CADDY_ADMIN="localhost:2019" \
     CADDY_HTTP_PORT=80 \
     COMPOSER_FUND=0 \
+    FORCE_COLOR=1 \
     OCTANE_SERVER=frankenphp \
     PHP_DATE_TIMEZONE=${TZ} \
     PHP_INI_SCAN_DIR=":$APP_BASE_DIR/deployment" \
@@ -35,7 +36,6 @@ WORKDIR ${APP_BASE_DIR}
 
 RUN apk add --no-cache --update \
     bash \
-    expect \
     fish \
     git \
     iputils \

@@ -73,7 +73,14 @@ if [ ! -d "$APP_BASE_DIR/node_modules" ]; then
     bun install
 fi
 
-unbuffer bunx concurrently \
+# Coloured output comes from FORCE_COLOR, set in the Dockerfile — see the comment there. Flushing
+# needs nothing: PHP CLI runs with implicit_flush=On and output_buffering=0, so it writes to a pipe
+# immediately.
+#
+# exec: makes concurrently PID 1 instead of leaving this shell there. A POSIX shell waiting on a
+# child does not forward SIGTERM to it, while concurrently handles SIGHUP/SIGINT/SIGTERM and kills
+# its children, so `docker stop` shuts the stack down cleanly.
+exec bunx concurrently \
     -c "red.bold,magenta.bold,yellow.bold" \
   "php $PHP_INI_FLAGS $ARTISAN octane:start --host=$SERVER_NAME --port=$PORT $HTTPS --server=frankenphp --admin-port=$CADDY_ADMIN_PORT $EXTRA_OCTANE_FLAGS --caddyfile=/etc/frankenphp/Caddyfile" \
   "php artisan pail --timeout=0" \
