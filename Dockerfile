@@ -87,12 +87,11 @@ RUN docker-php-serversideup-set-id www-data $USER_ID:$GROUP_ID && \
 # Install Dev specific helpers
 COPY --from=oven/bun:alpine /usr/local/bin/bun /usr/local/bin/bunx /usr/local/bin/
 
-RUN touch /tmp/xdebug.log && chmod 666 /tmp/xdebug.log
-
 # SSL Certs permissions for Sail/Local dev
 RUN mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates \
     && chown -R ${USER_ID}:${GROUP_ID} /etc/ssl/certs /usr/local/share/ca-certificates
 
+# 1777 is what lets Xdebug create its own log file at runtime (XDEBUG_CONFIG log=/tmp/xdebug.log)
 RUN rm -rf /tmp/* && chmod 1777 /tmp
 
 USER ${USER}
