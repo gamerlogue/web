@@ -8,7 +8,7 @@ services:
     # Octane bind a random port while the publish still pointed at 80). It must stay in sync with
     # the container side of `ports` in compose.common.yaml and with CADDY_HTTP_PORT, which the
     # base image's HEALTHCHECK uses.
-    command: ["unbuffer", "php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=${OCTANE_PORT:-80}", "--admin-port=${CADDY_ADMIN_PORT:-2019}", "--workers=${OCTANE_WORKERS:-auto}", "--caddyfile=/etc/frankenphp/Caddyfile"]
+    command: ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=${OCTANE_PORT:-80}", "--admin-port=${CADDY_ADMIN_PORT:-2019}", "--workers=${OCTANE_WORKERS:-auto}", "--caddyfile=/etc/frankenphp/Caddyfile"]
 
   task:
     extends:

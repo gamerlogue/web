@@ -190,6 +190,39 @@ survives a redeploy, see the accepted risks.
 after `docker-php-serversideup-set-id`, which changes www-data's uid and would otherwise leave the
 directory owned by an orphan uid.
 
+### `FORCE_COLOR=1` instead of `unbuffer`
+Coloured output used to come from wrapping commands in `unbuffer`, which fakes a pty so that the tools'
+"am I on a terminal?" check passes. The cost was that PID 1 became `tclsh`: `/usr/bin/unbuffer` is an
+expect script with no signal handlers, so on `docker stop` SIGTERM killed `tclsh`, the pty closed and
+Octane got **SIGHUP** instead — no graceful shutdown, in-flight requests cut on every deploy, and no
+zombie reaping either.
+
+Every tool involved can be told to colour explicitly instead. *Verified* in the image, output piped to a
+file:
+
+| Tool | No pty | With `FORCE_COLOR=1` |
+|---|---|---|
+| artisan / Symfony Console | no colours | ✅ (`--ansi` works too) |
+| `concurrently` prefixes | no colours | ✅ |
+| Vite (`bun dev`) | no colours | ✅ |
+
+`FORCE_COLOR=1` is set as an `ENV` in the Dockerfile's `base` stage, so it covers all three plus the
+services whose `command` runs straight in its own container — `task`, `queue`, `horizon` and the
+production `laravel` never go through the dev script. Symfony reads it in `Output/StreamOutput.php`, so
+it applies to every artisan command without touching them one by one.
+
+The off switch is **`NO_COLOR=1`, not `FORCE_COLOR=0`** — *verified*: Symfony only looks at the first
+character of the value, so `0` still reads as enabled. Set `NO_COLOR=1` on a service if a log collector
+ever chokes on the ANSI escapes.
+
+The flushing half of `unbuffer`'s name was never needed here: PHP CLI runs with `implicit_flush=On` and
+`output_buffering=0`, *verified* — a script that prints, sleeps 4s and prints again has its first line in
+the pipe after 2s.
+
+**Consequence**: in production the commands are plain `["php", "artisan", …]`, so `php` is PID 1, gets
+SIGTERM directly and Octane drains gracefully. In dev the script ends with `exec bunx concurrently`, which
+becomes PID 1 and forwards SIGHUP/SIGINT/SIGTERM to its children.
+
 ---
 
 ## Security
@@ -238,16 +271,6 @@ do want it in production, the gate has to be defined explicitly.
 Known and deliberate. Each one has a price, written down here so that it stays a choice and does not
 become a surprise.
 
-### `unbuffer` as PID 1
-It is there for colours and immediate output. But `/usr/bin/unbuffer` is an expect script that installs
-no signal handlers — no `trap`, just `spawn` + `interact`. On `docker stop`, SIGTERM kills `tclsh`, the
-pty closes and Octane receives **SIGHUP**. The graceful shutdown never runs, so **in-flight requests are
-cut on every deploy**, and `stop_grace_period` does not help because the right signal never arrives. On
-top of that, PID 1 is a process that does not reap, so zombies pile up.
-
-If this ever becomes a problem: drop `unbuffer` from the `laravel` and `task` commands in prod — **not**
-from `start-container-dev.sh`, where it is needed for `concurrently` and `bun dev`.
-
 ### No volume for `/var/log/frankenphp`
 The log files live in the container layer and disappear on every `docker compose up --force-recreate`.
 The stdout copy, with `json-file` rotation, is the one that survives.
@@ -265,7 +288,9 @@ updates. The risk is a MySQL major bump that makes the existing data directory u
 `vim`, `fish`, `git`, `mariadb-client`, `micro`, `nss-tools`, `xh`, `wget` and `iputils` sit in `base` and
 are therefore inherited by `prod`, because debugging in production does happen. The price is image size
 and attack surface: an attacker who gets code execution finds a DB client and network tools ready to use.
-`expect` and `unzip`, on the other hand, are genuinely needed — for `unbuffer` and for Composer.
+`unzip` is genuinely needed, for Composer. `expect` used to be, for `unbuffer`, and was dropped once
+`FORCE_COLOR` replaced it — verified first that nothing in the image or the repo invokes `unbuffer` and
+that `apk info --rdepends expect` lists no dependent package.
 
 ### No resource limits in the compose files
 They depend on the host, so they are set per deployment. If you do add them: `--workers=auto` reads the

@@ -64,7 +64,7 @@ services:
     build:
       context: .
       target: prod
-    command: ["unbuffer", "php", "/var/www/html/artisan", "schedule:work"]
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
     stop_signal: SIGTERM
     healthcheck:
       test: ["CMD", "healthcheck-schedule"]
