@@ -74,8 +74,9 @@ if [ ! -d "$APP_BASE_DIR/node_modules" ]; then
 fi
 
 unbuffer bunx concurrently \
-    -c "red.bold,yellow.bold" \
+    -c "red.bold,magenta.bold,yellow.bold" \
   "unbuffer php $PHP_INI_FLAGS $ARTISAN octane:start --host=$SERVER_NAME --port=$PORT $HTTPS --server=frankenphp --admin-port=$CADDY_ADMIN_PORT $EXTRA_OCTANE_FLAGS --caddyfile=/etc/frankenphp/Caddyfile" \
+  "php artisan pail --timeout=0" \
   "unbuffer bun dev" \
-  --names=server,vite \
+  --names=server,logs,vite \
   --kill-others
