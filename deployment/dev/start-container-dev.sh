@@ -1,52 +1,89 @@
 #!/bin/sh
 set -eu
 
-# Validate SUPERVISOR_PHP_USER
-case "${SUPERVISOR_PHP_USER:-}" in
-root|sail) ;;
-*)
-  echo "You should set SUPERVISOR_PHP_USER to either 'sail' or 'root'."
-  exit 1
-  ;;
-esac
-
-# Ensure scheduler programs run as the same user as PHP in dev
-export USER="$SUPERVISOR_PHP_USER"
-
-# Install project package manager
-corepack install
-
 # Common settings
 SERVER_NAME="${SERVER_NAME:-0.0.0.0}"
-PORT="${PORT:-443}"
-ADMIN_PORT="${ADMIN_PORT:-2019}"
-WEBSERVER="${WEBSERVER:-cli}"
+# Extract port from CADDY_ADMIN if it is set, otherwise use default 2019
+if [ -n "${CADDY_ADMIN:-}" ]; then
+    CADDY_ADMIN_PORT=$(echo "$CADDY_ADMIN" | awk -F: '{print $2}')
+else
+    CADDY_ADMIN_PORT=2019
+fi
 
-PHP_BIN=$(which php)
-ARTISAN="$ROOT/artisan"
+WEBSERVER="${WEBSERVER:-frankenphp}"
+
+ARTISAN="$APP_BASE_DIR/artisan"
 PHP_INI_FLAGS="-d variables_order=EGPCS"
+EXTRA_OCTANE_FLAGS="${EXTRA_OCTANE_FLAGS:-}"
 
+# HTTPS settings
+if [ "${SSL_MODE:-off}" = "off" ]; then
+    HTTPS=""
+    PORT="${CADDY_HTTP_PORT:-80}"
+else
+    HTTPS="--https"
+    PORT="${CADDY_HTTPS_PORT:-443}"
+fi
+
+# Enable watch if WEBSERVER ends with "-watch".
+#
+# config/octane.php owns the path list, so we read it from there instead of duplicating it. Two
+# transformations are mandatory before handing it to FrankenPHP (see deployment/AUDIT.md §3.1-bis):
+#  - single file paths must be dropped: a `watch <file>` segfaults FrankenPHP (SIGSEGV, exit 139)
+#    when the watcher restarts the workers while they are still booting;
+#  - directories must be narrowed to .php, otherwise the resources/ts rewrites done by
+#    Vite/wayfinder and the bootstrap/cache ones done by Laravel trigger a reload storm.
+#
+# Note: Octane's --watch cannot be used, because /etc/frankenphp/Caddyfile interpolates
+# {$CADDY_SERVER_WATCH_DIRECTIVES} under `frankenphp {}`, where `watch` is not a valid
+# subdirective. It has to live inside `worker {}`, so we inject it through FRANKENPHP_CONFIG.
+WATCH_DIRECTIVES=""
 case "$WEBSERVER" in
-cli)
-  export SUPERVISOR_PHP_COMMAND="${PHP_BIN} ${PHP_INI_FLAGS} $ARTISAN serve --host=\"${SERVER_NAME}\" --port=${PORT} --https"
-  ;;
-octane|octane-watch)
-  WATCH_FLAG=""
-  if [ "$WEBSERVER" = "octane-watch" ]; then
-    WATCH_FLAG="--watch"
-  fi
-  export SUPERVISOR_PHP_COMMAND="${PHP_BIN} ${PHP_INI_FLAGS} ${ARTISAN} octane:start ${WATCH_FLAG} --host=\"${SERVER_NAME}\" --port=${PORT} --admin-port=${ADMIN_PORT} --https --caddyfile=$ROOT/deployment/dev/Caddyfile"
-  ;;
-*)
-  echo "Unknown WEBSERVER='${WEBSERVER}'. Supported: cli, octane, octane-watch."
-  exit 1
-  ;;
+*-watch)
+    WATCH_PATHS=$(php "$ARTISAN" config:show octane.watch --no-ansi | awk '/^ *[0-9]+ /{print $NF}')
+    [ -n "$WATCH_PATHS" ] || { echo "Unable to read octane.watch from config." >&2; exit 1; }
+    # set -f: without noglob the shell would expand the patterns (database/**/*.php would become
+    # the list of matching files, which the -d test then drops, silently losing the pattern).
+    set -f
+    for p in $WATCH_PATHS; do
+        case "$p" in
+        *'*'*) ;;                                        # already a pattern: use it as is
+        *)  [ -d "$APP_BASE_DIR/$p" ] || continue        # single file: skip, it would crash
+            p="$p/**/*.php" ;;
+        esac
+        WATCH_DIRECTIVES="$WATCH_DIRECTIVES
+    watch $APP_BASE_DIR/$p"
+    done
+    set +f
+    ;;
 esac
 
-echo "RUNNING WEBSERVER: ${SUPERVISOR_PHP_COMMAND}"
+export FRANKENPHP_CONFIG="worker {
+  file \"$APP_BASE_DIR/public/frankenphp-worker.php\"$WATCH_DIRECTIVES
+}"
 
-if [ "$#" -gt 0 ]; then
-  exec "$@"
-else
-  exec /usr/bin/supervisord
+# Run composer install if vendor directory does not exist
+if [ ! -d "$APP_BASE_DIR/vendor" ]; then
+    echo "Vendor directory not found. Running composer install..."
+    composer install --no-interaction --optimize-autoloader
 fi
+
+if [ ! -d "$APP_BASE_DIR/node_modules" ]; then
+    echo "Node modules directory not found. Running bun install..."
+    bun install
+fi
+
+# Coloured output comes from FORCE_COLOR, set in the Dockerfile — see the comment there. Flushing
+# needs nothing: PHP CLI runs with implicit_flush=On and output_buffering=0, so it writes to a pipe
+# immediately.
+#
+# exec: makes concurrently PID 1 instead of leaving this shell there. A POSIX shell waiting on a
+# child does not forward SIGTERM to it, while concurrently handles SIGHUP/SIGINT/SIGTERM and kills
+# its children, so `docker stop` shuts the stack down cleanly.
+exec bunx concurrently \
+    -c "red.bold,magenta.bold,yellow.bold" \
+  "php $PHP_INI_FLAGS $ARTISAN octane:start --host=$SERVER_NAME --port=$PORT $HTTPS --server=frankenphp --admin-port=$CADDY_ADMIN_PORT $EXTRA_OCTANE_FLAGS --caddyfile=/etc/frankenphp/Caddyfile" \
+  "php artisan pail --timeout=0" \
+  "bun dev" \
+  --names=server,logs,vite \
+  --kill-others

@@ -1,47 +1,22 @@
 import type {PluginOption} from 'vite';
 
-import fs from 'node:fs';
-import path, {dirname, resolve} from 'node:path';
 import process from 'node:process';
-import timer from 'node:timers/promises';
-import {fileURLToPath} from 'node:url';
-import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import {wayfinder} from '@laravel/vite-plugin-wayfinder';
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import {defineConfig} from 'vite';
-import VitePluginRestart from 'vite-plugin-restart';
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
+import {bunny} from "laravel-vite-plugin/fonts";
 
 const SERVER_NAME = process.env.SERVER_NAME;
-const ssl = {
-  key: `${process.env.XDG_DATA_HOME}/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.key`,
-  cert: `${process.env.XDG_DATA_HOME}/caddy/certificates/local/${SERVER_NAME}/${SERVER_NAME}.crt`
-};
 
 const additionalPlugins: PluginOption[] = [];
 
 // Don't do it in production
 if (process.env.APP_ENV === 'local') {
-  if (!fs.existsSync(ssl.key) || !fs.existsSync(ssl.cert)) {
-    console.error(`SSL certificate files not found. Make sure Caddy is running and has generated the SSL certificates for ${SERVER_NAME}.`);
-    process.exit(1);
-  }
-
-  // Wait for the SSL certificate files to be available
-  const maxAttempts = 10;
-  let attempts = 0;
-  while ((!fs.existsSync(ssl.key) || !fs.existsSync(ssl.cert)) && attempts < maxAttempts) {
-    console.log(`Waiting for SSL certificate files to be available... (Attempt ${attempts + 1}/${maxAttempts})`);
-    await timer.setTimeout(3000); // Wait for 3 seconds before checking again
-    attempts++;
-  }
-
-  // Don't do it in production
-  if (process.env.APP_ENV === 'local') {
-    additionalPlugins.push(wayfinder({
-      path: 'resources/ts'
-    }));
-  }
+  additionalPlugins.push(wayfinder({
+    path: 'resources/ts'
+  }));
 }
 
 // noinspection JSUnusedGlobalSymbols (Removes the false positive on "isCustomElement")
@@ -60,7 +35,12 @@ export default defineConfig({
   plugins: [
     laravel({
       input: ['resources/scss/app.scss', 'resources/ts/app.ts'],
-      refresh: true
+      refresh: true,
+      fonts: [
+        bunny('Instrument Sans', {
+          weights: [400, 500, 600],
+        }),
+      ],
     }),
     vue({
       template: {
@@ -73,25 +53,28 @@ export default defineConfig({
       // Locale messages resource pre-compile option
       include: resolve(dirname(fileURLToPath(import.meta.url)), './lang/**.json')
     }),
-    VitePluginRestart({
-      restart: [ssl.key, ssl.cert]
-    }),
     ...additionalPlugins
   ],
+  // No server.https on purpose: Caddy terminates TLS on ${VITE_PORT} and proxies here in
+  // plaintext (see deployment/dev/vite.caddyfile). When server.https is set, Vite builds the
+  // dev server with node:http2 createSecureServer — hard-coded in resolveHttpServer, with no
+  // opt-out — and the HTTP/1.1 Upgrade of the WebSocket handshake never reaches Vite's
+  // listener: every HMR attempt gets a 403, even with the vite-ping subprotocol that bypasses
+  // all of Vite's own checks.
   server: {
-    https: {
-      key: (process.env.APP_ENV === 'local') ? fs.readFileSync(ssl.key) : undefined,
-      cert: (process.env.APP_ENV === 'local') ? fs.readFileSync(ssl.cert) : undefined
-    },
-    hmr: {
-      host: SERVER_NAME
+    host: '127.0.0.1',
+    port: Number(process.env.VITE_INTERNAL_PORT ?? 5174),
+    strictPort: true,
+    ws: {
+      protocol: 'wss',
+      host: SERVER_NAME,
+      clientPort: Number(process.env.VITE_PORT ?? 5173)
     },
     watch: {
       ignored: [
-        '**/.config/**',
-        '**/.data/**',
         '**/storage/framework/views/**'
       ]
     }
   }
-});
+})
+;

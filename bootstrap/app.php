@@ -31,5 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
             Request::HEADER_X_FORWARDED_PROTO
         );
     })
-    ->withExceptions(function (Exceptions $exceptions): void {})
-    ->create();
+    ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+        );
+    })->create();

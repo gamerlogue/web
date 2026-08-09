@@ -1,0 +1,142 @@
+#########################
+# GitLab CI/CD configuration file
+# This file is used to define the CI/CD pipeline for building and deploying Docker images to AWS ECR
+# It includes the following stages:
+# 1. precheck_tag_on_main: Ensures that tags are only created on the main branch
+# 2. build: Builds the Docker image using Buildah and pushes it to AWS ECR
+# 3. create_template: Generates deployment templates using Sitekit and pushes them to the repository
+#########################
+# Variables to set on the repo:
+# AWS_WEB_HOST_PROD: The hosts (separated by commas) where the application will be deployed in production
+#########################
+
+default:
+  tags:
+    - docker_aws
+
+stages:
+  - precheck_tag_on_main
+  - build
+  - create_template
+
+variables:
+  DOCKER_BUILDKIT: 1
+
+precheck_tag_on_main:
+  image: alpine:3.20
+  stage: precheck_tag_on_main
+  rules:
+    - if: '$CI_COMMIT_TAG'    # esegue solo per pipeline di tag
+  script:
+    - apk add --no-cache git
+    - git fetch --no-tags origin main
+    # Verifica che il commit taggato ($CI_COMMIT_SHA) sia un antenato di origin/main
+    - |
+      if git merge-base --is-ancestor "$CI_COMMIT_SHA" origin/main; then
+        echo "Tag $CI_COMMIT_TAG è su main (o discendente)."
+      else
+        echo "Tag $CI_COMMIT_TAG NON è su main. Interrompo la pipeline."
+        exit 1
+      fi
+
+build:
+  image: docker:latest
+  stage: build
+  needs:
+    - job: precheck_tag_on_main
+  rules:
+    # Tag on main ending with -prod -> production host
+    - if: '$CI_COMMIT_TAG =~ /-prod$/'
+      variables:
+        AWS_ACCESS_KEY: '$AWS_ACCESS_KEY_PROD'
+        AWS_SECRET_KEY: '$AWS_SECRET_KEY_PROD'
+        ECR_REPO_PREFIX: '$ECR_REPO_PREFIX_PROD'
+    # Any other tag on main -> development host
+    - if: '$CI_COMMIT_TAG'
+      variables:
+        AWS_ACCESS_KEY: '$AWS_ACCESS_KEY_DEV'
+        AWS_SECRET_KEY: '$AWS_SECRET_KEY_DEV'
+        ECR_REPO_PREFIX: '$ECR_REPO_PREFIX_DEV'
+  services:
+    - docker:dind
+  before_script:
+    - docker info
+    - echo $CI_REGISTRY_PASSWORD | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  variables:
+    ECR_REPO_NAME: ${CI_PROJECT_NAME}
+    ECR_REGISTRY: ${ECR_REPO_PREFIX}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
+    DOCKER_IMAGE_TAG: $ECR_REGISTRY/${ECR_REPO_NAME}:${CI_COMMIT_TAG}
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_DRIVER: overlay2
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_KEY}
+  script:
+    - apk add docker-credential-ecr-login jq
+
+    - cat /root/.docker/config.json
+    - tmp=$(mktemp)
+    - jq --arg host "$ECR_REGISTRY" '
+      .credHelpers =
+      (.credHelpers // {}) |
+      .credHelpers[$host] = "ecr-login"
+      ' /root/.docker/config.json > "$tmp" && mv "$tmp" /root/.docker/config.json
+    - cat /root/.docker/config.json
+
+    - echo "BUILDING THE IMAGE FOR ${CI_PROJECT_NAME} " # BUILD THE IMAGE AND PUSH IT
+    - docker context create my-builder
+    - docker buildx create my-builder --driver docker-container --use
+    - docker buildx build --push -t ${DOCKER_IMAGE_TAG}
+      --target prod
+      --secret=id=gitlab-ci-token,env=CI_JOB_TOKEN
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/cache,mode=max
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache .
+
+    - docker system prune -a -f
+
+create_template:
+  stage: create_template
+  image: alpine:latest
+  variables:
+    APP_NAME: ${CI_PROJECT_NAME}
+    DOCKER_IMAGE_TAG: "${CI_COMMIT_TAG}"
+    ECR_REPO_NAME: "${ECR_REPO_PREFIX}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${CI_PROJECT_NAME}"
+    GITLAB_TOKEN: "$CI_JOB_TOKEN"
+    APP_FILES_DIR: /var/www/html/storage/app
+  rules:
+    # Tag on main ending with -prod -> production host
+    - if: '$CI_COMMIT_TAG =~ /-prod$/'
+      variables:
+        AWS_ACCESS_KEY: '$AWS_ACCESS_KEY_PROD'
+        AWS_SECRET_KEY: '$AWS_SECRET_KEY_PROD'
+        ECR_REPO_PREFIX: '$ECR_REPO_PREFIX_PROD'
+        HOST: "${AWS_WEB_HOST_PROD}"
+        APP_ENV: 'prod'
+    # Any other tag on main -> development host
+    - if: '$CI_COMMIT_TAG'
+      variables:
+        AWS_ACCESS_KEY: '$AWS_ACCESS_KEY_DEV'
+        AWS_SECRET_KEY: '$AWS_SECRET_KEY_DEV'
+        ECR_REPO_PREFIX: '$ECR_REPO_PREFIX_DEV'
+        HOST: "${AWS_WEB_HOST_DEV}"
+        APP_ENV: 'dev'
+  needs:
+    - job: precheck_tag_on_main
+    - job: build
+      optional: true
+  when: on_success
+  script:
+    - apk add --no-cache git curl
+    - |
+      curl --location --header "PRIVATE-TOKEN: glpat-xQnpeUnwxGet4kMhWq13" https://gitlab.trust-itservices.com/api/v4/projects/419/jobs/artifacts/main/raw/builds/binaries/linux/linux-x64?job=build --output sitekit
+    - chmod +x ./sitekit
+    - mv ./sitekit /usr/local/bin/sitekit
+    - sitekit --version
+
+    # Set git config to push changes
+    - git config --global user.email "system@gitlab.trust-itservices.com"
+    - git config --global user.name "Gitlab"
+    # clone the repository
+    # install dependencies
+    # run the script with the correct input parameters
+    - echo "${ECR_REPO_NAME} ${DOCKER_IMAGE_TAG} ${APP_ENV} ${APP_NAME} ${APP_FILES_DIR} ${HOST}"
+    - sitekit ci:helm ${ECR_REPO_NAME} ${DOCKER_IMAGE_TAG} ${APP_ENV} ${APP_NAME} ${APP_FILES_DIR} ${HOST}

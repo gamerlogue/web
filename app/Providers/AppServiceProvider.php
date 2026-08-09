@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Opcodes\LogViewer\Facades\LogViewer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -69,5 +70,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->extend(ErrorNormalizer::class, fn ($service, $app) => new JsonApiStringStatusErrorNormalizer($service));
 
         $this->app->tag(CurrentUserFilter::class, FilterInterface::class);
+
+        LogViewer::auth(static function ($request) {
+            return $request->user()
+                && in_array($request->user()->email, [
+                    // ...
+                ], true);
+        });
     }
 }
