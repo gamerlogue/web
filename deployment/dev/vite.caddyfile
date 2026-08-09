@@ -1,0 +1,20 @@
+# Terminates TLS for the Vite dev server on the public port and proxies to the Vite process,
+# which listens on loopback in plaintext.
+#
+# Why: when Vite handles TLS itself (server.https), Vite 8 builds the dev server with
+# node:http2 createSecureServer — hard-coded in resolveHttpServer, with no opt-out — and the
+# HTTP/1.1 Upgrade of the WebSocket handshake never reaches Vite's listener, so HMR gets a 403
+# on every attempt. Caddy, on the other hand, proxies WebSockets natively.
+# See deployment/AUDIT.md §3.2.
+#
+# Mounted into /etc/frankenphp/caddyfile.d/, which the image's Caddyfile picks up with
+# `import caddyfile.d/*.caddyfile`. Development only.
+#
+# No `tls` directive on purpose: with CADDY_AUTO_HTTPS=on (set by the dev stage) this site
+# inherits the same automation policy as the main one, so Caddy issues the certificate from its
+# internal CA on the fly — it works on a first boot with empty volumes. Naming a certificate
+# file instead breaks that first boot (the file does not exist yet), and `tls internal` fails
+# with "hostname appears in more than one automation policy".
+https://{$SERVER_NAME}:{$VITE_PORT:5173} {
+	reverse_proxy 127.0.0.1:{$VITE_INTERNAL_PORT:5174}
+}

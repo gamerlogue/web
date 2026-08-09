@@ -2,6 +2,15 @@
 # (https://fishshell.com/). You cannot run it directly.
 # Source: https://github.com/python/cpython/blob/main/Lib/venv/scripts/common/activate.fish#L27
 
+# --- guard to prevent direct execution -----------------------------
+# If the script was not “sourced” with `source` or `.` block everything.
+set -l _cmd (status current-command)
+if not contains -- $_cmd source . fish # For some reason some sources are called with "fish"
+    echo "❌  This command only works with: source bin/activate.fish oppure . bin/activate.fish" >&2
+    exit 1
+end
+# -------------------------------------------------------------------------
+
 function deactivate  -d "Exit virtual environment and return to normal shell environment"
     # reset old environment variables
     if test -n "$_OLD_VIRTUAL_PATH"
@@ -27,7 +36,7 @@ function deactivate  -d "Exit virtual environment and return to normal shell env
     end
 
     # Unset sail aliases in one command
-    functions -e sail artisan php composer node npm pnpm mariadb shell root-shell tinker share open
+    functions -e sail artisan php composer node npm bun mariadb shell root-shell tinker share open
 end
 
 # Unset irrelevant variables.
@@ -46,7 +55,7 @@ alias php="./vendor/bin/sail php"
 alias composer="./vendor/bin/sail composer"
 alias node="./vendor/bin/sail node"
 alias npm="./vendor/bin/sail npm"
-alias pnpm="./vendor/bin/sail pnpm"
+alias bun="./vendor/bin/sail bun"
 alias mariadb="./vendor/bin/sail mariadb"
 alias shell="./vendor/bin/sail shell"
 alias root-shell="./vendor/bin/sail root-shell"

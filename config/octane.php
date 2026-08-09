@@ -135,7 +135,7 @@ return [
     ],
 
     'flush' => [
-        //
+        \Barryvdh\Debugbar\LaravelDebugbar::class,
     ],
 
     /*
@@ -190,6 +190,7 @@ return [
         'database/**/*.php',
         'public/**/*.php',
         'resources/**/*.php',
+        'lang/**/*.php',
         'routes',
         'composer.lock',
         '.env',
@@ -221,4 +222,25 @@ return [
 
     'max_execution_time' => 30,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Octane Server State File
+    |--------------------------------------------------------------------------
+    |
+    | This value determines where Octane stores the state file used to track
+    | the running server's master process ID and admin endpoint, which is
+    | read by various Octane commands. You may tweak this if necessary.
+    |
+    */
+
+    'state_file' => env('OCTANE_STATE_FILE', storage_path('logs/octane-server-state.json')),
+
+    'caddy' => [
+        'env' => [
+            'CADDY_GLOBAL_OPTIONS' => env('CADDY_GLOBAL_OPTIONS', ''),
+            'CADDY_PHP_SERVER_OPTIONS' => env('CADDY_PHP_SERVER_OPTIONS', ''),
+            'CADDY_SERVER_EXTRA_DIRECTIVES' => env('CADDY_SERVER_EXTRA_DIRECTIVES', ''),
+            'FRANKENPHP_CONFIG' => env('FRANKENPHP_CONFIG', '')
+        ]
+    ]
 ];

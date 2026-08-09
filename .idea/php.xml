@@ -2,13 +2,11 @@
 <project version="4">
   <component name="LaravelPint">
     <laravel_pint_settings>
+      <LaravelPintConfiguration tool_path="$PROJECT_DIR$/vendor/bin/pint" />
       <laravel_pint_by_interpreter interpreter_id="797db172-3ee2-48eb-bef4-db9266520502" tool_path="/var/www/html/vendor/bin/pint">
         <option name="timeout" value="30000" />
       </laravel_pint_by_interpreter>
       <LaravelPintConfiguration deletedFromTheList="true" tool_path="$PROJECT_DIR$/vendor/bin/pint" />
-      <laravel_pint_by_interpreter asDefaultInterpreter="true" interpreter_id="a979d89f-1311-43d6-8cb2-fba99bfbad54" tool_path="\\wsl.localhost\NixOS\home\maicol07\Projects\Web\gamerlogue_web\vendor\bin\pint">
-        <option name="timeout" value="30000" />
-      </laravel_pint_by_interpreter>
     </laravel_pint_settings>
   </component>
   <component name="LaravelPintOptionsConfiguration">

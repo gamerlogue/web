@@ -22,6 +22,7 @@
       <data directive="@default" />
       <data directive="@disabled" injection="true" prefix="&lt;?php if(" suffix=") {echo 'disabled';}?&gt;" />
       <data directive="@dump" injection="true" prefix="&lt;?php&#10;dump(" suffix="); ?&gt;" />
+      <data directive="@dumpData" injection="true" prefix="&lt;?php _bladeDirective(" suffix="); ?&gt;" />
       <data directive="@each" injection="true" prefix="&lt;?php&#10;echo $__env-&gt;renderEach(" suffix="); ?&gt;" />
       <data directive="@else" />
       <data directive="@elseauth" injection="true" prefix="&lt;?php&#10;elseif(auth()-&gt;guard(" suffix=")-&gt;check()): ?&gt;" />
@@ -45,6 +46,7 @@
       <data directive="@endfor" />
       <data directive="@endforeach" />
       <data directive="@endforelse" />
+      <data directive="@endformConnectedFields" />
       <data directive="@endfragment" />
       <data directive="@endguest" />
       <data directive="@endif" />
@@ -77,6 +79,8 @@
       <data directive="@for" injection="true" prefix="&lt;?php&#10;for(" suffix="): ?&gt;" />
       <data directive="@foreach" injection="true" prefix="&lt;?php&#10;foreach(" suffix="): ?&gt;" />
       <data directive="@forelse" injection="true" prefix="&lt;?php&#10;foreach(" suffix="): ?&gt;" />
+      <data directive="@formConnectedFields" injection="true" prefix="&lt;?php [" suffix="]; ?&gt;" />
+      <data directive="@formField" injection="true" prefix="&lt;?php [" suffix="]; ?&gt;" />
       <data directive="@fragment" injection="true" prefix="&lt;?php&#10;$__env-&gt;startFragment(" suffix="); ?&gt;" />
       <data directive="@guest" injection="true" prefix="&lt;?php&#10;if(auth()-&gt;guard(" suffix=")-&gt;guest()): ?&gt;" />
       <data directive="@hasSection" injection="true" prefix="&lt;?php&#10;if (! empty(trim($__env-&gt;yieldContent(" suffix=")))): ?&gt;" />
@@ -99,6 +103,7 @@
       <data directive="@once" />
       <data directive="@overwrite" />
       <data directive="@parent" />
+      <data directive="@partialView" injection="true" prefix="&lt;?php _bladeDirective(" suffix="); ?&gt;" />
       <data directive="@persist" injection="true" prefix="&lt;?php echo e(" suffix="); ?&gt;" />
       <data directive="@php" injection="true" prefix="&lt;?php&#10;(" suffix="); ?&gt;" />
       <data directive="@prepend" injection="true" prefix="&lt;?php&#10;$__env-&gt;startPrepend(" suffix="); ?&gt;" />

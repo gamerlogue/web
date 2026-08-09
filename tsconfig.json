@@ -11,9 +11,9 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
     "isolatedModules": true,
-    "libReplacement": true,
     "lib": [
       "esnext",
       "dom",

@@ -1,54 +1,182 @@
 services:
   laravel:
+    restart: unless-stopped
     build:
       context: .
       target: prod
-    user: "${WWWUSER-web}:${WWWGROUP-1000}"
+    user: "${WWWUSER-www-data}"
     extra_hosts:
-      - 'host.docker.internal:host-gateway'
-      - '${SERVER_NAME}:0.0.0.0'
+      - '${SERVER_NAME:-laravel.localhost}:127.0.0.1'
     ports:
       - '${APP_PORT:-80}:80'
-      - '443:443'
-      - '443:443/udp'
+    env_file:
+      - .env
+    # Set healthcheck to use our native healthcheck script for Octane
+    healthcheck:
+      test: ["CMD", "healthcheck-octane"]
+      start_period: 10s
+    environment:
+      CADDY_GLOBAL_OPTIONS: |
+        log file {
+            output file /var/log/frankenphp/frankenphp.log {
+                roll_size 10MiB
+                roll_keep 5
+            }
+        }
+      CADDY_PHP_SERVER_OPTIONS: |
+        index frankenphp-worker.php
+        try_files {path} frankenphp-worker.php
+        # Required for the public/storage/ directory...
+        resolve_root_symlink
+      CADDY_SERVER_EXTRA_DIRECTIVES: |
+        log access {
+            format json
+            output file /var/log/frankenphp/access.log {
+                roll_size 10MiB
+                roll_keep 5
+            }
+        }
+      # Overridden in dev by deployment/dev/start-container-dev.sh, which appends the `watch`
+      # directives. Needed here because /etc/frankenphp/Caddyfile takes the worker block from
+      # this variable and nowhere else.
+      FRANKENPHP_CONFIG: |
+        worker {
+          file "${APP_PUBLIC_PATH:-/var/www/html/public}/frankenphp-worker.php"
+        }
+    volumes:
+      - caddy_config:/config:rw
+      - caddy_data:/data:rw
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    security_opt:
+      - no-new-privileges:true
+
+  task:
+    restart: unless-stopped
+    build:
+      context: .
+      target: prod
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD", "healthcheck-schedule"]
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    env_file:
+      - .env
+    security_opt:
+      - no-new-privileges:true
+
+  queue:
+    restart: unless-stopped
+    build:
+      context: .
+      target: prod
+    command: ["php", "/var/www/html/artisan", "queue:work", "--tries=3"]
+    stop_signal: SIGTERM
+    healthcheck:
+      # This is our native healthcheck script for the queue
+      test: ["CMD", "healthcheck-queue"]
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     env_file:
       - .env
     depends_on:
-      - mariadb
-      - redis
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+
+  horizon:
+    restart: unless-stopped
+    build:
+      context: .
+      target: prod
+    command: ["php", "/var/www/html/artisan", "horizon"]
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD", "healthcheck-horizon"]
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
 
   mariadb:
     image: 'mariadb:11'
     ports:
       - '${FORWARD_DB_PORT:-3306}:3306'
     environment:
-      MARIADB_ROOT_PASSWORD: '${DB_PASSWORD}'
-      MARIADB_ROOT_HOST: '%'
+      MARIADB_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:-$DB_PASSWORD}'
       MARIADB_DATABASE: '${DB_DATABASE}'
       MARIADB_USER: '${DB_USERNAME}'
-      MARIADB_PASSWORD: '${DB_PASSWORD}'
-      MARIADB_ALLOW_EMPTY_PASSWORD: 'yes'
+      MARIADB_PASSWORD: '${DB_PASSWORD:?DB_PASSWORD required}'
     volumes:
       - 'mariadb:/var/lib/mysql'
-      - './vendor/laravel/sail/database/mariadb/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
     healthcheck:
       test: [ CMD, healthcheck.sh, '--connect', '--innodb_initialized' ]
       retries: 3
       timeout: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE]
 
   redis:
+    restart: unless-stopped
     image: 'redis:alpine'
-    ports:
-      - '${FORWARD_REDIS_PORT:-6379}:6379'
+    command: ["redis-server", "--maxmemory", "${REDIS_MAXMEMORY:-384mb}", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - 'redis:/data'
     healthcheck:
       test: [ CMD, redis-cli, ping ]
       retries: 3
       timeout: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE]
 
 volumes:
+  caddy_config:
+  caddy_data:
   mariadb:
-    driver: local
   redis:
-    driver: local

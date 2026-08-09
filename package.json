@@ -2,37 +2,34 @@
   "$schema": "https://www.schemastore.org/package.json",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.17.1",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite"
+    "dev": "bunx --bun vite",
+    "build": "bunx --bun vite build"
   },
-  "web-types": "./web-types.json",
   "devDependencies": {
     "@intlify/unplugin-vue-i18n": "^11.0.1",
     "@laravel/vite-plugin-wayfinder": "^0.1.7",
-    "@maicol07/eslint-config": "3.0.0-rc.6",
-    "@types/node": "^24.5.2",
+    "@maicol07/eslint-config": "3.0.0",
+    "@types/node": "^26.1.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.8.1",
     "better-typescript-lib": "^2.12.0",
-    "chokidar": "^4.0.3",
-    "eslint": "^9.36.0",
+    "eslint": "^10.8.0",
+    "fontaine": "^0.8.0",
     "include-media": "^2.0.0",
-    "laravel-vite-plugin": "^2.0.1",
+    "laravel-vite-plugin": "^3.1.3",
     "postcss-html": "^1.8.0",
-    "sass": "^1.93.2",
-    "stylelint": "^16.24.0",
-    "stylelint-config-clean-order": "^7.0.0",
+    "sass-embedded": "^1.100.0",
+    "stylelint": "^17.14.1",
+    "stylelint-config-clean-order": "^10.0.0",
     "stylelint-config-html": "^1.1.0",
-    "stylelint-config-recommended-scss": "^16.0.1",
+    "stylelint-config-recommended-scss": "^17.0.1",
     "stylelint-config-recommended-vue": "^1.6.1",
-    "stylelint-config-standard": "^39.0.0",
-    "stylelint-config-standard-scss": "^16.0.0",
-    "type-fest": "^5.0.1",
-    "typescript": "^5.9.2",
-    "vite": "^7.1.7",
-    "vite-plugin-restart": "^1.0.0"
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "type-fest": "^5.2.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5"
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.9.0",
@@ -53,13 +50,5 @@
     "vue3-loading-shimmer": "^1.0.0",
     "vue3-lottie": "^3.3.1",
     "vue3-simple-icons": "^15.6.0"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "vue-circle-flags": "patches/vue-circle-flags.patch"
-    },
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }

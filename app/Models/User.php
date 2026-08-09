@@ -12,6 +12,10 @@ use App\Http\Requests\UserFormRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,6 +28,17 @@ use Soved\Laravel\Gdpr\Contracts\Portable as PortableContract;
 use Soved\Laravel\Gdpr\Portable;
 use Spatie\Activitylog\Traits\CausesActivity;
 
+#[Fillable([
+    'email',
+    'email_verified_at',
+    'password',
+    'first_name',
+    'last_name',
+    'picture',
+    'nickname',
+    'name',
+])]
+#[Hidden(['email', 'id', 'password', 'remember_token'])]
 #[ApiResource(
     description: 'A user of the application.',
     operations: [
@@ -47,34 +62,6 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
      * The attributes that should be hidden for the downloadable data.
      */
     protected array $gdprHidden = ['password', 'remember_token', 'passkeys.credential_id', 'passkeys.data'];
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'first_name',
-        'last_name',
-        'nickname',
-        'picture',
-        'email',
-        'password',
-        'email_verified_at',
-        'name'
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'id',
-        'password',
-        'email',
-        'remember_token',
-    ];
 
     /**
      * Get the attributes that should be cast.
