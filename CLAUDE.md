@@ -253,3 +253,30 @@ Vue components must have a single root element.
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 </laravel-boost-guidelines>
+
+## Project notes
+
+### API Platform metadata
+
+API Platform derives its routes from the Eloquent metadata it reads **from the database while the
+service providers boot**. Two consequences:
+
+- The test suite runs against `database/testing.sqlite`, migrated by `tests/bootstrap.php` *before*
+  the first application boots. `RefreshDatabase` alone is too late: with an empty schema the item
+  operations lose their `{id}` and every `/api/<resource>/{id}` request 404s.
+- `metadata_dump` is deliberately left unset. It only seeds the models it was dumped for — API
+  Platform still introspects `Illuminate\Foundation\Auth\User` — so it does not buy a database-free
+  boot, and its fingerprint is built from migration mtimes, which git does not preserve: a committed
+  dump reads as stale on every fresh checkout.
+- `api-platform.cache` must stay `array`. `config/cache.php` sets `serializable_classes => false`,
+  so any persistent store hands the cached metadata objects back as `__PHP_Incomplete_Class`.
+
+The same `serializable_classes => false` applies to everything else the app caches: cache plain
+arrays, never objects.
+
+### Writes go through the serializer, not the validated data
+
+API Platform persists the *deserialized payload*, so a FormRequest can reject a value but never
+replace it, and deserialization runs *before* validation (an ill-typed attribute is a
+`NotNormalizableValueException`, mapped to 422 in `config/api-platform.php`). Server-assigned
+attributes belong in a model event: see `LibraryEntry::booted()` for the owner.
