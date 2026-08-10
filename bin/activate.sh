@@ -45,7 +45,7 @@ PATH="$VIRTUAL_ENV/bin:$PATH"
 export PATH
 
 # Set sail aliases
-alias sail='docker compose'
+alias sail='./vendor/bin/sail'
 alias artisan='./vendor/bin/sail artisan'
 alias php='./vendor/bin/sail php'
 alias composer='./vendor/bin/sail composer'

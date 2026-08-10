@@ -47,7 +47,7 @@ services:
       - caddy_config:/config:rw
       - caddy_data:/data:rw
     depends_on:
-      mysql:
+      mariadb:
         condition: service_healthy
       redis:
         condition: service_healthy
