@@ -211,6 +211,16 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/iamcal/sql-parser" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/larastan/larastan" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpstan/phpstan" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/mariusgelez/igdb-laravel" />
+      <excludeFolder url="file://$MODULE_DIR$/storage/debugbar" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/fumeapp/modeltyper" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/agent-detector" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laravel/pao" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/file-filter" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/git-state" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/backtrace" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/error-solutions" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/spatie/laravel-error-solutions" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

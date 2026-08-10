@@ -6,7 +6,6 @@
       <laravel_pint_by_interpreter interpreter_id="797db172-3ee2-48eb-bef4-db9266520502" tool_path="/var/www/html/vendor/bin/pint">
         <option name="timeout" value="30000" />
       </laravel_pint_by_interpreter>
-      <LaravelPintConfiguration deletedFromTheList="true" tool_path="$PROJECT_DIR$/vendor/bin/pint" />
     </laravel_pint_settings>
   </component>
   <component name="LaravelPintOptionsConfiguration">
@@ -14,7 +13,7 @@
   </component>
   <component name="MessDetector">
     <phpmd_settings>
-      <phpmd_by_interpreter asDefaultInterpreter="true" interpreter_id="a979d89f-1311-43d6-8cb2-fba99bfbad54" timeout="30000" />
+      <phpmd_by_interpreter asDefaultInterpreter="true" interpreter_id="797db172-3ee2-48eb-bef4-db9266520502" timeout="30000" />
     </phpmd_settings>
   </component>
   <component name="MessDetectorOptionsConfiguration">
@@ -34,7 +33,7 @@
   </component>
   <component name="PhpCodeSniffer">
     <phpcs_settings>
-      <phpcs_by_interpreter asDefaultInterpreter="true" interpreter_id="a979d89f-1311-43d6-8cb2-fba99bfbad54" timeout="30000" />
+      <phpcs_by_interpreter asDefaultInterpreter="true" interpreter_id="797db172-3ee2-48eb-bef4-db9266520502" timeout="30000" />
     </phpcs_settings>
   </component>
   <component name="PhpExternalFormatter">
@@ -259,6 +258,15 @@
       <path value="$PROJECT_DIR$/vendor/web-auth/webauthn-lib" />
       <path value="$PROJECT_DIR$/vendor/web-auth/cose-lib" />
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php86" />
+      <path value="$PROJECT_DIR$/vendor/mariusgelez/igdb-laravel" />
+      <path value="$PROJECT_DIR$/vendor/laravel/agent-detector" />
+      <path value="$PROJECT_DIR$/vendor/laravel/pao" />
+      <path value="$PROJECT_DIR$/vendor/fumeapp/modeltyper" />
+      <path value="$PROJECT_DIR$/vendor/spatie/error-solutions" />
+      <path value="$PROJECT_DIR$/vendor/spatie/laravel-error-solutions" />
+      <path value="$PROJECT_DIR$/vendor/spatie/backtrace" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/file-filter" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/git-state" />
     </include_path>
   </component>
   <component name="PhpInterpreters">
@@ -345,9 +353,11 @@
   <component name="PhpStan">
     <PhpStan_settings>
       <phpstan_by_interpreter asDefaultInterpreter="true" interpreter_id="a979d89f-1311-43d6-8cb2-fba99bfbad54" timeout="60000" />
+      <PhpStanConfiguration tool_path="$PROJECT_DIR$/vendor/bin/phpstan" />
     </PhpStan_settings>
   </component>
   <component name="PhpStanOptionsConfiguration">
+    <option name="config" value="$PROJECT_DIR$/phpstan.neon" />
     <option name="transferred" value="true" />
   </component>
   <component name="PhpUnit">
