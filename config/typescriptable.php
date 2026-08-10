@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     /**
      * Engine used for parsing.
@@ -104,8 +106,6 @@ return [
             ],
             'path' => [
                 '_ignition/*',
-                '__clockwork/*',
-                'clockwork/*',
                 'two-factor-challenge',
                 'livewire',
             ],

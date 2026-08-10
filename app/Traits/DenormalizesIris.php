@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Traits;
 
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\ItemNotFoundException;
 use ApiPlatform\Metadata\IriConverterInterface;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -13,61 +15,35 @@ use Illuminate\Support\Str;
  */
 trait DenormalizesIris
 {
-    protected function prepareForValidation(): void
-    {
-        $this->denormalizeIris();
-
-        $parentClass = get_parent_class($this);
-        if ($parentClass && method_exists($parentClass, 'prepareForValidation')) {
-            parent::prepareForValidation();
-        }
-    }
-
     protected function denormalizeIris(): void
     {
         $data = $this->all();
-        $modified = false;
 
-        if (isset($data['data']['attributes']) && is_array($data['data']['attributes'])) {
-            array_walk_recursive($data['data']['attributes'], function (&$value) {
-                if (is_string($value) && Str::startsWith($value, '/api/')) {
-                    $value = $this->convertIriToId($value);
-                }
-            });
-            $modified = true;
+        if (! isset($data['data']['relationships']) || ! is_array($data['data']['relationships'])) {
+            return;
         }
 
-        if (isset($data['data']['relationships']) && is_array($data['data']['relationships'])) {
-            array_walk_recursive($data['data']['relationships'], function (&$value, $key) {
-                if ($key === 'id' && is_string($value) && Str::startsWith($value, '/api/')) {
-                    $value = $this->convertIriToId($value);
-                }
-            });
-            $modified = true;
-        }
+        array_walk_recursive($data['data']['relationships'], function (&$value, $key): void {
+            if ($key === 'id' && is_string($value) && Str::startsWith($value, '/api/')) {
+                $value = $this->convertIriToId($value);
+            }
+        });
 
-        if ($modified) {
-            $this->merge($data);
-        }
+        $this->replace($data);
     }
 
     protected function convertIriToId(string $iri): string|int
     {
         try {
             $resource = app(IriConverterInterface::class)->getResourceFromIri($iri);
-
-            if (method_exists($resource, 'getKey')) {
-                return $resource->getKey();
-            }
-
-            if (property_exists($resource, 'id')) {
-                return $resource->id;
-            }
-        } catch (\Exception $e) {
-            // If conversion fails, log it and return the original IRI
-            logger()->debug('Failed to convert IRI to ID', ['iri' => $iri, 'exception' => $e]);
+        } catch (InvalidArgumentException|ItemNotFoundException) {
+            return $iri;
         }
 
-        return $iri;
+        if (method_exists($resource, 'getKey')) {
+            return $resource->getKey();
+        }
+
+        return property_exists($resource, 'id') ? $resource->id : $iri;
     }
 }
