@@ -17,9 +17,11 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     {
         parent::boot();
 
-        // Horizon::routeSmsNotificationsTo('15556667777');
-        Horizon::routeMailNotificationsTo('maicolbattistini@live.it');
-        // Horizon::routeSlackNotificationsTo('slack-webhook-url', '#channel');
+        $adminEmail = config('app.admin_email');
+
+        if (is_string($adminEmail) && $adminEmail !== '') {
+            Horizon::routeMailNotificationsTo($adminEmail);
+        }
     }
 
     /**
@@ -29,8 +31,6 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewHorizon', static function ($user = null) {
-            return optional($user)->email === config('app.admin_email');
-        });
+        Gate::define('viewHorizon', static fn ($user = null): bool => Gate::forUser($user)->allows('admin'));
     }
 }
