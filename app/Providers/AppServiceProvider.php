@@ -72,10 +72,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->tag(CurrentUserFilter::class, FilterInterface::class);
 
         LogViewer::auth(static function ($request) {
-            return $request->user()
-                && in_array($request->user()->email, [
-                    // ...
-                ], true);
+            return $request->user()?->email === config('app.admin_email');
         });
     }
 }
