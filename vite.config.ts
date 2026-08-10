@@ -1,5 +1,5 @@
 import type {PluginOption} from 'vite';
-
+import {resolve, dirname} from 'node:path';
 import process from 'node:process';
 import {wayfinder} from '@laravel/vite-plugin-wayfinder';
 import vue from '@vitejs/plugin-vue';
@@ -7,6 +7,7 @@ import laravel from 'laravel-vite-plugin';
 import {defineConfig} from 'vite';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import {bunny} from "laravel-vite-plugin/fonts";
+import {fileURLToPath} from "node:url";
 
 const SERVER_NAME = process.env.SERVER_NAME;
 
@@ -29,7 +30,7 @@ export default defineConfig({
       '~/': '/resources/ts/',
       '@images/': '/resources/images/',
       '@animations/': '/resources/animations/',
-      'inertia-modal': path.resolve('vendor/emargareten/inertia-modal')
+      'inertia-modal': resolve('vendor/emargareten/inertia-modal')
     }
   },
   plugins: [
