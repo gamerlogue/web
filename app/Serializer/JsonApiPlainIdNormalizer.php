@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace App\Serializer;
 
+use ApiPlatform\Metadata\IriConverterInterface;
+use App\Models\LibraryEntry;
+use App\Models\User;
 use App\Traits\DecoratesSerializer;
 use ArrayObject;
-use Illuminate\Support\Str;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
+use UnexpectedValueException;
 
 readonly class JsonApiPlainIdNormalizer implements DenormalizerInterface, NormalizerInterface, SerializerAwareInterface
 {
     use DecoratesSerializer;
 
-    private string $routePrefix;
-
     public function __construct(
         private NormalizerInterface|DenormalizerInterface $decorated,
-    ) {
-        $this->routePrefix = config('api-platform.defaults.route_prefix') ?? '';
-    }
+        private IriConverterInterface $iriConverter,
+    ) {}
 
     /**
      * -------------------------------------------------------------------------
@@ -131,9 +131,16 @@ readonly class JsonApiPlainIdNormalizer implements DenormalizerInterface, Normal
 
     private function buildIri(string $type, string $id): string
     {
-        $path = Str::plural(Str::kebab($type));
+        $resourceClass = match ($type) {
+            'LibraryEntry' => LibraryEntry::class,
+            'User' => User::class,
+            default => throw new UnexpectedValueException("Unknown JSON:API resource type [$type]."),
+        };
 
-        return sprintf('%s/%s/%s', $this->routePrefix, $path, $id);
+        return $this->iriConverter->getIriFromResource(
+            $resourceClass,
+            context: ['uri_variables' => ['id' => $id]],
+        ) ?? throw new UnexpectedValueException("Unable to build an IRI for [$type].");
     }
 
     private function cleanIdsRecursively(array $data): array

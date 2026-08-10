@@ -2,29 +2,42 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     config()->set('cache.default', 'array');
+    config()->set('services.igdb_proxy.allowed_paths', ['games', 'events']);
 
+    Cache::flush();
     Http::preventStrayRequests();
+});
+
+test('requires authentication', function () {
+    $this->postJson('/api/igdb/games')
+        ->assertUnauthorized();
+});
+
+test('rejects endpoints outside the allowlist', function () {
+    $this->actingAs(User::factory()->create(), 'sanctum')
+        ->postJson('/api/igdb/webhooks')
+        ->assertNotFound();
 });
 
 test('returns error if not configured', function () {
     config()->set('igdb.credentials.client_id');
     config()->set('igdb.credentials.access_token');
-    Cache::flush();
 
-    $this->post('/api/igdb/games', ['fields id; where id = 1;'])
-//        ->dump()
-        ->assertStatus(500);
+    $this->actingAs(User::factory()->create(), 'sanctum')
+        ->postJson('/api/igdb/games')
+        ->assertStatus(502)
+        ->assertJsonPath('message', 'IGDB is temporarily unavailable.');
 });
 
-test('caches successful get response', function () {
+test('caches successful post responses', function () {
     config()->set('igdb.cache_lifetime', 3600);
-    Cache::flush();
 
     $count = 5;
     $games = array_map(
@@ -38,12 +51,16 @@ test('caches successful get response', function () {
     ]);
 
     $query = "fields id; limit $count;";
-    $this->call('POST', '/api/igdb/games', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
+    $user = User::factory()->create();
+
+    $this->actingAs($user, 'sanctum')
+        ->call('POST', '/api/igdb/games', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
         ->assertOk()
         ->assertJson($games)
         ->assertJsonCount($count);
 
-    $this->call('POST', '/api/igdb/games', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
+    $this->actingAs($user, 'sanctum')
+        ->call('POST', '/api/igdb/games', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
         ->assertOk()
         ->assertJson($games);
 
@@ -52,34 +69,75 @@ test('caches successful get response', function () {
     $this->assertTrue(Cache::has(config('igdb.cache_prefix', 'igdb_cache') . '.' . md5('games' . $query)));
 });
 
-test('caches event responses for five seconds', function () {
-    config()->set('igdb.cache_lifetime', 3600);
-    Cache::flush();
-
+test('serves stale event data while refreshing it', function () {
     Cache::put('igdb_cache.access_token', 'test-token');
     Http::fake([
         'api.igdb.com/v4/*' => Http::sequence()
-            ->push([['id' => 1, 'games' => [['id' => 10]]]])
-            ->push([['id' => 2, 'games' => [['id' => 20]]]]),
+            ->push([['id' => 1]])
+            ->push([['id' => 2]]),
     ]);
 
-    $query = 'fields id,games.*;';
+    $query = 'fields id;';
+    $user = User::factory()->create();
 
-    $this->call('POST', '/api/igdb/events', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
+    $this->actingAs($user, 'sanctum')
+        ->call('POST', '/api/igdb/events', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
         ->assertOk()
-        ->assertJson([['id' => 1, 'games' => [['id' => 10]]]]);
-
-    $this->call('POST', '/api/igdb/events', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
-        ->assertOk()
-        ->assertJson([['id' => 1, 'games' => [['id' => 10]]]]);
-
-    Http::assertSentCount(1);
+        ->assertJson([['id' => 1]]);
 
     $this->travel(6)->seconds();
 
-    $this->call('POST', '/api/igdb/events', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
+    $this->actingAs($user, 'sanctum')
+        ->call('POST', '/api/igdb/events', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
         ->assertOk()
-        ->assertJson([['id' => 2, 'games' => [['id' => 20]]]]);
+        ->assertJson([['id' => 1]]);
+
+    $this->actingAs($user, 'sanctum')
+        ->call('POST', '/api/igdb/events', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
+        ->assertOk()
+        ->assertJson([['id' => 2]]);
 
     Http::assertSentCount(2);
+});
+
+test('does not cache upstream errors', function () {
+    Cache::put('igdb_cache.access_token', 'test-token');
+    Http::fake([
+        'api.igdb.com/v4/*' => Http::sequence()
+            ->push(['message' => 'Rate limited'], 429)
+            ->push([['id' => 1]], 200),
+    ]);
+
+    $query = 'fields id;';
+    $user = User::factory()->create();
+
+    $this->actingAs($user, 'sanctum')
+        ->call('POST', '/api/igdb/games', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
+        ->assertTooManyRequests();
+
+    $this->actingAs($user, 'sanctum')
+        ->call('POST', '/api/igdb/games', server: ['CONTENT_TYPE' => 'text/plain'], content: $query)
+        ->assertOk();
+
+    Http::assertSentCount(2);
+});
+
+test('returns bad gateway when igdb cannot be reached', function () {
+    Cache::put('igdb_cache.access_token', 'test-token');
+    Http::fake([
+        'api.igdb.com/v4/*' => Http::failedConnection(),
+    ]);
+
+    $this->actingAs(User::factory()->create(), 'sanctum')
+        ->call('POST', '/api/igdb/games', server: ['CONTENT_TYPE' => 'text/plain'], content: 'fields id;')
+        ->assertStatus(502)
+        ->assertJsonPath('message', 'IGDB is temporarily unavailable.');
+});
+
+test('rejects oversized queries before contacting igdb', function () {
+    $this->actingAs(User::factory()->create(), 'sanctum')
+        ->call('POST', '/api/igdb/games', server: ['CONTENT_TYPE' => 'text/plain'], content: str_repeat('a', 16_385))
+        ->assertStatus(413);
+
+    Http::assertNothingSent();
 });
