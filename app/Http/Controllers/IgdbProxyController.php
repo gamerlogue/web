@@ -13,13 +13,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class IgdbProxyController extends Controller
 {
+    private const int EVENT_CACHE_LIFETIME = 5;
+
     public function handle(Request $request, ?string $path = ''): Response
     {
-        $cacheLifetime = (int) config('igdb.cache_lifetime');
-
-        if (str_starts_with($path, '/events')) {
-            $cacheLifetime = 0;
-        }
+        $cacheLifetime = $path === 'events'
+            ? self::EVENT_CACHE_LIFETIME
+            : (int) config('igdb.cache_lifetime');
 
         $query = $request->getContent();
 
