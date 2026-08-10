@@ -42,19 +42,11 @@ WORKDIR ${APP_BASE_DIR}
 
 RUN apk add --no-cache --update \
     bash \
-    fish \
-    git \
-    iputils \
     mariadb-client \
-    micro \
-    nss-tools \
     tzdata \
-    unzip \
-    vim \
-    wget \
-    xh
+    unzip
 
-# Setup User (Fish as default shell), Timezone & Permissions
+# Setup timezone and log permissions
 RUN set -eux; \
     ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime; \
     echo ${TZ} > /etc/timezone; \
@@ -80,6 +72,16 @@ ENV CADDY_AUTO_HTTPS=on \
 
 USER root
 RUN install-php-extensions xdebug
+
+RUN apk add --no-cache --update \
+    fish \
+    git \
+    iputils \
+    micro \
+    nss-tools \
+    vim \
+    wget \
+    xh
 
 # Use the build arguments to change the UID
 # and GID of www-data while also changing
