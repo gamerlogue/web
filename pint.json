@@ -2,7 +2,7 @@
   "preset": "laravel",
   "rules": {
     "trailing_comma_in_multiline": false,
-    "declare_strict_types": true
+    "declare_strict_types": true,
     "concat_space": {
       "spacing": "one"
     }
