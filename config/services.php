@@ -20,7 +20,6 @@ return [
     ],
 
     'igdb_proxy' => [
-        'allowed_paths' => array_values(array_filter(array_map('trim', explode(',', env('IGDB_PROXY_ALLOWED_PATHS', 'games,events'))))),
         'rate_limit' => (int) env('IGDB_PROXY_RATE_LIMIT', 30),
         'event_cache_lifetime' => (int) env('IGDB_PROXY_EVENT_CACHE_LIFETIME', 5),
         'event_stale_lifetime' => (int) env('IGDB_PROXY_EVENT_STALE_LIFETIME', 10),

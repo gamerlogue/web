@@ -10,8 +10,10 @@ Route::post('/sanctum/token/exchange', [SanctumTokenController::class, 'exchange
     ->middleware('throttle:10,1');
 
 /**
- * IGDB proxy: forwards to https://api.igdb.com/v4/{path}
+ * IGDB proxy: forwards to https://api.igdb.com/v4/{path}, guests included.
+ * The endpoint pattern keeps the path a single IGDB endpoint name.
  */
-Route::middleware(['auth:sanctum', 'throttle:igdb'])
+Route::middleware('throttle:igdb')
     ->post('/igdb/{path}', [IgdbProxyController::class, 'handle'])
+    ->where('path', '[a-z_]+')
     ->name('igdb.proxy');
