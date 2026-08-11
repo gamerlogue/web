@@ -27,7 +27,7 @@
     "mariusgelez/igdb-laravel": "^1.0",
     "opcodesio/log-viewer": "^3.10",
     "soved/laravel-gdpr": "^1.9",
-    "spatie/laravel-activitylog": "^4.10"
+    "spatie/laravel-activitylog": "^5.0"
   },
   "require-dev": {
     "fakerphp/faker": "^1.23",
