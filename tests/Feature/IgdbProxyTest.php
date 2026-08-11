@@ -9,21 +9,23 @@ use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     config()->set('cache.default', 'array');
-    config()->set('services.igdb_proxy.allowed_paths', ['games', 'events']);
-
     Cache::flush();
     Http::preventStrayRequests();
 });
 
-test('requires authentication', function () {
-    $this->postJson('/api/igdb/games')
-        ->assertUnauthorized();
-});
+test('forwards any igdb endpoint, for guests too', function (string $endpoint) {
+    Cache::put('igdb_cache.access_token', 'test-token');
+    Http::fake(['api.igdb.com/v4/*' => Http::response([['id' => 1]])]);
 
-test('rejects endpoints outside the allowlist', function () {
-    $this->actingAs(User::factory()->create(), 'sanctum')
-        ->postJson('/api/igdb/webhooks')
-        ->assertNotFound();
+    $this->call('POST', "/api/igdb/{$endpoint}", server: ['CONTENT_TYPE' => 'text/plain'], content: 'fields id;')
+        ->assertOk()
+        ->assertJson([['id' => 1]]);
+
+    Http::assertSent(static fn (Request $request): bool => $request->url() === "https://api.igdb.com/v4/{$endpoint}");
+})->with(['games', 'covers', 'game_engines']);
+
+test('rejects a path that is not an endpoint name', function () {
+    $this->postJson('/api/igdb/../admin')->assertNotFound();
 });
 
 test('returns error if not configured', function () {

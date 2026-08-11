@@ -22,8 +22,6 @@ class IgdbProxyController
 
     public function handle(Request $request, string $path): Response
     {
-        abort_unless(in_array($path, config('services.igdb_proxy.allowed_paths'), true), 404);
-
         $query = $request->getContent();
 
         abort_if(strlen($query) > self::MAX_QUERY_LENGTH, 413);
