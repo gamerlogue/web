@@ -264,10 +264,11 @@ service providers boot**. Two consequences:
 - The test suite runs against `database/testing.sqlite`, migrated by `tests/bootstrap.php` *before*
   the first application boots. `RefreshDatabase` alone is too late: with an empty schema the item
   operations lose their `{id}` and every `/api/<resource>/{id}` request 404s.
-- `metadata_dump` is deliberately left unset. It only seeds the models it was dumped for — API
-  Platform still introspects `Illuminate\Foundation\Auth\User` — so it does not buy a database-free
-  boot, and its fingerprint is built from migration mtimes, which git does not preserve: a committed
-  dump reads as stale on every fresh checkout.
+- The docker build migrates a throwaway sqlite database before any `artisan` call, then generates
+  the metadata dump the workers read at runtime. Do not commit that dump: its fingerprint hashes
+  migration mtimes, which git does not preserve, so a checked-in one always reads as stale. Note it
+  only seeds the models it was dumped for — API Platform asks for `Illuminate\Foundation\Auth\User`
+  as well — so it reduces the boot-time introspection without removing it.
 - `api-platform.cache` must stay `array`. `config/cache.php` sets `serializable_classes => false`,
   so any persistent store hands the cached metadata objects back as `__PHP_Incomplete_Class`.
 
