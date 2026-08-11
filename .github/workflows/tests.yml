@@ -36,6 +36,11 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
           coverage: none
 
+      # composer install runs package:discover, which boots the application, and API Platform reads
+      # the Eloquent metadata from the database. The file has to exist before that happens.
+      - name: Create the sqlite database
+        run: touch database/database.sqlite
+
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
