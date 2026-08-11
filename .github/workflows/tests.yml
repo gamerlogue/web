@@ -23,6 +23,15 @@ jobs:
 
     name: PHP ${{ matrix.php }}
 
+    # .env.example points at the Sail services, none of which exist here, and every artisan call
+    # boots the application. Laravel loads .env immutably, so these win over the copied file.
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
+      SESSION_DRIVER: array
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
