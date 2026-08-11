@@ -5,22 +5,27 @@ declare(strict_types=1);
 namespace App\Serializer;
 
 use ApiPlatform\Metadata\IriConverterInterface;
-use App\Models\LibraryEntry;
-use App\Models\User;
+use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
+use ApiPlatform\Metadata\Resource\Factory\ResourceNameCollectionFactoryInterface;
 use App\Traits\DecoratesSerializer;
 use ArrayObject;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
-use UnexpectedValueException;
 
-readonly class JsonApiPlainIdNormalizer implements DenormalizerInterface, NormalizerInterface, SerializerAwareInterface
+class JsonApiPlainIdNormalizer implements DenormalizerInterface, NormalizerInterface, SerializerAwareInterface
 {
     use DecoratesSerializer;
 
+    /** @var array<string, class-string>|null */
+    private ?array $resourceClassesByType = null;
+
     public function __construct(
-        private NormalizerInterface|DenormalizerInterface $decorated,
-        private IriConverterInterface $iriConverter,
+        private readonly NormalizerInterface|DenormalizerInterface $decorated,
+        private readonly IriConverterInterface $iriConverter,
+        private readonly ResourceNameCollectionFactoryInterface $resourceNameCollectionFactory,
+        private readonly ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory,
     ) {}
 
     /**
@@ -131,16 +136,42 @@ readonly class JsonApiPlainIdNormalizer implements DenormalizerInterface, Normal
 
     private function buildIri(string $type, string $id): string
     {
-        $resourceClass = match ($type) {
-            'LibraryEntry' => LibraryEntry::class,
-            'User' => User::class,
-            default => throw new UnexpectedValueException("Unknown JSON:API resource type [$type]."),
-        };
-
         return $this->iriConverter->getIriFromResource(
-            $resourceClass,
+            $this->resolveResourceClass($type),
             context: ['uri_variables' => ['id' => $id]],
-        ) ?? throw new UnexpectedValueException("Unable to build an IRI for [$type].");
+        ) ?? throw new NotNormalizableValueException("Unable to build an IRI for [$type].");
+    }
+
+    /**
+     * @return class-string
+     */
+    private function resolveResourceClass(string $type): string
+    {
+        $this->resourceClassesByType ??= $this->mapTypesToResourceClasses();
+
+        return $this->resourceClassesByType[$type]
+            ?? throw new NotNormalizableValueException("Unknown JSON:API resource type [$type].");
+    }
+
+    /**
+     * JSON:API types are the resource short names, so the mapping is whatever API Platform knows
+     * about. Memoized per instance rather than cached: it only changes when the code does.
+     *
+     * @return array<string, class-string>
+     */
+    private function mapTypesToResourceClasses(): array
+    {
+        $classes = [];
+
+        foreach ($this->resourceNameCollectionFactory->create() as $resourceClass) {
+            foreach ($this->resourceMetadataCollectionFactory->create($resourceClass) as $resource) {
+                if (($shortName = $resource->getShortName()) !== null) {
+                    $classes[$shortName] = $resourceClass;
+                }
+            }
+        }
+
+        return $classes;
     }
 
     private function cleanIdsRecursively(array $data): array
