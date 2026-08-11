@@ -231,3 +231,24 @@ test('validates library entry boundaries', function () {
         'data.attributes.end_date',
     );
 });
+
+test('an unknown resource type is rejected', function () {
+    $user = User::factory()->create();
+    $entry = LibraryEntry::create([
+        'user_id' => $user->id,
+        'game_id' => 1,
+        'status' => LibraryEntryStatus::Playing,
+        'owned' => true,
+    ]);
+
+    // The type is resolved against the resource short names API Platform knows about.
+    $this->actingAs($user, 'sanctum')
+        ->json('PATCH', "/api/library_entries/{$entry->id}", [
+            'data' => [
+                'type' => 'NotAResource',
+                'id' => (string) $entry->id,
+                'attributes' => ['status' => LibraryEntryStatus::Completed->value],
+            ],
+        ], jsonApiHeaders())
+        ->assertUnprocessable();
+});

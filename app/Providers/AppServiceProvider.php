@@ -7,6 +7,8 @@ namespace App\Providers;
 use ApiPlatform\JsonApi\Serializer\ErrorNormalizer;
 use ApiPlatform\JsonApi\Serializer\ItemNormalizer;
 use ApiPlatform\Metadata\IriConverterInterface;
+use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
+use ApiPlatform\Metadata\Resource\Factory\ResourceNameCollectionFactoryInterface;
 use App\Models\User;
 use App\Serializer\JsonApiPlainIdNormalizer;
 use App\Serializer\JsonApiStringStatusErrorNormalizer;
@@ -45,7 +47,12 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->extend(
             ItemNormalizer::class,
-            fn ($service, $app) => new JsonApiPlainIdNormalizer($service, $app->make(IriConverterInterface::class)),
+            fn ($service, $app) => new JsonApiPlainIdNormalizer(
+                $service,
+                $app->make(IriConverterInterface::class),
+                $app->make(ResourceNameCollectionFactoryInterface::class),
+                $app->make(ResourceMetadataCollectionFactoryInterface::class),
+            ),
         );
         $this->app->extend(ErrorNormalizer::class, fn ($service, $app) => new JsonApiStringStatusErrorNormalizer($service));
 
