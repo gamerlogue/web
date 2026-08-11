@@ -11,9 +11,7 @@ use ApiPlatform\Metadata\Patch;
 use App\Http\Requests\UserFormRequest;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,17 +26,6 @@ use Soved\Laravel\Gdpr\Contracts\Portable as PortableContract;
 use Soved\Laravel\Gdpr\Portable;
 use Spatie\Activitylog\Traits\CausesActivity;
 
-#[Fillable([
-    'email',
-    'email_verified_at',
-    'password',
-    'first_name',
-    'last_name',
-    'picture',
-    'nickname',
-    'name',
-])]
-#[Hidden(['email', 'id', 'password', 'remember_token'])]
 #[ApiResource(
     description: 'A user of the application.',
     operations: [
@@ -52,6 +39,27 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
 {
     /** @use HasFactory<UserFactory> */
     use CausesActivity, HasApiTokens, HasFactory, HasUuids, LogsInWithOidc, Notifiable, Portable, SoftDeletes;
+
+    /**
+     * Declared as properties rather than through the #[Fillable] and #[Hidden] attributes: those
+     * are applied by the constructor, and API Platform inspects the model through
+     * newInstanceWithoutConstructor(), which would leave every field visible to the serializer.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'email',
+        'email_verified_at',
+        'password',
+        'first_name',
+        'last_name',
+        'picture',
+        'nickname',
+        'name',
+    ];
+
+    /** @var list<string> */
+    protected $hidden = ['email', 'id', 'password', 'remember_token'];
 
     /**
      * The relations to include in the downloadable data.
