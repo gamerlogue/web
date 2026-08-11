@@ -24,7 +24,6 @@ use Maicol07\OIDCClient\Models\Traits\LogsInWithOidc;
 use Maicol07\OpenIDConnect\UserInfo;
 use Soved\Laravel\Gdpr\Contracts\Portable as PortableContract;
 use Soved\Laravel\Gdpr\Portable;
-use Spatie\Activitylog\Traits\CausesActivity;
 
 #[ApiResource(
     description: 'A user of the application.',
@@ -38,7 +37,7 @@ use Spatie\Activitylog\Traits\CausesActivity;
 class User extends Authenticatable implements MustVerifyEmail, PortableContract
 {
     /** @use HasFactory<UserFactory> */
-    use CausesActivity, HasApiTokens, HasFactory, HasUuids, LogsInWithOidc, Notifiable, Portable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasUuids, LogsInWithOidc, Notifiable, Portable, SoftDeletes;
 
     /**
      * Declared as properties rather than through the #[Fillable] and #[Hidden] attributes: those
