@@ -110,6 +110,7 @@ services:
     ports:
       - '${FORWARD_DB_PORT:-3306}:3306'
     environment:
+      MARIADB_AUTO_UPGRADE: 'yes'
       MARIADB_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:-$DB_PASSWORD}'
       MARIADB_DATABASE: '${DB_DATABASE}'
       MARIADB_USER: '${DB_USERNAME}'
