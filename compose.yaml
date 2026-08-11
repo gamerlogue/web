@@ -43,6 +43,8 @@ services:
       service: task
     build:
       target: dev
+    volumes:
+      - '.:/var/www/html'
 
   queue:
     extends:
