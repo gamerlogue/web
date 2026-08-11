@@ -8,6 +8,9 @@
             <TailItem>
               <option name="path" value="$USER_HOME$/.cache/JetBrains/PhpStorm2024.2/log/idea.log" />
             </TailItem>
+            <TailItem>
+              <option name="path" value="$USER_HOME$/AppData/Local/JetBrains/PhpStorm2026.2/log/idea.log" />
+            </TailItem>
           </set>
         </option>
       </TailHistory>
