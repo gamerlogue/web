@@ -93,6 +93,11 @@ return [
     // set to null if you want to keep snake_case
     'name_converter' => null,
 
+    // Generated during the docker build (see Dockerfile) so the workers read the Eloquent metadata
+    // from here instead of introspecting the database on every boot. Not committed: the fingerprint
+    // hashes migration mtimes, which git does not preserve, so a checked-in dump always reads stale.
+    'metadata_dump' => base_path('database/api-platform-metadata.dump'),
+
     'exception_to_status' => [
         AuthenticationException::class => 401,
         AuthorizationException::class => 403,
