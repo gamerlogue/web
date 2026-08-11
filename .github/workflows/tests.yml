@@ -3,7 +3,7 @@ name: Tests
 on:
   push:
     branches:
-      - master
+      - main
       - '*.x'
   pull_request:
   schedule:
@@ -39,6 +39,12 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      - name: Validate Composer files
+        run: composer validate --strict
+
+      - name: Audit Composer dependencies
+        run: composer audit
+
       - name: Copy environment file
         run: cp .env.example .env
 
@@ -51,7 +57,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Check code style (Pint)
-        run: ./vendor/bin/pint app --test
+        run: ./vendor/bin/pint --test
 
       - name: Static analysis (PHPStan)
         run: ./vendor/bin/phpstan analyse --memory-limit=1G

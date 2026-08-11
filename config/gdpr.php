@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -25,8 +27,7 @@ return [
 
     'middleware' => [
         'web',
-        'auth',
-        'password.confirm'
+        'auth'
     ],
 
     /*

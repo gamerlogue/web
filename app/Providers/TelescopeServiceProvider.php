@@ -44,6 +44,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
         Telescope::hideRequestParameters(['_token']);
 
         Telescope::hideRequestHeaders([
+            'authorization',
             'cookie',
             'x-csrf-token',
             'x-xsrf-token',
@@ -57,8 +58,6 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', static function ($user) {
-            return $user->email === config('app.admin_email');
-        });
+        Gate::define('viewTelescope', static fn ($user = null): bool => Gate::forUser($user)->allows('admin'));
     }
 }

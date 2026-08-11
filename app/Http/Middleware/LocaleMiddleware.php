@@ -7,7 +7,6 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use LaravelLang\Locales\Data\LocaleData;
 use LaravelLang\Locales\Facades\Locales;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,18 +15,25 @@ class LocaleMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        /** @var Collection<LocaleData> $availableLocales */
-        $availableLocales = cache()->rememberForever(
-            'available_locales',
-            static fn () =>
-            /** @var Collection<LocaleData> $langs */
-            Locales::available()->map(fn (LocaleData $lang) => $lang->locale->value)
+        // Cached as a plain array: a serialized Collection blows up on unserialize in workers
+        // that boot before the framework classes are loaded.
+        /** @var list<string> $availableLocales */
+        $availableLocales = cache()->remember(
+            'available_locales:v3',
+            now()->addDay(),
+            static fn (): array => Locales::available()
+                ->map(static fn (LocaleData $locale): string => $locale->locale->value)
+                ->all(),
         );
-        $locale = $request->session()->get('locale', $request->getPreferredLanguage($availableLocales->all()));
-        if (is_string($locale)) {
-            app()->setLocale($locale);
-            Carbon::setLocale($locale);
+
+        $locale = $request->session()->get('locale', $request->getPreferredLanguage($availableLocales));
+
+        if (! is_string($locale) || ! Locales::isAvailable($locale)) {
+            $locale = config('app.locale');
         }
+
+        app()->setLocale($locale);
+        Carbon::setLocale($locale);
 
         return $next($request);
     }

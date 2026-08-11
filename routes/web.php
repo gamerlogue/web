@@ -1,31 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Controllers\LocaleController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\SanctumTokenController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', static function () {
-    return 'OK. You are logged in as '.(auth()->check() ? auth()->user()->name : 'Guest');
-});
+Route::get('/', static fn (): string => 'OK');
 
-Route::get('/sanctum/token', static function (Request $request) {
-    if (! $request->query->has('token_name')) {
-        return response()->json(['message' => 'The token_name query parameter is required.'], 422);
-    }
-
-    $token = $request->user()->createToken($request->query('token_name'));
-
-    $redirectUri = $request->query('redirect_uri', 'gamerlogue://auth/callback');
-
-    $encoded_token = urlencode($token->plainTextToken);
-    // Build query string
-    $queryString = http_build_query([
-        'token' => $encoded_token,
-        'user_id' => $request->user()->id,
-    ]);
-
-    return redirect()->away("$redirectUri?$queryString");
-})->middleware('auth');
+Route::post('/sanctum/token', [SanctumTokenController::class, 'issue'])
+    ->middleware(['auth', 'throttle:6,1']);
 
 /**
  * Service routes
