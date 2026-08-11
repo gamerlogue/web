@@ -252,3 +252,98 @@ test('an unknown resource type is rejected', function () {
         ], jsonApiHeaders())
         ->assertUnprocessable();
 });
+
+test('a game cannot be added to the same library twice', function () {
+    $user = User::factory()->create();
+    LibraryEntry::create([
+        'user_id' => $user->id,
+        'game_id' => 7,
+        'status' => LibraryEntryStatus::Playing,
+        'owned' => true,
+    ]);
+
+    // A unique index covers (game_id, user_id); validation has to catch it before the database does.
+    $this->actingAs($user, 'sanctum')
+        ->json('POST', '/api/library_entries', [
+            'data' => [
+                'type' => 'LibraryEntry',
+                'attributes' => [
+                    'game_id' => 7,
+                    'status' => LibraryEntryStatus::Playing->value,
+                    'owned' => true,
+                ],
+            ],
+        ], jsonApiHeaders())
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.0.code', fn (string $code) => str_ends_with($code, '/data.attributes.game_id'));
+
+    expect(LibraryEntry::query()->where('game_id', 7)->count())->toBe(1);
+});
+
+test('the same game may sit in two different libraries', function () {
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+
+    LibraryEntry::create([
+        'user_id' => $other->id,
+        'game_id' => 7,
+        'status' => LibraryEntryStatus::Playing,
+        'owned' => true,
+    ]);
+
+    $this->actingAs($user, 'sanctum')
+        ->json('POST', '/api/library_entries', [
+            'data' => [
+                'type' => 'LibraryEntry',
+                'attributes' => [
+                    'game_id' => 7,
+                    'status' => LibraryEntryStatus::Playing->value,
+                    'owned' => true,
+                ],
+            ],
+        ], jsonApiHeaders())
+        ->assertCreated();
+});
+
+test('entries can be filtered by game', function () {
+    $user = User::factory()->create();
+
+    foreach ([11, 22] as $gameId) {
+        LibraryEntry::create([
+            'user_id' => $user->id,
+            'game_id' => $gameId,
+            'status' => LibraryEntryStatus::Playing,
+            'owned' => true,
+        ]);
+    }
+
+    $this->actingAs($user, 'sanctum')
+        ->getJson('/api/library_entries?filter[game_id]=22', jsonApiHeaders())
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.attributes.game_id', 22);
+});
+
+test('the collection is paginated', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 31) as $gameId) {
+        LibraryEntry::create([
+            'user_id' => $user->id,
+            'game_id' => $gameId,
+            'status' => LibraryEntryStatus::Playing,
+            'owned' => true,
+        ]);
+    }
+
+    // pagination_items_per_page is 30, and the client cannot ask for more.
+    $this->actingAs($user, 'sanctum')
+        ->getJson('/api/library_entries', jsonApiHeaders())
+        ->assertOk()
+        ->assertJsonCount(30, 'data');
+
+    $this->actingAs($user, 'sanctum')
+        ->getJson('/api/library_entries?page=2', jsonApiHeaders())
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+});

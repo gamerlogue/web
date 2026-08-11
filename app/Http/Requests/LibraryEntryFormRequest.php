@@ -24,7 +24,14 @@ class LibraryEntryFormRequest extends FormRequest
                 'uuid',
                 'exists:users,id',
             ],
-            'data.attributes.game_id' => [Rule::requiredIf($this->isMethod('POST')), 'integer'],
+            'data.attributes.game_id' => [
+                Rule::requiredIf($this->isMethod('POST')),
+                'integer',
+                // A game appears once per library; without this the unique index surfaces as a 500.
+                Rule::unique('library_entries', 'game_id')
+                    ->where('user_id', $this->user()?->id)
+                    ->ignore($this->route('id')),
+            ],
             'data.attributes.status' => [Rule::requiredIf($this->isMethod('POST')), Rule::enum(LibraryEntryStatus::class)],
             'data.attributes.completion_status' => ['nullable', Rule::enum(LibraryEntryCompletionStatus::class)],
             'data.attributes.owned' => ['boolean'],
