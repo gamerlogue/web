@@ -42,9 +42,17 @@ WORKDIR ${APP_BASE_DIR}
 
 RUN apk add --no-cache --update \
     bash \
+    fish \
+    git \
+    iputils \
+    micro \
     mariadb-client \
+    nss-tools \
     tzdata \
-    unzip
+    unzip \
+    vim \
+    wget \
+    xh
 
 # Setup timezone and log permissions
 RUN set -eux; \
@@ -67,6 +75,8 @@ ENV CADDY_AUTO_HTTPS=on \
     CADDY_HTTPS_PORT=443 \
     PHP_DISPLAY_ERRORS=1 \
     PHP_DISPLAY_STARTUP_ERRORS=1 \
+    # PHPStan exhausts the 256M default while analysing the API Platform metadata
+    PHP_MEMORY_LIMIT=1G \
     PHP_OPCACHE_REVALIDATE_FREQ=0 \
     SSL_MODE=full
 
