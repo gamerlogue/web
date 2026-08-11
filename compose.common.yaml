@@ -132,7 +132,7 @@ services:
 
   redis:
     restart: unless-stopped
-    image: 'redis:8.2-alpine'
+    image: 'redis:alpine'
     command: ["redis-server", "--maxmemory", "${REDIS_MAXMEMORY:-384mb}", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - 'redis:/data'
