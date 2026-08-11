@@ -428,3 +428,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/git,node,linux,macos,windows,phpstorm,composer,laravel,vue,vuejs
+
+# Test database (recreated by tests/bootstrap.php)
+/database/testing.sqlite
+
+# Generated during the docker build
+/database/api-platform-metadata.dump

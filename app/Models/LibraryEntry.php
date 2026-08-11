@@ -10,7 +10,6 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Enums\LibraryEntryCompletionStatus;
 use App\Enums\LibraryEntryStatus;
-use App\Filter\CurrentUserFilter;
 use App\Http\Requests\LibraryEntryFormRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,8 +37,6 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     property: 'platforms_ids',
     nativeType: new BuiltinType(TypeIdentifier::ARRAY)
 )]
-#[QueryParameter('current_user', filter: CurrentUserFilter::class, description: 'Filter library entries by the current authenticated user')]
-#[QueryParameter('filter[user_id]', filter: EqualsFilter::class, property: 'user_id', description: 'Filter library entries by the associated user ID')]
 #[QueryParameter('filter[game_id]', filter: EqualsFilter::class, property: 'game_id', description: 'Filter library entries by the associated game ID')]
 class LibraryEntry extends Model
 {
@@ -60,6 +57,21 @@ class LibraryEntry extends Model
         'rating_details',
         'review',
     ];
+
+    /**
+     * The owner cannot be taken from the request body: API Platform persists the deserialized
+     * payload, not the validated data, so a FormRequest can reject a foreign owner but never
+     * replace it. Assigning it here covers every write that happens for an authenticated user,
+     * while leaving factories, seeders and console commands free to set it explicitly.
+     */
+    protected static function booted(): void
+    {
+        static::creating(static function (self $entry): void {
+            if (auth()->check()) {
+                $entry->user_id = auth()->id();
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -86,45 +98,5 @@ class LibraryEntry extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function getEditionsIds(): ?array
-    {
-        return $this->getAttribute('editions_ids');
-    }
-
-    public function setEditionsIds(?array $editionsIds): void
-    {
-        $this->setAttribute('editions_ids', $editionsIds);
-    }
-
-    public function getEditions_ids(): ?array
-    {
-        return $this->getAttribute('editions_ids');
-    }
-
-    public function setEditions_ids(?array $editionsIds): void
-    {
-        $this->setAttribute('editions_ids', $editionsIds);
-    }
-
-    public function getPlatformsIds(): ?array
-    {
-        return $this->getAttribute('platforms_ids');
-    }
-
-    public function setPlatformsIds(?array $platformsIds): void
-    {
-        $this->setAttribute('platforms_ids', $platformsIds);
-    }
-
-    public function getPlatforms_ids(): ?array
-    {
-        return $this->getAttribute('platforms_ids');
-    }
-
-    public function setPlatforms_ids(?array $platformsIds): void
-    {
-        $this->setAttribute('platforms_ids', $platformsIds);
     }
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 use ApiPlatform\Metadata\UrlGeneratorInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 
 return [
     'title' => 'Gamerlogue API',
@@ -92,9 +93,17 @@ return [
     // set to null if you want to keep snake_case
     'name_converter' => null,
 
+    // Generated during the docker build (see Dockerfile) so the workers read the Eloquent metadata
+    // from here instead of introspecting the database on every boot. Not committed: the fingerprint
+    // hashes migration mtimes, which git does not preserve, so a checked-in dump always reads stale.
+    'metadata_dump' => base_path('database/api-platform-metadata.dump'),
+
     'exception_to_status' => [
         AuthenticationException::class => 401,
         AuthorizationException::class => 403,
+        // Deserialization runs before validation, so a malformed enum or date never reaches the
+        // FormRequest. Without this it surfaces as a 500 instead of a client error.
+        NotNormalizableValueException::class => 422,
     ],
 
     'swagger_ui' => [
@@ -143,8 +152,10 @@ return [
         // 'datetime_format' => \DateTimeInterface::RFC3339,
     ],
 
-    // we recommend using "file" or "acpu"
-    'cache' => 'file',
+    // Not a persistent store: API Platform caches metadata objects, and cache.serializable_classes
+    // is false, so anything written to file/redis comes back as __PHP_Incomplete_Class. The array
+    // store lives as long as the Octane worker, and metadata_dump already spares the database.
+    'cache' => 'array',
 
     // install `api-platform/http-cache`
     // 'http_cache' => [

@@ -26,4 +26,9 @@ class UserFormRequest extends FormRequest
         // Users may only patch their own resource.
         return $this->user()?->id === $this->route('id');
     }
+
+    protected function prepareForValidation(): void
+    {
+        $this->denormalizeIris();
+    }
 }

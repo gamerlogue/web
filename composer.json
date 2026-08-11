@@ -1,6 +1,7 @@
 {
   "$schema": "https://getcomposer.org/schema.json",
   "name": "maicol07/account",
+  "description": "Gamerlogue web application.",
   "type": "project",
   "license": "proprietary",
   "require": {
@@ -11,7 +12,6 @@
     "api-platform/laravel": "^4.2",
     "emargareten/inertia-modal": "^1.5",
     "inertiajs/inertia-laravel": "^2.0",
-    "itsgoingd/clockwork": "^5.3",
     "laravel-lang/locales": "^2.10",
     "laravel/fortify": "*",
     "laravel/framework": "^13.0",
@@ -26,7 +26,6 @@
     "maicol07/laravel-oidc-client": "^1.1",
     "mariusgelez/igdb-laravel": "^1.0",
     "opcodesio/log-viewer": "^3.10",
-    "phpdocumentor/type-resolver": "^1.12",
     "soved/laravel-gdpr": "^1.9",
     "spatie/laravel-activitylog": "^4.10"
   },
@@ -38,7 +37,6 @@
     "laravel-lang/publisher": "^16.7",
     "laravel/boost": "^2.0",
     "laravel/pint": "*",
-    "laravel/pail": "*",
     "laravel/pao": "*",
     "laravel/sail": "*",
     "mockery/mockery": "*",
@@ -53,10 +51,7 @@
       "App\\": "app/",
       "Database\\Factories\\": "database/factories/",
       "Database\\Seeders\\": "database/seeders/"
-    },
-    "files": [
-      "app/helpers.php"
-    ]
+    }
   },
   "autoload-dev": {
     "psr-4": {

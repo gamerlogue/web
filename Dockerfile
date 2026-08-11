@@ -42,19 +42,11 @@ WORKDIR ${APP_BASE_DIR}
 
 RUN apk add --no-cache --update \
     bash \
-    fish \
-    git \
-    iputils \
     mariadb-client \
-    micro \
-    nss-tools \
     tzdata \
-    unzip \
-    vim \
-    wget \
-    xh
+    unzip
 
-# Setup User (Fish as default shell), Timezone & Permissions
+# Setup timezone and log permissions
 RUN set -eux; \
     ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime; \
     echo ${TZ} > /etc/timezone; \
@@ -80,6 +72,16 @@ ENV CADDY_AUTO_HTTPS=on \
 
 USER root
 RUN install-php-extensions xdebug
+
+RUN apk add --no-cache --update \
+    fish \
+    git \
+    iputils \
+    micro \
+    nss-tools \
+    vim \
+    wget \
+    xh
 
 # Use the build arguments to change the UID
 # and GID of www-data while also changing
@@ -139,13 +141,27 @@ RUN --mount=type=cache,target=/tmp/composer-cache,uid=${USER_ID},gid=${GROUP_ID}
 
 COPY --chown=${USER} . .
 
-RUN composer dump-autoload --optimize --apcu --no-dev
+RUN composer dump-autoload --optimize --apcu --no-dev --no-scripts
 
 RUN mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+# Every artisan call below boots the application, and API Platform derives its routes from the
+# Eloquent metadata it reads from the database: with no schema the item operations lose their {id},
+# so package discovery and the generated Wayfinder routes would both be wrong. A throwaway sqlite
+# database provides that schema, and the metadata dump carries it into the image so the running
+# workers do not introspect the real database on every boot.
+# DB_CONNECTION is exported because Telescope defaults its own connection to mysql.
+ENV DB_CONNECTION=sqlite
+
+RUN touch database/database.sqlite \
+    && php artisan migrate --force \
+    && php artisan package:discover --ansi
+
 # Build-time operations
-RUN php artisan wayfinder:generate --path=resources/ts
+RUN php artisan wayfinder:generate --path=resources/ts \
+    && php artisan api-platform:metadata:dump \
+    && rm database/database.sqlite
 
 ###########################################
 # Frontend Build
@@ -162,7 +178,7 @@ COPY --link --parents resources lang vite.config.ts tsconfig.json ./
 COPY --from=prod-base --link /var/www/html/resources/ts/actions  ./resources/ts/actions
 COPY --from=prod-base --link /var/www/html/resources/ts/routes  ./resources/ts/routes
 COPY --from=prod-base --link /var/www/html/resources/ts/wayfinder  ./resources/ts/wayfinder
-#COPY --from=prod-base --link /var/www/html/vendor/emargareten/inertia-modal  ./vendor/emargareten/inertia-modal
+COPY --from=prod-base --link /var/www/html/vendor/emargareten/inertia-modal  ./vendor/emargareten/inertia-modal
 
 RUN bun run build
 
