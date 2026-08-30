@@ -15,15 +15,19 @@ services:
       file: compose.common.yaml
       service: task
 
-  queue:
+  horizon:
     extends:
       file: compose.common.yaml
-      service: queue
+      service: horizon
 
   mariadb:
     extends:
       file: compose.common.yaml
       service: mariadb
+    environment:
+      # Distinct from DB_PASSWORD, and required: the common file defaults it to empty so that
+      # development can rely on MARIADB_ALLOW_EMPTY_PASSWORD.
+      MARIADB_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD required}'
 
   redis:
     extends:

@@ -106,12 +106,13 @@ services:
       - no-new-privileges:true
 
   mariadb:
+    restart: unless-stopped
     image: 'mariadb:12'
-    ports:
-      - '${FORWARD_DB_PORT:-3306}:3306'
+    # No `ports` here: the database is only reachable over the compose network. compose.yaml
+    # publishes it for development, where MARIADB_ALLOW_EMPTY_PASSWORD makes that acceptable.
     environment:
       MARIADB_AUTO_UPGRADE: 'yes'
-      MARIADB_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:-$DB_PASSWORD}'
+      MARIADB_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:-}'
       MARIADB_DATABASE: '${DB_DATABASE}'
       MARIADB_USER: '${DB_USERNAME}'
       MARIADB_PASSWORD: '${DB_PASSWORD:?DB_PASSWORD required}'
