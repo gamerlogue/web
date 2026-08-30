@@ -20,12 +20,30 @@ return [
 
         /*
          * Digital Asset Links, served at /.well-known/assetlinks.json so that Android can verify
-         * the App Link that replaces the private-use scheme above. Unset means the route 404s.
-         * Fingerprints are the SHA-256 of the signing certificates, uppercase and colon-separated;
-         * both the debug and the release certificate belong here while both are in use.
+         * the App Link that replaces the private-use scheme above. Empty means the route 404s.
+         *
+         * One entry per application, because debug and release are separate packages and each
+         * needs its own statement — a single statement with both fingerprints would not verify
+         * either. Declared as `package:FINGERPRINT[:FINGERPRINT...]`, semicolon separated, with
+         * fingerprints as uppercase colon-separated SHA-256 of the signing certificate.
+         *
+         * @var array<int, array{package: string, fingerprints: list<string>}>
          */
-        'android_package' => env('NATIVE_AUTH_ANDROID_PACKAGE'),
-        'android_fingerprints' => array_values(array_filter(array_map('trim', explode(',', (string) env('NATIVE_AUTH_ANDROID_FINGERPRINTS'))))),
+        'android_apps' => array_values(array_filter(array_map(
+            static function (string $app): ?array {
+                [$package, $fingerprints] = array_pad(explode('=', trim($app), 2), 2, null);
+
+                if (! is_string($package) || $package === '' || ! is_string($fingerprints) || $fingerprints === '') {
+                    return null;
+                }
+
+                return [
+                    'package' => $package,
+                    'fingerprints' => array_values(array_filter(array_map('trim', explode(',', $fingerprints)))),
+                ];
+            },
+            array_filter(explode(';', (string) env('NATIVE_AUTH_ANDROID_APPS'))),
+        )))
     ],
 
     'igdb_proxy' => [

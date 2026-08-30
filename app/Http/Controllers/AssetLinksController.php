@@ -14,20 +14,13 @@ class AssetLinksController
 {
     public function __invoke(): JsonResponse
     {
-        $package = config('services.native_auth.android_package');
-        $fingerprints = config('services.native_auth.android_fingerprints');
+        $statements = 'services.native_auth.android_apps'
+                |> config(...)
+                |> (fn ($x) => array_map(static fn (array $app): array => ['relation' => ['delegate_permission/common.handle_all_urls'], 'target' => ['namespace' => 'android_app', 'package_name' => $app['package'], 'sha256_cert_fingerprints' => $app['fingerprints']]], $x))
+                |> array_values(...);
 
-        abort_if(! is_string($package) || $package === '' || $fingerprints === [], 404);
+        abort_if($statements === [], 404);
 
-        return response()->json([
-            [
-                'relation' => ['delegate_permission/common.handle_all_urls'],
-                'target' => [
-                    'namespace' => 'android_app',
-                    'package_name' => $package,
-                    'sha256_cert_fingerprints' => $fingerprints,
-                ],
-            ],
-        ]);
+        return response()->json($statements);
     }
 }
