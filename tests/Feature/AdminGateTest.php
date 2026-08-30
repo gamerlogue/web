@@ -14,7 +14,7 @@ test('admin gates only allow the configured admin', function (string $gate) {
     expect(Gate::forUser($admin)->allows($gate))->toBeTrue()
         ->and(Gate::forUser($other)->allows($gate))->toBeFalse()
         ->and(Gate::forUser(null)->allows($gate))->toBeFalse();
-})->with(['admin', 'viewTelescope', 'viewHorizon']);
+})->with(['admin', 'viewTelescope', 'viewPulse', 'viewHorizon']);
 
 test('an empty admin email locks everyone out', function (string $gate) {
     config()->set('app.admin_email', '');
@@ -23,4 +23,4 @@ test('an empty admin email locks everyone out', function (string $gate) {
 
     expect(Gate::forUser($user)->allows($gate))->toBeFalse()
         ->and(Gate::forUser(null)->allows($gate))->toBeFalse();
-})->with(['admin', 'viewTelescope', 'viewHorizon']);
+})->with(['admin', 'viewTelescope', 'viewPulse', 'viewHorizon']);

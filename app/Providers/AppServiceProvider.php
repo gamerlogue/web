@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
             return route('oidc.login');
         });
 
-        /** Single source of truth for the admin check shared by Telescope, Horizon and the log viewer. */
+        /** Single source of truth for the admin check shared by Telescope, Pulse, Horizon and the log viewer. */
         Gate::define('admin', static function (?User $user): bool {
             $adminEmail = config('app.admin_email');
 
@@ -44,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define('viewLogViewer', static fn (?User $user): bool => app()->isLocal() || Gate::forUser($user)->allows('admin'));
+
+        Gate::define('viewPulse', static fn (?User $user): bool => Gate::forUser($user)->allows('admin'));
 
         $this->app->extend(
             ItemNormalizer::class,
