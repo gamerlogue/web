@@ -22,6 +22,17 @@ return Application::configure(basePath: dirname(__DIR__))
             LocaleMiddleware::class,
         ]);
 
+        /*
+         * `localhost` is in the list on purpose: the base image's HEALTHCHECK calls
+         * http://localhost:${CADDY_HTTP_PORT}${HEALTHCHECK_PATH}. Caddy answers that path itself
+         * today, but pointing HEALTHCHECK_PATH at Laravel's /up would otherwise turn every
+         * healthcheck into a 403 and restart-loop the container.
+         */
+        $middleware->trustHosts(at: static fn (): array => array_filter([
+            parse_url((string) config('app.url'), PHP_URL_HOST),
+            'localhost',
+        ]), subdomains: true);
+
         $middleware->trustProxies(
             at: [
                 '10.0.0.0/8',
