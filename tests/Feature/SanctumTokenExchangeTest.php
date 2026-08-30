@@ -36,7 +36,7 @@ function issuePayload(array $overrides = []): array
 /** @return array<string, string> */
 function issuedQuery(User $user, array $overrides = []): array
 {
-    $response = test()->actingAs($user)->post('/sanctum/token', issuePayload($overrides));
+    $response = test()->actingAs($user)->get('/sanctum/token?' . http_build_query(issuePayload($overrides)));
 
     $response->assertRedirect();
 
@@ -45,15 +45,22 @@ function issuedQuery(User $user, array $overrides = []): array
     return $query;
 }
 
-test('token issuance only accepts post requests', function () {
+/**
+ * GET so a Custom Tab can navigate to it. The request is safe to expose that way: it mints no
+ * token by itself, only the intent behind a single-use code that is worthless without the
+ * verifier, and the redirect target has to be on the allowlist.
+ */
+test('token issuance is navigable and refuses other verbs', function () {
     $this->actingAs(User::factory()->create())
-        ->get('/sanctum/token?token_name=mobile')
+        ->post('/sanctum/token', issuePayload())
         ->assertMethodNotAllowed();
 });
 
 test('token issuance rejects untrusted redirect uris', function () {
+    $payload = issuePayload(['redirect_uri' => 'https://attacker.example/callback']);
+
     $this->actingAs(User::factory()->create())
-        ->postJson('/sanctum/token', issuePayload(['redirect_uri' => 'https://attacker.example/callback']))
+        ->getJson('/sanctum/token?' . http_build_query($payload))
         ->assertUnprocessable()
         ->assertJsonValidationErrors('redirect_uri');
 });
@@ -63,14 +70,14 @@ test('token issuance requires a PKCE challenge and a state', function (string $f
     unset($payload[$field]);
 
     $this->actingAs(User::factory()->create())
-        ->postJson('/sanctum/token', $payload)
+        ->getJson('/sanctum/token?' . http_build_query($payload))
         ->assertUnprocessable()
         ->assertJsonValidationErrors($field);
 })->with(['code_challenge', 'code_challenge_method', 'state']);
 
 test('token issuance refuses the plain challenge method', function () {
     $this->actingAs(User::factory()->create())
-        ->postJson('/sanctum/token', issuePayload(['code_challenge_method' => 'plain']))
+        ->getJson('/sanctum/token?' . http_build_query(issuePayload(['code_challenge_method' => 'plain'])))
         ->assertUnprocessable()
         ->assertJsonValidationErrors('code_challenge_method');
 });
@@ -195,4 +202,53 @@ test('a redirect uri that already carries a query keeps it', function () {
 
     expect($query)->toHaveKey('source', 'app')
         ->and($query)->toHaveKey('code');
+});
+
+/**
+ * The navigable endpoint can be triggered cross-site, since a GET carries no CSRF token. That is
+ * survivable only because the code it mints is bound to a challenge the triggering page cannot
+ * pair with a verifier, and lands on an allowlisted redirect the attacker cannot read.
+ */
+test('a code minted by a cross-site trigger is unusable', function () {
+    $user = User::factory()->create();
+
+    // The attacker picks the challenge, so they hold the matching verifier.
+    $query = issuedQuery($user, ['code_challenge' => RFC_CHALLENGE]);
+
+    // But the redirect is still on the allowlist, and the app that receives the code exchanges it
+    // with its own verifier, which does not match.
+    $this->postJson('/api/sanctum/token/exchange', [
+        'code' => $query['code'],
+        'code_verifier' => str_repeat('b', 43),
+    ])->assertUnprocessable();
+
+    expect($user->tokens()->count())->toBe(0);
+});
+
+test('the authorize endpoint mints no token on its own', function () {
+    $user = User::factory()->create();
+
+    issuedQuery($user);
+    issuedQuery($user);
+    issuedQuery($user);
+
+    // Prefetchers and scanners can follow a GET. Codes that are never redeemed expire without
+    // ever having created anything.
+    expect($user->tokens()->count())->toBe(0);
+});
+
+/**
+ * The whole point of the endpoint being navigable: a Custom Tab opens it, an unauthenticated
+ * caller is sent through OIDC, and the intended URL brings the parameters back afterwards, so
+ * the client does not have to reissue the request itself.
+ */
+test('an unauthenticated visitor is sent through OIDC and comes back to the same request', function () {
+    $response = $this->get('/sanctum/token?' . http_build_query(issuePayload()))
+        ->assertRedirect(route('oidc.login'));
+
+    // Laravel normalises the query order, so compare the parameters rather than the raw string.
+    parse_str((string) parse_url((string) session('url.intended'), PHP_URL_QUERY), $intended);
+
+    expect($intended)->toEqualCanonicalizing(issuePayload())
+        ->and($response->headers->get('Location'))->toBe(route('oidc.login'));
 });
