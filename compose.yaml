@@ -46,10 +46,10 @@ services:
     volumes:
       - '.:/var/www/html'
 
-  queue:
+  horizon:
     extends:
       file: compose.common.yaml
-      service: queue
+      service: horizon
     build:
       target: dev
     volumes:

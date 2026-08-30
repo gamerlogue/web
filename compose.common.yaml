@@ -105,6 +105,36 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  horizon:
+    restart: unless-stopped
+    build:
+      context: .
+      target: prod
+    command: ["php", "/var/www/html/artisan", "horizon"]
+    stop_signal: SIGTERM
+    # Horizon finishes the job in flight before exiting, but Docker's default grace period is 10s:
+    # anything longer gets SIGKILLed, and with tries: 1 the job is lost rather than retried. This
+    # sits above the supervisor's 60s job timeout plus shutdown slack.
+    stop_grace_period: 90s
+    healthcheck:
+      test: ["CMD", "healthcheck-horizon"]
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    env_file:
+      - .env
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+
+
   mariadb:
     restart: unless-stopped
     image: 'mariadb:12'
@@ -135,7 +165,11 @@ services:
   redis:
     restart: unless-stopped
     image: 'redis:alpine'
-    command: ["redis-server", "--maxmemory", "${REDIS_MAXMEMORY:-384mb}", "--maxmemory-policy", "allkeys-lru"]
+    # volatile-lru, not allkeys-lru: the queue lists Horizon reads carry no TTL, so eviction can
+    # only take cache entries that have one, never a pending job. The ceiling: if keys without a
+    # TTL ever fill maxmemory, Redis starts refusing writes instead of evicting. That is a loud
+    # failure rather than a silent one, and the fix at that point is a separate Redis for queues.
+    command: ["redis-server", "--maxmemory", "${REDIS_MAXMEMORY:-384mb}", "--maxmemory-policy", "volatile-lru"]
     volumes:
       - 'redis:/data'
     healthcheck:

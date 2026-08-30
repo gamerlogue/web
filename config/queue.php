@@ -83,12 +83,17 @@ return [
             'driver' => 'background',
         ],
 
+        /*
+         * Unused: Horizon supervises the 'redis' connection directly, and a job that failed over
+         * to 'database' would never be picked up. Kept only so that an environment still set to
+         * 'failover' degrades to a working connection rather than an unknown one. `deferred` is
+         * deliberately absent: it drops the job at the end of the request instead of persisting it.
+         */
         'failover' => [
             'driver' => 'failover',
             'connections' => [
                 'redis',
                 'database',
-                'deferred',
             ],
         ],
 

@@ -297,11 +297,24 @@ They depend on the host, so they are set per deployment. If you do add them: `--
 **host's** CPU count, not the cgroup limit, so it must be paired with an explicit `OCTANE_WORKERS`,
 otherwise you get N workers fighting over a fraction of a CPU. Redis is the other one worth sizing:
 without `--maxmemory` it grows until the OOM killer takes it, losing the whole cache instead of evicting
-old keys, which is why `--maxmemory` + `allkeys-lru` are already set.
+old keys, which is why `--maxmemory` + `volatile-lru` are already set. The policy is `volatile-lru` and
+not `allkeys-lru` because the same Redis holds the queue: queue lists carry no TTL, so eviction can only
+take cache entries that have one, never a pending job.
 
-### The `horizon` service is defined but unused
-Neither `compose.yaml` nor `compose.prod.yaml` extends it: both use `queue` with `queue:work`. It stays in
-`compose.common.yaml` for applications that want it.
+### The queue runs under Horizon
+`compose.yaml` and `compose.prod.yaml` both extend `horizon`, which runs `artisan horizon`. The `queue`
+service stays defined in `compose.common.yaml` as a template for applications that want a plain worker.
+Because Horizon supervises the connection its supervisors declare, `QUEUE_CONNECTION` must name a Redis
+one: a job that landed on `database` would never be picked up.
+
+Its healthcheck is the image's `healthcheck-horizon` (`artisan horizon:status`), **not**
+`healthcheck-queue` — *verified*: that one greps for `queue:work` while Horizon's supervisors run
+`horizon:work`, so it would restart a healthy container. `horizon:status` exits 0 while running and 2
+while stopped.
+
+`config/horizon.php` keys its supervisors by `APP_ENV`. An environment missing from that list is not an
+error: Horizon starts, supervises nothing, and the queue never drains, silently. `Dockerfile` sets
+`APP_ENV=production`, which is one of the keys present.
 
 ---
 
