@@ -57,10 +57,8 @@
       <path value="$PROJECT_DIR$/vendor/psr/log" />
       <path value="$PROJECT_DIR$/vendor/nette/utils" />
       <path value="$PROJECT_DIR$/vendor/brick/math" />
-      <path value="$PROJECT_DIR$/vendor/bacon/bacon-qr-code" />
       <path value="$PROJECT_DIR$/vendor/psr/clock" />
       <path value="$PROJECT_DIR$/vendor/cse/helpers-session" />
-      <path value="$PROJECT_DIR$/vendor/dasprid/enum" />
       <path value="$PROJECT_DIR$/vendor/vlucas/phpdotenv" />
       <path value="$PROJECT_DIR$/vendor/laminas/laminas-diactoros" />
       <path value="$PROJECT_DIR$/vendor/egulias/email-validator" />
@@ -100,8 +98,6 @@
       <path value="$PROJECT_DIR$/vendor/laravel/prompts" />
       <path value="$PROJECT_DIR$/vendor/laravel/framework" />
       <path value="$PROJECT_DIR$/vendor/monolog/monolog" />
-      <path value="$PROJECT_DIR$/vendor/laravel/fortify" />
-      <path value="$PROJECT_DIR$/vendor/laravel/horizon" />
       <path value="$PROJECT_DIR$/vendor/symfony/process" />
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-mbstring" />
       <path value="$PROJECT_DIR$/vendor/symfony/web-link" />
@@ -144,7 +140,6 @@
       <path value="$PROJECT_DIR$/vendor/fruitcake/php-cors" />
       <path value="$PROJECT_DIR$/vendor/carbonphp/carbon-doctrine-types" />
       <path value="$PROJECT_DIR$/vendor/archtechx/enums" />
-      <path value="$PROJECT_DIR$/vendor/pragmarx/google2fa" />
       <path value="$PROJECT_DIR$/vendor/opcodesio/mail-parser" />
       <path value="$PROJECT_DIR$/vendor/opcodesio/log-viewer" />
       <path value="$PROJECT_DIR$/vendor/inertiajs/inertia-laravel" />
@@ -165,7 +160,6 @@
       <path value="$PROJECT_DIR$/vendor/dragon-code/pretty-array" />
       <path value="$PROJECT_DIR$/vendor/ralouphie/getallheaders" />
       <path value="$PROJECT_DIR$/vendor/phpoption/phpoption" />
-      <path value="$PROJECT_DIR$/vendor/paragonie/constant_time_encoding" />
       <path value="$PROJECT_DIR$/vendor/tijsverkoyen/css-to-inline-styles" />
       <path value="$PROJECT_DIR$/vendor/laravel-lang/locales" />
       <path value="$PROJECT_DIR$/vendor/laravel-lang/locale-list" />
@@ -254,11 +248,7 @@
       <path value="$PROJECT_DIR$/vendor/iamcal/sql-parser" />
       <path value="$PROJECT_DIR$/vendor/phpstan/phpstan" />
       <path value="$PROJECT_DIR$/vendor/larastan/larastan" />
-      <path value="$PROJECT_DIR$/vendor/laravel/passkeys" />
       <path value="$PROJECT_DIR$/vendor/laravel/sentinel" />
-      <path value="$PROJECT_DIR$/vendor/spomky-labs/cbor-php" />
-      <path value="$PROJECT_DIR$/vendor/web-auth/webauthn-lib" />
-      <path value="$PROJECT_DIR$/vendor/web-auth/cose-lib" />
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php86" />
       <path value="$PROJECT_DIR$/vendor/mariusgelez/igdb-laravel" />
       <path value="$PROJECT_DIR$/vendor/laravel/agent-detector" />
