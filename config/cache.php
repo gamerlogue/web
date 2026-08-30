@@ -99,12 +99,15 @@ return [
             'driver' => 'octane',
         ],
 
+        /*
+         * No `array` fallback: locks, single-use codes and rate limits would silently become
+         * local to one Octane worker instead of failing loudly.
+         */
         'failover' => [
             'driver' => 'failover',
             'stores' => [
                 'redis',
                 'database',
-                'array',
             ],
         ],
 
