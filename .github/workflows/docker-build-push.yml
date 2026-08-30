@@ -65,6 +65,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v7
         with:
           push: true
@@ -72,3 +73,13 @@ jobs:
           target: prod
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Runs after the push rather than gating it: a failing scan should be visible on an image
+      # that exists, not silently stop the branch tag from being published.
+      - name: Scan the image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ steps.prep.outputs.image }}:${{ github.event_name == 'release' && github.event.release.tag_name || 'edge' }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'

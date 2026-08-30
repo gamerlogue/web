@@ -56,6 +56,9 @@ jobs:
       - name: Validate Composer files
         run: composer validate --strict
 
+      - name: Audit dependencies
+        run: composer audit
+
       - name: Copy environment file
         run: cp .env.example .env
 
