@@ -102,11 +102,9 @@ return [
                 'lighthouse.*',
                 'filament.*',
                 'log-viewer.*',
-                'two-factor.*',
             ],
             'path' => [
                 '_ignition/*',
-                'two-factor-challenge',
                 'livewire',
             ],
         ],

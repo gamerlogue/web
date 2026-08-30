@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type {PageComponentProps} from '~/typings/inertia.js';
-import {router, usePage} from '@inertiajs/vue3';
+import {usePage} from '@inertiajs/vue3';
 import {CloseIcon, LogoutIcon} from 'mdi-vue3';
 import {computed} from 'vue';
 import UserAccountImage from '~/Components/UserAccountImage.vue';
-import {logout} from '~/routes';
+import {logout} from '~/routes/oidc';
 import '@material/web/menu/menu.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/button/outlined-button.js';
@@ -21,6 +21,10 @@ defineEmits<{
 
 const page = usePage<PageComponentProps>();
 const user = computed(() => page.props.user);
+
+// A full navigation rather than router.visit: the session is gone, and oidc.logout lands on a
+// plain response that Inertia would reject.
+const goToLogout = () => window.location.assign(logout().url);
 </script>
 
 <template>
@@ -41,7 +45,7 @@ const user = computed(() => page.props.user);
         <span>{{ $t('Hi {name}', {name: user.name ?? user.nickname}) }}</span>
       </div>
       <!-- Logout button -->
-      <md-outlined-button @click="router.visit(logout().url, {method: 'post'})">
+      <md-outlined-button @click="goToLogout">
         <md-icon slot="icon">
           <LogoutIcon/>
         </md-icon>
