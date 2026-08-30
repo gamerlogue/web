@@ -17,6 +17,15 @@ return [
 
     'native_auth' => [
         'redirect_uris' => array_values(array_filter(array_map('trim', explode(',', env('NATIVE_AUTH_REDIRECT_URIS', 'gamerlogue://auth/callback'))))),
+
+        /*
+         * Digital Asset Links, served at /.well-known/assetlinks.json so that Android can verify
+         * the App Link that replaces the private-use scheme above. Unset means the route 404s.
+         * Fingerprints are the SHA-256 of the signing certificates, uppercase and colon-separated;
+         * both the debug and the release certificate belong here while both are in use.
+         */
+        'android_package' => env('NATIVE_AUTH_ANDROID_PACKAGE'),
+        'android_fingerprints' => array_values(array_filter(array_map('trim', explode(',', (string) env('NATIVE_AUTH_ANDROID_FINGERPRINTS'))))),
     ],
 
     'igdb_proxy' => [
