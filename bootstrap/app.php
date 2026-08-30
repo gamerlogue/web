@@ -28,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
          * today, but pointing HEALTHCHECK_PATH at Laravel's /up would otherwise turn every
          * healthcheck into a 403 and restart-loop the container.
          */
+        $middleware->statefulApi();
+
         $middleware->trustHosts(at: static fn (): array => array_filter([
             parse_url((string) config('app.url'), PHP_URL_HOST),
             'localhost',

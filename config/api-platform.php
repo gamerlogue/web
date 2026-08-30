@@ -64,6 +64,9 @@ return [
         'pagination_maximum_items_per_page' => 30,
         'route_prefix' => '/api',
         'middleware' => [
+            // The API Platform routes are not part of the 'api' group, so statefulApi() alone
+            // would never reach them: the session-cookie middleware has to be named here.
+            'api',
             'auth:sanctum'
         ],
     ],
