@@ -25,6 +25,7 @@
     "maicol07/laravel-oidc-client": "^1.1",
     "mariusgelez/igdb-laravel": "^1.0",
     "opcodesio/log-viewer": "^3.10",
+    "phpdocumentor/type-resolver": "^2.0",
     "soved/laravel-gdpr": "^1.9"
   },
   "require-dev": {
