@@ -26,9 +26,13 @@ class UserFormRequest extends FormRequest
 
     public function authorize(): bool
     {
-        // Users may only patch their own resource, and a native token needs the 'profile' ability.
-        return $this->user()?->id === $this->route('id')
-            && $this->user()->tokenCan('profile');
+        if ($this->user()?->tokenCan('profile') !== true) {
+            return false;
+        }
+
+        // No route id means the collection, which OwnedResourcesExtension narrows to the caller.
+        // Item operations still have to name the caller's own id.
+        return $this->route('id') === null || $this->user()->id === $this->route('id');
     }
 
     protected function prepareForValidation(): void

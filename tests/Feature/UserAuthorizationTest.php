@@ -19,7 +19,9 @@ test('a user cannot patch another user', function () {
                 'attributes' => ['nickname' => 'hacked'],
             ],
         ], ['Content-Type' => 'application/vnd.api+json', 'Accept' => 'application/vnd.api+json'])
-        ->assertForbidden();
+        // 404 rather than 403: OwnedResourcesExtension scopes the query before authorization runs,
+        // so another user's resource is simply not there for this caller.
+        ->assertNotFound();
 
     expect($other->fresh()->nickname)->toBe('other');
 });
@@ -57,21 +59,26 @@ test('a native token without the profile ability cannot patch the user', functio
 });
 
 /**
- * The browser reaches the same API through the OIDC session, which Sanctum authenticates with a
- * TransientToken. That token grants every ability, so the checks above must not lock the web out.
+ * A token holding the wildcard ability is not narrowed by the checks above. This is what
+ * Sanctum's TransientToken grants, so it also covers any caller authenticated without a personal
+ * access token.
+ *
+ * It deliberately says nothing about the browser: an actual OIDC session does NOT reach these
+ * routes today, because the API middleware stack has neither StartSession nor
+ * EnsureFrontendRequestsAreStateful. Measured, not assumed — a real session cookie gets a 401.
  */
-test('a session request is not blocked by the token abilities', function () {
+test('a token with the wildcard ability is not narrowed', function () {
     $user = User::factory()->create(['nickname' => 'owner']);
 
-    $this->actingAs($user)
+    actingAsNative($user, ['*'])
         ->json('PATCH', "/api/users/{$user->id}", [
             'data' => [
                 'type' => 'User',
                 'id' => $user->id,
-                'attributes' => ['nickname' => 'from-the-browser'],
+                'attributes' => ['nickname' => 'from-a-wildcard-token'],
             ],
         ], ['Content-Type' => 'application/vnd.api+json', 'Accept' => 'application/vnd.api+json'])
         ->assertOk();
 
-    expect($user->fresh()->nickname)->toBe('from-the-browser');
+    expect($user->fresh()->nickname)->toBe('from-a-wildcard-token');
 });

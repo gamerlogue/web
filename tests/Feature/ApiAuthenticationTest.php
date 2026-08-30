@@ -28,14 +28,28 @@ test('guests cannot reach the api', function (string $method, string $uri) {
     'user update' => ['PATCH', '/api/users/00000000-0000-0000-0000-000000000000'],
 ]);
 
-test('an authenticated user cannot list every user', function () {
+/**
+ * The collection doubles as the current-user endpoint, so a client that does not know its own id
+ * can still fetch itself. This is the test that matters if OwnedResourcesExtension ever stops
+ * being applied: without it the same request would return every user in the database.
+ */
+test('the user collection holds the caller and nobody else', function () {
     $user = User::factory()->create();
+    User::factory()->count(3)->create();
 
-    // UserFormRequest::authorize() compares the route id with the current user, and a collection
-    // has none: the endpoint exists but stays closed.
-    actingAsNative($user)
+    $response = actingAsNative($user)
         ->getJson('/api/users', ['Accept' => 'application/vnd.api+json'])
-        ->assertForbidden();
+        ->assertOk();
+
+    expect($response->json('data'))->toHaveCount(1)
+        ->and($response->json('data.0.id'))->toBe($user->id);
+});
+
+test('an unauthenticated request cannot reach the user collection', function () {
+    User::factory()->create();
+
+    $this->getJson('/api/users', ['Accept' => 'application/vnd.api+json'])
+        ->assertUnauthorized();
 });
 
 test('a user can read their own resource but not someone elses', function () {
@@ -47,9 +61,11 @@ test('a user can read their own resource but not someone elses', function () {
         ->assertOk()
         ->assertJsonPath('data.id', $user->id);
 
+    // 404, not 403: OwnedResourcesExtension scopes the query, so someone else's resource does not
+    // exist as far as this caller is concerned. Same shape as library entries.
     actingAsNative($user)
         ->getJson("/api/users/{$other->id}", ['Accept' => 'application/vnd.api+json'])
-        ->assertForbidden();
+        ->assertNotFound();
 });
 
 test('the api never exposes a users email', function () {

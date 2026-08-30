@@ -53,7 +53,7 @@ class LibraryEntryFormRequest extends FormRequest
     }
 
     /**
-     * Ownership on writes is enforced by OwnedLibraryEntriesExtension, which scopes every item
+     * Ownership on writes is enforced by OwnedResourcesExtension, which scopes every item
      * query to the authenticated user: someone else's entry is already a 404 before we get here.
      *
      * The ability check applies to native tokens; a session request carries a TransientToken,
