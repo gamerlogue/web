@@ -99,6 +99,9 @@ class JsonApiPlainIdNormalizer implements DenormalizerInterface, NormalizerInter
 
     /**
      * Takes a raw resource (array) and converts ID and Relationships to IRI.
+     *
+     * @param  array<string, mixed>  $resource
+     * @return array<string, mixed>
      */
     private function hydrateResource(array $resource): array
     {
@@ -174,6 +177,10 @@ class JsonApiPlainIdNormalizer implements DenormalizerInterface, NormalizerInter
         return $classes;
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
     private function cleanIdsRecursively(array $data): array
     {
         // 1. Clean current ID

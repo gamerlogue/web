@@ -10,6 +10,9 @@ use LaravelLang\Locales\Facades\Locales;
 
 class LocaleUpdateRequest extends FormRequest
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

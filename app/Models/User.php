@@ -44,6 +44,9 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
      * are applied by the constructor, and API Platform inspects the model through
      * newInstanceWithoutConstructor(), which would leave every field visible to the serializer.
      *
+     * list<string>, not string[]: the parent declares it that way and the narrower type is the
+     * only one covariant with it.
+     *
      * @var list<string>
      */
     protected $fillable = [
@@ -62,11 +65,15 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
 
     /**
      * The relations to include in the downloadable data.
+     *
+     * @var string[]
      */
     protected array $gdprWith = ['actions'];
 
     /**
      * The attributes that should be hidden for the downloadable data.
+     *
+     * @var string[]
      */
     protected array $gdprHidden = ['password', 'remember_token'];
 
@@ -86,7 +93,7 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
     /**
      * Get the user's full name.
      *
-     * @return Attribute<string>
+     * @return Attribute<string, array{first_name: string|null, last_name: string|null}>
      */
     public function name(): Attribute
     {
@@ -95,7 +102,7 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
                 ->filter()
                 ->implode(' '),
             set: static fn ($value) => [
-                'first_name' => explode(' ', $value, 2)[0] ?? null,
+                'first_name' => explode(' ', $value, 2)[0],
                 'last_name' => explode(' ', $value, 2)[1] ?? null,
             ]
         );
@@ -108,6 +115,8 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
         $this->nickname = $user_info->nickname;
         $this->picture = $user_info->picture;
         $this->email = $user_info->email;
-        $this->email_verified_at = $user_info->email_verified ? now() : null;
+        // A date string, not a Carbon instance: the 'datetime' cast parses it back on read, and
+        // Larastan types the column from the migration because it does not read the casts() method.
+        $this->email_verified_at = $user_info->email_verified ? now()->toDateTimeString() : null;
     }
 }

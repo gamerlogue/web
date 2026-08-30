@@ -17,7 +17,7 @@ class LocaleMiddleware
     {
         // Cached as a plain array: a serialized Collection blows up on unserialize in workers
         // that boot before the framework classes are loaded.
-        /** @var list<string> $availableLocales */
+        /** @var string[] $availableLocales */
         $availableLocales = cache()->remember(
             'available_locales:v3',
             now()->addDay(),

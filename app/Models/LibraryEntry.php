@@ -17,8 +17,8 @@ use Symfony\Component\TypeInfo\Type\BuiltinType;
 use Symfony\Component\TypeInfo\TypeIdentifier;
 
 /**
- * @property array $editions_ids
- * @property array $platforms_ids
+ * @property int[] $editions_ids
+ * @property int[] $platforms_ids
  */
 #[ApiResource(
     shortName: 'LibraryEntry',
@@ -95,6 +95,9 @@ class LibraryEntry extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
