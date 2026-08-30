@@ -11,6 +11,9 @@ class UserFormRequest extends FormRequest
 {
     use DenormalizesIris;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -23,8 +26,9 @@ class UserFormRequest extends FormRequest
 
     public function authorize(): bool
     {
-        // Users may only patch their own resource.
-        return $this->user()?->id === $this->route('id');
+        // Users may only patch their own resource, and a native token needs the 'profile' ability.
+        return $this->user()?->id === $this->route('id')
+            && $this->user()->tokenCan('profile');
     }
 
     protected function prepareForValidation(): void

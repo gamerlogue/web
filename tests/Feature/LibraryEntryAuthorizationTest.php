@@ -18,7 +18,7 @@ test('a supplied owner is replaced with the authenticated user', function () {
     $user = User::factory()->create(['nickname' => 'owner']);
     $other = User::factory()->create(['nickname' => 'other']);
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json('POST', '/api/library_entries', [
             'data' => [
                 'type' => 'LibraryEntry',
@@ -38,7 +38,7 @@ test('a supplied owner is replaced with the authenticated user', function () {
 test('a user can create their own library entry', function () {
     $user = User::factory()->create(['nickname' => 'owner']);
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json('POST', '/api/library_entries', [
             'data' => [
                 'type' => 'LibraryEntry',
@@ -60,7 +60,7 @@ test('a user can create their own library entry', function () {
         ->and($entry->platforms_ids)->toBe([48, 49]);
 
     // The array attributes must survive the round trip through the serializer, too.
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->getJson("/api/library_entries/{$entry->id}", jsonApiHeaders())
         ->assertOk()
         ->assertJsonPath('data.attributes.editions_ids', [123, 456])
@@ -76,7 +76,7 @@ test('a user can patch their own entry without resubmitting its owner', function
         'owned' => true,
     ]);
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json('PATCH', "/api/library_entries/{$entry->id}", [
             'data' => [
                 'type' => 'LibraryEntry',
@@ -103,7 +103,7 @@ test('a user cannot patch or delete another users library entry', function (stri
         'owned' => true,
     ]);
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json($method, "/api/library_entries/{$entry->id}", [
             'data' => [
                 'type' => 'LibraryEntry',
@@ -133,12 +133,12 @@ test('users only see their own library entries', function () {
         'owned' => true,
     ]);
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->getJson('/api/library_entries', jsonApiHeaders())
         ->assertOk()
         ->assertJsonCount(1, 'data');
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->getJson("/api/library_entries/{$otherEntry->id}", jsonApiHeaders())
         ->assertNotFound();
 });
@@ -152,7 +152,7 @@ test('a user can delete their own library entry', function () {
         'owned' => true,
     ]);
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json('DELETE', "/api/library_entries/{$entry->id}", headers: jsonApiHeaders())
         ->assertNoContent();
 
@@ -169,7 +169,7 @@ test('a user cannot transfer an entry to another user', function () {
         'owned' => true,
     ]);
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json('PATCH', "/api/library_entries/{$entry->id}", [
             'data' => [
                 'type' => 'LibraryEntry',
@@ -188,7 +188,7 @@ test('ill-typed attributes are rejected during deserialization', function (array
     $user = User::factory()->create();
 
     // Deserialization happens before validation, so these never reach the FormRequest rules.
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json('POST', '/api/library_entries', [
             'data' => [
                 'type' => 'LibraryEntry',
@@ -204,7 +204,7 @@ test('ill-typed attributes are rejected during deserialization', function (array
 test('validates library entry boundaries', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user, 'sanctum')
+    $response = actingAsNative($user)
         ->json('POST', '/api/library_entries', [
             'data' => [
                 'type' => 'LibraryEntry',
@@ -242,7 +242,7 @@ test('an unknown resource type is rejected', function () {
     ]);
 
     // The type is resolved against the resource short names API Platform knows about.
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json('PATCH', "/api/library_entries/{$entry->id}", [
             'data' => [
                 'type' => 'NotAResource',
@@ -263,7 +263,7 @@ test('a game cannot be added to the same library twice', function () {
     ]);
 
     // A unique index covers (game_id, user_id); validation has to catch it before the database does.
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json('POST', '/api/library_entries', [
             'data' => [
                 'type' => 'LibraryEntry',
@@ -291,7 +291,7 @@ test('the same game may sit in two different libraries', function () {
         'owned' => true,
     ]);
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->json('POST', '/api/library_entries', [
             'data' => [
                 'type' => 'LibraryEntry',
@@ -317,7 +317,7 @@ test('entries can be filtered by game', function () {
         ]);
     }
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->getJson('/api/library_entries?filter[game_id]=22', jsonApiHeaders())
         ->assertOk()
         ->assertJsonCount(1, 'data')
@@ -337,12 +337,12 @@ test('the collection is paginated', function () {
     }
 
     // pagination_items_per_page is 30, and the client cannot ask for more.
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->getJson('/api/library_entries', jsonApiHeaders())
         ->assertOk()
         ->assertJsonCount(30, 'data');
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->getJson('/api/library_entries?page=2', jsonApiHeaders())
         ->assertOk()
         ->assertJsonCount(1, 'data');

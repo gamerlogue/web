@@ -15,6 +15,9 @@ class LibraryEntryFormRequest extends FormRequest
 {
     use DenormalizesIris;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -52,10 +55,13 @@ class LibraryEntryFormRequest extends FormRequest
     /**
      * Ownership on writes is enforced by OwnedLibraryEntriesExtension, which scopes every item
      * query to the authenticated user: someone else's entry is already a 404 before we get here.
+     *
+     * The ability check applies to native tokens; a session request carries a TransientToken,
+     * which grants every ability.
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return $this->user()?->tokenCan('library') ?? false;
     }
 
     protected function prepareForValidation(): void

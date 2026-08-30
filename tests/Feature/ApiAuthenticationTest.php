@@ -33,7 +33,7 @@ test('an authenticated user cannot list every user', function () {
 
     // UserFormRequest::authorize() compares the route id with the current user, and a collection
     // has none: the endpoint exists but stays closed.
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->getJson('/api/users', ['Accept' => 'application/vnd.api+json'])
         ->assertForbidden();
 });
@@ -42,12 +42,12 @@ test('a user can read their own resource but not someone elses', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->getJson("/api/users/{$user->id}", ['Accept' => 'application/vnd.api+json'])
         ->assertOk()
         ->assertJsonPath('data.id', $user->id);
 
-    $this->actingAs($user, 'sanctum')
+    actingAsNative($user)
         ->getJson("/api/users/{$other->id}", ['Accept' => 'application/vnd.api+json'])
         ->assertForbidden();
 });
@@ -61,7 +61,7 @@ test('the api never exposes a users email', function () {
         'owned' => true,
     ]);
 
-    $response = $this->actingAs($user, 'sanctum')
+    $response = actingAsNative($user)
         ->getJson("/api/users/{$user->id}", ['Accept' => 'application/vnd.api+json'])
         ->assertOk();
 
