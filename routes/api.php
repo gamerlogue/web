@@ -14,6 +14,11 @@ Route::post('/sanctum/token/exchange', [SanctumTokenController::class, 'exchange
 Route::post('/sanctum/token/refresh', [SanctumTokenController::class, 'refresh'])
     ->middleware('throttle:30,1');
 
+// Without this a native sign-out only forgets the tokens locally: the family stays live, and a
+// refresh token lifted off a dismissed device keeps working until the family's cap.
+Route::post('/sanctum/token/revoke', [SanctumTokenController::class, 'revoke'])
+    ->middleware('throttle:30,1');
+
 /**
  * IGDB proxy: forwards to https://api.igdb.com/v4/{path}, guests included.
  * The endpoint pattern keeps the path a single IGDB endpoint name.

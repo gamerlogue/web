@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -142,6 +143,28 @@ class SanctumTokenController
             ->value('tokenable_id');
 
         return response()->json(self::pairPayload($pair, $userId));
+    }
+
+    /**
+     * Ends a native session. Unauthenticated for the same reason as refresh: the refresh token is
+     * the credential, and a client signing out has usually already let its access token expire.
+     *
+     * Idempotent — an unknown token answers 204 too. A logout that can fail is a logout a client
+     * retries, and there is nothing here worth telling an unauthenticated caller apart.
+     */
+    public function revoke(Request $request): Response
+    {
+        $validated = $request->validate([
+            'refresh_token' => ['required', 'string'],
+        ]);
+
+        try {
+            $this->manager->revokeByRefreshToken($validated['refresh_token']);
+        } catch (SanctumRefreshTokenException) {
+            // Nothing to revoke. TokenFamilyRevoked is not dispatched, so nothing is logged either.
+        }
+
+        return response()->noContent();
     }
 
     /**

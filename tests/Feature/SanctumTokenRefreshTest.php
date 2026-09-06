@@ -220,6 +220,25 @@ test('a refusal records the code the package raised, not the collapsed one', fun
         ->once();
 });
 
+test('a native sign-out ends the family', function () {
+    [$user, $pair] = issuedPair();
+
+    $this->postJson('/api/sanctum/token/revoke', ['refresh_token' => $pair['refresh_token']])
+        ->assertNoContent();
+
+    expect(SanctumRefreshToken::query()->where('tokenable_id', $user->id)->whereNull('revoked_at')->exists())
+        ->toBeFalse();
+
+    refresh($pair['refresh_token'])
+        ->assertStatus(401)
+        ->assertJsonPath('error', 'refresh_token_invalid');
+});
+
+test('a sign-out with a token that is already gone is still a success', function () {
+    $this->postJson('/api/sanctum/token/revoke', ['refresh_token' => '999|' . str_repeat('a', 43)])
+        ->assertNoContent();
+});
+
 test('a detected reuse alerts the administrator once per storm', function () {
     Notification::fake();
     config()->set('app.admin_email', 'admin@gamerlogue.test');
