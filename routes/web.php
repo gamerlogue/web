@@ -5,6 +5,9 @@ declare(strict_types=1);
 use App\Http\Controllers\AssetLinksController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\SanctumTokenController;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', static fn (): string => 'OK');
@@ -32,6 +35,24 @@ Route::view('/auth/callback', 'auth-callback')->name('native.callback');
  * segments but exempts /.well-known/*, so this is reachable in production.
  */
 Route::get('/.well-known/assetlinks.json', AssetLinksController::class)->name('assetlinks');
+
+/*
+ * The web client's sign-out. POST rather than the GET the OIDC package exposes: a navigable logout
+ * can be triggered cross-site, and this one is behind the CSRF middleware.
+ *
+ * Unauthenticated on purpose, so it is idempotent — a client whose session already died gets the
+ * same 204 instead of a redirect into the OIDC flow it is trying to leave.
+ */
+Route::post('/logout', static function (Request $request): Response {
+    Auth::guard('web')->logout();
+
+    // invalidate() rotates the session id, so the value in the client's cookie stops resolving to
+    // anything; regenerateToken() does the same for the XSRF-TOKEN the next request would send.
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return response()->noContent();
+})->name('logout');
 
 /**
  * Service routes
