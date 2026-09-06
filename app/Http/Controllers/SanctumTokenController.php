@@ -9,9 +9,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Uri;
 use Illuminate\Validation\Rule;
+use Reiarseni\SanctumRefreshToken\Exceptions\SanctumRefreshTokenException;
+use Reiarseni\SanctumRefreshToken\RefreshTokenManager;
+use Reiarseni\SanctumRefreshToken\SanctumRefreshToken;
+use Reiarseni\SanctumRefreshToken\ValueObjects\TokenPair;
 
 /**
  * Hands a Sanctum token to a native client through a single-use authorization code, bound to the
@@ -20,13 +25,13 @@ use Illuminate\Validation\Rule;
  */
 class SanctumTokenController
 {
+    public function __construct(private readonly RefreshTokenManager $manager) {}
+
     /**
      * Native tokens are limited to the resources the app actually uses, instead of ['*'].
      * Enforced in LibraryEntryFormRequest and UserFormRequest.
      */
-    private const ABILITIES = ['library', 'profile'];
-
-    private const TOKEN_LIFETIME_DAYS = 30;
+    public const ABILITIES = ['library', 'profile'];
 
     public function issue(Request $request): RedirectResponse
     {
@@ -92,17 +97,87 @@ class SanctumTokenController
 
         abort_if($user === null, 422, 'The authorization code is invalid or expired.');
 
-        $token = $user->createToken(
-            $pending['token_name'],
-            self::ABILITIES,
-            now()->addDays(self::TOKEN_LIFETIME_DAYS),
-        );
+        return response()->json(self::pairPayload(
+            $this->manager->issue($user, $pending['token_name']),
+            $user->id,
+        ));
+    }
 
-        return response()->json([
-            'token' => $token->plainTextToken,
-            'user_id' => $user->id,
-            'expires_at' => $token->accessToken->expires_at?->toIso8601String(),
+    /**
+     * Exchanges a refresh token for the next generation of its family. Unauthenticated by design:
+     * the refresh token is the credential, and the access token it replaces is expected to be dead.
+     */
+    public function refresh(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'refresh_token' => ['required', 'string'],
         ]);
+
+        try {
+            $pair = $this->manager->rotate($validated['refresh_token']);
+        } catch (SanctumRefreshTokenException $e) {
+            $code = self::clientErrorCode($e->errorCode());
+
+            // Precise in the log, collapsed in the response. Without this line an expired token, a
+            // revoked one and one that never existed are the same event in production, and the
+            // answer to "why does it keep logging me out" is not recoverable after the fact.
+            Log::info('Refresh token refused', [
+                'error' => $code,
+                'package_error' => $e->errorCode(),
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'error' => $code,
+                'message' => $e->getMessage(),
+            ], $code === 'rotation_in_progress' ? 409 : 401);
+        }
+
+        // The family is the only handle the pair carries back, and the rotation just appended the
+        // newest generation to it.
+        /** @var int|string $userId */
+        $userId = SanctumRefreshToken::query()
+            ->where('family_uuid', $pair->familyUuid)
+            ->latest('generation')
+            ->value('tokenable_id');
+
+        return response()->json(self::pairPayload($pair, $userId));
+    }
+
+    /**
+     * The pair as the KMP client reads it. Zulu ISO-8601 rather than TokenPair::toArray(), whose
+     * keys and `+00:00` offset are not the contract the client parses.
+     *
+     * @return array{
+     *     access_token: string,
+     *     refresh_token: string,
+     *     user_id: int|string,
+     *     expires_at: string|null,
+     *     refresh_expires_at: string|null,
+     * }
+     */
+    private static function pairPayload(TokenPair $pair, int|string $userId): array
+    {
+        return [
+            'access_token' => $pair->accessToken,
+            'refresh_token' => $pair->refreshToken,
+            'user_id' => $userId,
+            'expires_at' => $pair->accessTokenExpiresAt?->toIso8601ZuluString(),
+            'refresh_expires_at' => $pair->refreshTokenExpiresAt?->toIso8601ZuluString(),
+        ];
+    }
+
+    /**
+     * Collapses the package's error codes onto the four the client branches on. Everything that is
+     * not a live security signal or a benign race reads as `refresh_token_invalid`, which the
+     * client treats as a forced logout — the right outcome for an expired or revoked token too.
+     */
+    private static function clientErrorCode(string $packageCode): string
+    {
+        return match ($packageCode) {
+            'refresh_token_reused', 'family_expired', 'rotation_in_progress' => $packageCode,
+            default => 'refresh_token_invalid',
+        };
     }
 
     /**

@@ -104,7 +104,7 @@ test('a token is exchanged through a single use authorization code', function ()
 
     $response->assertOk()
         ->assertJsonPath('user_id', $user->id)
-        ->assertJsonStructure(['token', 'user_id', 'expires_at']);
+        ->assertJsonStructure(['access_token', 'refresh_token', 'user_id', 'expires_at', 'refresh_expires_at']);
 
     $this->postJson('/api/sanctum/token/exchange', [
         'code' => $query['code'],
@@ -166,7 +166,7 @@ test('an unredeemed code leaves no token behind', function () {
     expect($user->tokens()->count())->toBe(0);
 });
 
-test('the token stops working once it expires', function () {
+test('the access token stops working once it expires', function () {
     $user = User::factory()->create();
 
     $query = issuedQuery($user);
@@ -174,7 +174,7 @@ test('the token stops working once it expires', function () {
     $token = $this->postJson('/api/sanctum/token/exchange', [
         'code' => $query['code'],
         'code_verifier' => RFC_VERIFIER,
-    ])->assertOk()->json('token');
+    ])->assertOk()->json('access_token');
 
     // issuedQuery() authenticated a session, which would answer the requests below and hide
     // whether the bearer token is doing anything at all.
@@ -184,7 +184,7 @@ test('the token stops working once it expires', function () {
 
     $this->getJson("/api/users/{$user->id}", $headers)->assertOk();
 
-    $this->travel(31)->days();
+    $this->travel(16)->minutes();
 
     // Again: the guard caches the user it resolved on the request above and would not re-check
     // the token. A real request never reuses a resolved guard this way.
