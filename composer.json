@@ -26,6 +26,7 @@
     "mariusgelez/igdb-laravel": "^1.0",
     "opcodesio/log-viewer": "^3.10",
     "phpdocumentor/type-resolver": "^2.0",
+    "reiarseni/sanctum-refresh-token": "^0.2",
     "soved/laravel-gdpr": "^1.9"
   },
   "require-dev": {

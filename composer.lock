@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7d3b718539c73c79618c13151a933a3a",
+    "content-hash": "830ae74814cdfadba5eeaf680c6836bd",
     "packages": [
         {
             "name": "api-platform/documentation",
@@ -6622,6 +6622,77 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.9.3"
             },
             "time": "2026-06-18T03:57:49+00:00"
+        },
+        {
+            "name": "reiarseni/sanctum-refresh-token",
+            "version": "v0.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/reiarseni/sanctum-refresh-token.git",
+                "reference": "77596bd6e3b8f85c3640d57507e1e8188df0832f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/reiarseni/sanctum-refresh-token/zipball/77596bd6e3b8f85c3640d57507e1e8188df0832f",
+                "reference": "77596bd6e3b8f85c3640d57507e1e8188df0832f",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^11.0|^12.0|^13.0",
+                "illuminate/contracts": "^11.0|^12.0|^13.0",
+                "illuminate/database": "^11.0|^12.0|^13.0",
+                "illuminate/http": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "laravel/sanctum": "^4.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.18",
+                "orchestra/testbench": "^9.5|^10.0|^11.0",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^11.3|^12.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Reiarseni\\SanctumRefreshToken\\SanctumRefreshTokenServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Reiarseni\\SanctumRefreshToken\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Reinaldo Arsenio Lorenzo Trujillo",
+                    "email": "reiarseni@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Refresh tokens for Laravel Sanctum with token families, rotation and reuse detection.",
+            "homepage": "https://github.com/reiarseni/sanctum-refresh-token",
+            "keywords": [
+                "Authentication",
+                "laravel",
+                "refresh-token",
+                "reuse-detection",
+                "sanctum",
+                "token-rotation"
+            ],
+            "support": {
+                "issues": "https://github.com/reiarseni/sanctum-refresh-token/issues",
+                "security": "https://github.com/reiarseni/sanctum-refresh-token/security/policy",
+                "source": "https://github.com/reiarseni/sanctum-refresh-token"
+            },
+            "time": "2026-08-25T19:34:36+00:00"
         },
         {
             "name": "soved/laravel-gdpr",
