@@ -246,3 +246,36 @@ API Platform persists the *deserialized payload*, so a FormRequest can reject a 
 replace it, and deserialization runs *before* validation (an ill-typed attribute is a
 `NotNormalizableValueException`, mapped to 422 in `config/api-platform.php`). Server-assigned
 attributes belong in a model event: see `LibraryEntry::booted()` for the owner.
+
+### Native client tokens: short-lived access + rotating refresh
+
+`POST /api/sanctum/token/exchange` (PKCE, unchanged entry point) and
+`POST /api/sanctum/token/refresh` both answer with
+`{access_token, refresh_token, user_id, expires_at, refresh_expires_at}`, the dates ISO-8601 Zulu
+because the KMP client parses them with `kotlin.time.Instant.parse`. Access 15 min, refresh 30 days
+sliding, family capped at 180 days — the forced re-authentication interval.
+
+- The four error codes the client branches on are produced by
+  `SanctumTokenController::clientErrorCode()`, which collapses everything that is not
+  `refresh_token_reused`, `family_expired` or `rotation_in_progress` onto `refresh_token_invalid`.
+  Expired and revoked tokens included: all three mean "log the user out".
+- `rotation_in_progress` is unreachable while `rotation.on_grace_replay` is `reissue` — a replay
+  inside the grace window gets a fresh pair instead. It stays mapped so flipping the mode to
+  `reject` needs no client change.
+- Personal access tokens issued before this change keep their own `expires_at`; there is no
+  `config/sanctum.php`, so nothing global expires them.
+- `POST /api/sanctum/token/revoke` ends a family on native sign-out and is idempotent. Without it a
+  client that only forgets its tokens leaves the family live until the 180-day cap.
+- A refusal logs the package's own code under `package_error` while the response carries the
+  collapsed one: the four client codes cannot tell an expired token from a revoked one, and the log
+  is the only place that distinction survives.
+- `RefreshTokenReuseDetected` mails `app.admin_email` through `RefreshTokenReuseAlert`, deduped for
+  five minutes per user — a stolen token is replayed in a loop, not once. No `ADMIN_EMAIL`, no mail;
+  the `Log::warning` happens either way.
+- `security.revoke_on_password_reset` is on but inert: authentication is entirely OIDC and nothing
+  in this application dispatches `Illuminate\Auth\Events\PasswordReset`. It is set so a local
+  password flow, if one is ever added, arrives with the right behaviour rather than needing someone
+  to remember this.
+- `POST /logout` (`routes/web.php`) is the web client's sign-out: 204, session invalidated, CSRF
+  token regenerated, idempotent for a guest. The OIDC package's `GET /oidc/logout` still exists and
+  still works; it is just not navigable-safe and answers 302.
