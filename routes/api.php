@@ -25,5 +25,5 @@ Route::post('/sanctum/token/revoke', [SanctumTokenController::class, 'revoke'])
  */
 Route::middleware('throttle:igdb')
     ->post('/igdb/{path}', [IgdbProxyController::class, 'handle'])
-    ->where('path', '[a-z_]+')
+    ->where('path', '[a-z_]+(\.pb)?')
     ->name('igdb.proxy');
