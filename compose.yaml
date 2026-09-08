@@ -18,9 +18,17 @@ services:
     # Start Octane in worker mode
     command: ["${APP_BASE_PATH:-/var/www/html}/deployment/dev/start-container-dev.sh"]
     environment:
+      # The second address serves the Android emulator, which reaches the host through 10.0.2.2 and cannot resolve
+      # ${SERVER_NAME}: Bionic does not map *.localhost to loopback and /system/etc/hosts only carries `localhost`.
+      # It has to be listed here rather than added to SERVER_NAME, which also feeds the container hostname, APP_URL
+      # and the Vite site address, and would only earn a certificate from Caddy's internal CA — untrusted on the
+      # device. SSL_MODE drops from the image's `full` to `mixed` for the same reason: `full` turns the HTTP site
+      # into a blanket redirect to HTTPS, so a plaintext client would just get a 308 it cannot follow. HTTPS keeps
+      # working on ${SERVER_NAME} for the browser.
       # noinspection HttpUrlsUsage
-      CADDY_HTTP_SERVER_ADDRESS: "http://${SERVER_NAME:-laravel.localhost}"
+      CADDY_HTTP_SERVER_ADDRESS: "http://${SERVER_NAME:-laravel.localhost}, http://10.0.2.2"
       CADDY_HTTPS_SERVER_ADDRESS: "https://${SERVER_NAME:-laravel.localhost}"
+      SSL_MODE: mixed
       LARAVEL_SAIL: 1
       PHP_IDE_CONFIG: '${PHP_IDE_CONFIG:-serverName=Sail}'
       TERMINAL_EMULATOR: ${TERMINAL_EMULATOR:-Jetbrains-JediTerm}
