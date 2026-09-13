@@ -10,7 +10,7 @@
     "@intlify/unplugin-vue-i18n": "^11.2.5",
     "@laravel/vite-plugin-wayfinder": "^0.1.10",
     "@maicol07/eslint-config": "3.0.0",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.5.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.9.1",
     "better-typescript-lib": "^2.12.0",
