@@ -125,9 +125,10 @@ create_template:
       optional: true
   when: on_success
   script:
+    # Requires this project in sitekit's (419) CI/CD job token allowlist.
     - apk add --no-cache git curl
     - |
-      curl --location --header "PRIVATE-TOKEN: glpat-xQnpeUnwxGet4kMhWq13" https://gitlab.trust-itservices.com/api/v4/projects/419/jobs/artifacts/main/raw/builds/binaries/linux/linux-x64?job=build --output sitekit
+      curl --fail --location --header "JOB-TOKEN: $CI_JOB_TOKEN" https://gitlab.trust-itservices.com/api/v4/projects/419/jobs/artifacts/main/raw/builds/binaries/linux/linux-x64?job=build --output sitekit
     - chmod +x ./sitekit
     - mv ./sitekit /usr/local/bin/sitekit
     - sitekit --version
