@@ -137,7 +137,7 @@ services:
 
   mariadb:
     restart: unless-stopped
-    image: 'mariadb:12'
+    image: 'mariadb:13'
     # No `ports` here: the database is only reachable over the compose network. compose.yaml
     # publishes it for development, where MARIADB_ALLOW_EMPTY_PASSWORD makes that acceptable.
     environment:
