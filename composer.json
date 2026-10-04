@@ -9,7 +9,7 @@
     "ext-fileinfo": "*",
     "ext-intl": "*",
     "ext-pdo": "*",
-    "api-platform/laravel": "^4.2",
+    "api-platform/laravel": "^5.0",
     "emargareten/inertia-modal": "^3.4",
     "inertiajs/inertia-laravel": "^3.0",
     "laravel-lang/locales": "^2.10",
