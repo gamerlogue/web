@@ -161,15 +161,13 @@ RUN mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs boots
 # so package discovery and the generated Wayfinder routes would both be wrong. A throwaway sqlite
 # database provides that schema, and the metadata dump carries it into the image so the running
 # workers do not introspect the real database on every boot.
-# DB_CONNECTION is exported because Telescope defaults its own connection to mysql.
-ENV DB_CONNECTION=sqlite
-
-RUN touch database/database.sqlite \
+# DB_CONNECTION is scoped to these build-time Artisan calls so the runtime image can read it from
+# the mounted .env file. Telescope defaults its own connection to mysql, so it needs the same override.
+RUN export DB_CONNECTION=sqlite \
+    && touch database/database.sqlite \
     && php artisan migrate --force \
-    && php artisan package:discover --ansi
-
-# Build-time operations
-RUN php artisan wayfinder:generate --path=resources/ts \
+    && php artisan package:discover --ansi \
+    && php artisan wayfinder:generate --path=resources/ts \
     && php artisan api-platform:metadata:dump \
     && rm database/database.sqlite
 
