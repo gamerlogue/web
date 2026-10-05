@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use ApiPlatform\JsonApi\Serializer\ErrorNormalizer;
-use ApiPlatform\JsonApi\Serializer\ItemNormalizer;
-use ApiPlatform\Metadata\IriConverterInterface;
-use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
-use ApiPlatform\Metadata\Resource\Factory\ResourceNameCollectionFactoryInterface;
+use ApiPlatform\JsonApi\Serializer\ItemDenormalizer;
 use App\Models\User;
-use App\Serializer\JsonApiPlainIdNormalizer;
-use App\Serializer\JsonApiStringStatusErrorNormalizer;
+use App\Serializer\JsonApiResourceTypeDenormalizer;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -47,16 +42,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('viewPulse', static fn (?User $user): bool => Gate::forUser($user)->allows('admin'));
 
-        $this->app->extend(
-            ItemNormalizer::class,
-            fn ($service, $app) => new JsonApiPlainIdNormalizer(
-                $service,
-                $app->make(IriConverterInterface::class),
-                $app->make(ResourceNameCollectionFactoryInterface::class),
-                $app->make(ResourceMetadataCollectionFactoryInterface::class),
-            ),
-        );
-        $this->app->extend(ErrorNormalizer::class, fn ($service, $app) => new JsonApiStringStatusErrorNormalizer($service));
+        $this->app->extend(ItemDenormalizer::class, fn (ItemDenormalizer $service) => new JsonApiResourceTypeDenormalizer($service));
 
         LogViewer::auth(static fn ($request): bool => Gate::forUser($request->user())->allows('admin'));
     }

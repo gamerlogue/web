@@ -241,7 +241,7 @@ test('an unknown resource type is rejected', function () {
         'owned' => true,
     ]);
 
-    // The type is resolved against the resource short names API Platform knows about.
+    // JSON:API answers a type that does not match the endpoint's resource with 409 Conflict.
     actingAsNative($user)
         ->json('PATCH', "/api/library_entries/{$entry->id}", [
             'data' => [
@@ -250,7 +250,11 @@ test('an unknown resource type is rejected', function () {
                 'attributes' => ['status' => LibraryEntryStatus::Completed->value],
             ],
         ], jsonApiHeaders())
-        ->assertUnprocessable();
+        ->assertConflict()
+        // JSON:API requires the error status as a string; API Platform 5 emits it natively.
+        ->assertJsonPath('errors.0.status', '409');
+
+    expect($entry->fresh()->status)->toBe(LibraryEntryStatus::Playing);
 });
 
 test('a game cannot be added to the same library twice', function () {
