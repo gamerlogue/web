@@ -45,7 +45,6 @@ return [
 
     'docs_formats' => [
         //        'jsonld' => ['application/ld+json'],
-        'jsonapi' => ['application/vnd.api+json'],
         'jsonopenapi' => ['application/vnd.openapi+json'],
         'html' => ['text/html'],
     ],
