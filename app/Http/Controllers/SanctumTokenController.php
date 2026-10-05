@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Uri;
-use Illuminate\Validation\Rule;
 use Reiarseni\SanctumRefreshToken\Exceptions\SanctumRefreshTokenException;
 use Reiarseni\SanctumRefreshToken\RefreshTokenManager;
 use Reiarseni\SanctumRefreshToken\SanctumRefreshToken;
@@ -40,8 +40,13 @@ class SanctumTokenController
             'token_name' => ['required', 'string', 'max:255'],
             'redirect_uri' => [
                 'sometimes',
+                'bail',
                 'string',
-                Rule::in(config('services.native_auth.redirect_uris')),
+                static function (string $attribute, string $value, Closure $fail): void {
+                    if (! self::isAllowedRedirectUri($value)) {
+                        $fail('validation.in')->translate();
+                    }
+                },
             ],
             // S256 only: 'plain' would leave the code bound to a value the interceptor can read
             // out of the same redirect it stole the code from.
@@ -212,6 +217,18 @@ class SanctumTokenController
             |> base64_encode(...)
             |> (static fn (string $base64): string => strtr($base64, '+/', '-_'))
             |> (static fn (string $base64url): string => rtrim($base64url, '='));
+    }
+
+    /**
+     * RFC 8252 §7.3: a loopback redirect matches its allowlisted entry whatever the port, because a
+     * desktop client binds an ephemeral one at runtime. Allowlist it without the port.
+     */
+    private static function isAllowedRedirectUri(string $uri): bool
+    {
+        $allowed = config('services.native_auth.redirect_uris');
+        $withoutPort = preg_replace('~^http://(127\.0\.0\.1|\[::1]|localhost):\d+(?=[/?#]|$)~', 'http://$1', $uri);
+
+        return in_array($uri, $allowed, true) || in_array($withoutPort, $allowed, true);
     }
 
     private static function cacheKey(string $code): string

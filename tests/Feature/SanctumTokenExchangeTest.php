@@ -65,6 +65,32 @@ test('token issuance rejects untrusted redirect uris', function () {
         ->assertJsonValidationErrors('redirect_uri');
 });
 
+/** RFC 8252 §7.3: a desktop client listens on whatever loopback port it was given. */
+test('a loopback redirect uri matches its allowlisted entry on any port', function (string $redirectUri) {
+    config()->set('services.native_auth.redirect_uris', ['http://localhost/callback', 'http://127.0.0.1/callback', 'http://[::1]/callback']);
+
+    expect(issuedQuery(User::factory()->create(), ['redirect_uri' => $redirectUri]))->toHaveKey('code');
+})->with([
+    'http://localhost:57407/callback',
+    'http://127.0.0.1:8080/callback',
+    'http://[::1]:49152/callback',
+]);
+
+test('the port wildcard is limited to loopback hosts and the allowlisted path', function (string $redirectUri) {
+    config()->set('services.native_auth.redirect_uris', ['http://localhost/callback', 'https://gamerlogue.test/callback']);
+
+    $this->actingAs(User::factory()->create())
+        ->getJson('/sanctum/token?' . http_build_query(issuePayload(['redirect_uri' => $redirectUri])))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('redirect_uri');
+})->with([
+    'https://gamerlogue.test:8443/callback',
+    'http://localhost:57407/other',
+    'https://localhost:57407/callback',
+    'http://localhost.attacker.example:80/callback',
+    'http://localhost:57407@attacker.example/callback',
+]);
+
 test('token issuance requires a PKCE challenge and a state', function (string $field) {
     $payload = issuePayload();
     unset($payload[$field]);
