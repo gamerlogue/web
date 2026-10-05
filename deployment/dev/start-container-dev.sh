@@ -40,7 +40,10 @@ fi
 WATCH_DIRECTIVES=""
 case "$WEBSERVER" in
 *-watch)
-    WATCH_PATHS=$(php "$ARTISAN" config:show octane.watch --no-ansi | awk '/^ *[0-9]+ /{print $NF}')
+    # Artisan prints boot failures (e.g. the database API Platform reads at boot being unreachable)
+    # on stdout, so they have to be echoed back here or awk swallows them.
+    WATCH_CONFIG=$(php "$ARTISAN" config:show octane.watch --no-ansi) || { printf '%s\n' "$WATCH_CONFIG" >&2; exit 1; }
+    WATCH_PATHS=$(printf '%s\n' "$WATCH_CONFIG" | awk '/^ *[0-9]+ /{print $NF}')
     [ -n "$WATCH_PATHS" ] || { echo "Unable to read octane.watch from config." >&2; exit 1; }
     # set -f: without noglob the shell would expand the patterns (database/**/*.php would become
     # the list of matching files, which the -d test then drops, silently losing the pattern).
