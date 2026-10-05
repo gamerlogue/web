@@ -65,6 +65,19 @@ test('token issuance rejects untrusted redirect uris', function () {
         ->assertJsonValidationErrors('redirect_uri');
 });
 
+/**
+ * A browser is what reaches this endpoint, and the default redirect back would land it on the
+ * session's previous URL — any page from another tab — instead of showing why the request failed.
+ */
+test('a browser gets the validation error in place instead of a redirect', function () {
+    $payload = issuePayload(['redirect_uri' => 'https://attacker.example/callback']);
+
+    $this->actingAs(User::factory()->create())
+        ->from('/telescope')
+        ->get('/sanctum/token?' . http_build_query($payload))
+        ->assertBadRequest();
+});
+
 /** RFC 8252 §7.3: a desktop client listens on whatever loopback port it was given. */
 test('a loopback redirect uri matches its allowlisted entry on any port', function (string $redirectUri) {
     config()->set('services.native_auth.redirect_uris', ['http://localhost/callback', 'http://127.0.0.1/callback', 'http://[::1]/callback']);

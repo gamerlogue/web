@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Uri;
 use Reiarseni\SanctumRefreshToken\Exceptions\SanctumRefreshTokenException;
@@ -36,7 +37,7 @@ class SanctumTokenController
 
     public function issue(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'token_name' => ['required', 'string', 'max:255'],
             'redirect_uri' => [
                 'sometimes',
@@ -55,6 +56,15 @@ class SanctumTokenController
             // Correlates the callback with the login this client started, per RFC 8252.
             'state' => ['required', 'string', 'max:512'],
         ]);
+
+        // The default response to a failed validation redirects back to the session's previous URL,
+        // which here is whatever the browser last visited — not the client that sent it. An
+        // invalid redirect_uri must not be followed either, so a browser gets the error in place.
+        if ($validator->fails() && ! $request->expectsJson()) {
+            abort(Response::HTTP_BAD_REQUEST, $validator->errors()->first());
+        }
+
+        $validated = $validator->validate();
 
         $code = Str::random(64);
 
