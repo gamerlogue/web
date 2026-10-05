@@ -19,7 +19,7 @@ Route::get('/', static fn (): string => 'OK');
  * no token on its own: it only records the intent behind a single-use code.
  */
 Route::get('/sanctum/token', [SanctumTokenController::class, 'issue'])
-    ->middleware(['auth', 'throttle:6,1'])
+    ->middleware(['auth', 'throttle:30,1,sanctum-authorize:'])
     ->name('native.authorize');
 
 /*

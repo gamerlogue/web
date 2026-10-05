@@ -276,6 +276,76 @@ test('the authorize endpoint mints no token on its own', function () {
     expect($user->tokens()->count())->toBe(0);
 });
 
+test('authorization allows thirty requests per user and resets after a minute', function () {
+    $this->freezeTime();
+    $user = User::factory()->create();
+    $url = '/sanctum/token?' . http_build_query(issuePayload());
+
+    $this->actingAs($user);
+
+    for ($attempt = 0; $attempt < 30; $attempt++) {
+        $this->get($url)->assertRedirect();
+    }
+
+    $this->getJson($url)->assertTooManyRequests()->assertHeader('Retry-After', '60');
+
+    $this->actingAs(User::factory()->create())->get($url)->assertRedirect();
+
+    $this->travel(61)->seconds();
+    $this->actingAs($user)->get($url)->assertRedirect();
+});
+
+test('token API quotas are isolated for guests and authenticated users', function (string $endpoint, int $limit, bool $authenticated) {
+    $this->freezeTime();
+
+    if ($authenticated) {
+        $this->actingAs(User::factory()->create());
+    }
+
+    $url = '/api/sanctum/token/' . $endpoint;
+
+    for ($attempt = 0; $attempt < $limit; $attempt++) {
+        $this->postJson($url, [])->assertUnprocessable();
+    }
+
+    $this->postJson($url, [])->assertTooManyRequests()->assertHeader('Retry-After', '60');
+
+    foreach (['exchange', 'refresh', 'revoke'] as $otherEndpoint) {
+        if ($otherEndpoint !== $endpoint) {
+            $this->postJson('/api/sanctum/token/' . $otherEndpoint, [])->assertUnprocessable();
+        }
+    }
+
+    if ($authenticated) {
+        $this->get('/sanctum/token?' . http_build_query(issuePayload()))->assertRedirect();
+    }
+
+    $this->travel(61)->seconds();
+    $this->postJson($url, [])->assertUnprocessable();
+})->with([
+    'exchange' => ['exchange', 10],
+    'refresh' => ['refresh', 30],
+    'revoke' => ['revoke', 30],
+])->with([
+    'guest' => false,
+    'authenticated' => true,
+]);
+
+test('exhausting authorization leaves token API quotas available', function () {
+    $this->actingAs(User::factory()->create());
+    $url = '/sanctum/token?' . http_build_query(issuePayload());
+
+    for ($attempt = 0; $attempt < 30; $attempt++) {
+        $this->get($url)->assertRedirect();
+    }
+
+    $this->getJson($url)->assertTooManyRequests();
+
+    foreach (['exchange', 'refresh', 'revoke'] as $endpoint) {
+        $this->postJson('/api/sanctum/token/' . $endpoint, [])->assertUnprocessable();
+    }
+});
+
 /**
  * The whole point of the endpoint being navigable: a Custom Tab opens it, an unauthenticated
  * caller is sent through OIDC, and the intended URL brings the parameters back afterwards, so
