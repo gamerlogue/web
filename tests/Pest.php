@@ -23,3 +23,11 @@ function actingAsNative(User $user, array $abilities = ['library', 'profile'])
 
     return test();
 }
+
+/**
+ * @return array<string, string>
+ */
+function jsonApiHeaders(): array
+{
+    return ['Content-Type' => 'application/vnd.api+json', 'Accept' => 'application/vnd.api+json'];
+}

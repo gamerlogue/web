@@ -9,11 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function jsonApiHeaders(): array
-{
-    return ['Content-Type' => 'application/vnd.api+json', 'Accept' => 'application/vnd.api+json'];
-}
-
 test('a supplied owner is replaced with the authenticated user', function () {
     $user = User::factory()->create(['nickname' => 'owner']);
     $other = User::factory()->create(['nickname' => 'other']);
