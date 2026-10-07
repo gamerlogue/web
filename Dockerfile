@@ -167,6 +167,7 @@ RUN export DB_CONNECTION=sqlite \
     && touch database/database.sqlite \
     && php artisan migrate --force \
     && php artisan package:discover --ansi \
+    && php artisan vendor:publish --tag=api-platform-assets --force --no-interaction \
     && php artisan wayfinder:generate --path=resources/ts \
     && php artisan api-platform:metadata:dump \
     && rm database/database.sqlite
