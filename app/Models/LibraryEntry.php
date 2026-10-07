@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use ApiPlatform\Laravel\Eloquent\Filter\BooleanFilter;
+use ApiPlatform\Laravel\Eloquent\Filter\DateFilter;
 use ApiPlatform\Laravel\Eloquent\Filter\EqualsFilter;
+use ApiPlatform\Laravel\Eloquent\Filter\JsonApi\SortFilter;
+use ApiPlatform\Laravel\Eloquent\Filter\RangeFilter;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\QueryParameter;
@@ -13,6 +17,7 @@ use App\Enums\LibraryEntryStatus;
 use App\Http\Requests\LibraryEntryFormRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\TypeInfo\Type\BuiltinType;
 use Symfony\Component\TypeInfo\TypeIdentifier;
 
@@ -38,6 +43,19 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     nativeType: new BuiltinType(TypeIdentifier::ARRAY)
 )]
 #[QueryParameter('filter[game_id]', filter: EqualsFilter::class, property: 'game_id', description: 'Filter library entries by the associated game ID')]
+#[QueryParameter('filter[status]', filter: EqualsFilter::class, property: 'status', description: 'Filter library entries by play status, one of the values of the status attribute', constraints: [new Enum(LibraryEntryStatus::class)])]
+#[QueryParameter('filter[completion_status]', filter: EqualsFilter::class, property: 'completion_status', description: 'Filter library entries by completion status, one of the values of the completion_status attribute', constraints: [new Enum(LibraryEntryCompletionStatus::class)])]
+#[QueryParameter('filter[owned]', filter: BooleanFilter::class, property: 'owned', description: 'Filter library entries by whether the user owns the game')]
+#[QueryParameter('filter[start_date]', filter: DateFilter::class, property: 'start_date', description: 'Filter library entries by start date, with the eq, gt, lt, gte and lte operators')]
+#[QueryParameter('filter[end_date]', filter: DateFilter::class, property: 'end_date', description: 'Filter library entries by end date, with the eq, gt, lt, gte and lte operators')]
+#[QueryParameter('filter[rating]', filter: RangeFilter::class, property: 'rating', description: 'Filter library entries by rating, with the gt, lt, gte and lte operators', constraints: ['array:gt,lt,gte,lte'])]
+#[QueryParameter('filter[played_time]', filter: RangeFilter::class, property: 'played_time', description: 'Filter library entries by played time, with the gt, lt, gte and lte operators', constraints: ['array:gt,lt,gte,lte'])]
+#[QueryParameter(
+    'sort',
+    filter: SortFilter::class,
+    description: 'Comma-separated fields to sort by, descending when prefixed with "-" (e.g. "-rating,start_date")',
+    properties: ['start_date', 'end_date', 'rating', 'played_time', 'created_at', 'updated_at']
+)]
 class LibraryEntry extends Model
 {
     protected $hidden = ['id'];
