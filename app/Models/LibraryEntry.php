@@ -32,6 +32,7 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
 )]
 #[ApiProperty(description: 'The unique identifier of the game associated with this library entry.', property: 'game_id')]
 #[ApiProperty(description: 'The unique identifier of the user who owns this library entry.', property: 'user_id')]
+#[ApiProperty(description: 'The user who owns this library entry, always the authenticated user.', writable: false, property: 'user')]
 #[ApiProperty(
     description: 'The unique identifiers of the game editions associated with this library entry.',
     property: 'editions_ids',

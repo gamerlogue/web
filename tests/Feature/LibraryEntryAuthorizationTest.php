@@ -30,6 +30,26 @@ test('a supplied owner is replaced with the authenticated user', function () {
     expect(LibraryEntry::query()->sole()->user_id)->toBe($user->id);
 });
 
+test('an empty user relationship is ignored on create', function () {
+    $user = User::factory()->create(['nickname' => 'owner']);
+
+    actingAsNative($user)
+        ->json('POST', '/api/library_entries', [
+            'data' => [
+                'type' => 'LibraryEntry',
+                'attributes' => [
+                    'game_id' => 1,
+                    'status' => LibraryEntryStatus::Backlog->value,
+                    'owned' => false,
+                ],
+                'relationships' => ['user' => ['data' => null]],
+            ],
+        ], jsonApiHeaders())
+        ->assertCreated();
+
+    expect(LibraryEntry::query()->sole()->user_id)->toBe($user->id);
+});
+
 test('a user can create their own library entry', function () {
     $user = User::factory()->create(['nickname' => 'owner']);
 
