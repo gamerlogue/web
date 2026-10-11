@@ -1,85 +1,84 @@
-name: Build and Push Docker image
+name: Build Docker image
 
 on:
-  push:
-    branches:
-      - '**'
-  release:
-    types:
-      - published
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to build
+        type: string
+        default: ''
+      push:
+        description: Publish the image to GHCR
+        type: boolean
+        default: false
+      version:
+        description: Release tag, empty for an edge build
+        type: string
+        default: ''
+      prerelease:
+        description: Do not update latest for pre-releases
+        type: boolean
+        default: false
 
 permissions:
   contents: read
   packages: write
 
-env:
-  REGISTRY_HOST: ghcr.io
-  REGISTRY_IMAGE: ${{ github.repository }}
-  APP_ENV: prod
-
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
 
-      - name: Prepare tags and image name
-        id: prep
-        shell: bash
+      - name: Prepare image tags
+        id: image
+        env:
+          VERSION: ${{ inputs.version }}
+          PRERELEASE: ${{ inputs.prerelease }}
         run: |
           set -euo pipefail
-          HOST="${{ env.REGISTRY_HOST }}"
-          FULL="${REGISTRY_IMAGE:-$GITHUB_REPOSITORY}"
-          IMAGE_LC="${FULL,,}"
-          # Export normalized image path for subsequent steps
-          echo "REGISTRY_IMAGE=${IMAGE_LC}" >> "$GITHUB_ENV"
-
-          if [ "${{ github.event_name }}" = "release" ]; then
-            TAG="${{ github.event.release.tag_name }}"
-            TAG1="${HOST}/${IMAGE_LC}:${TAG}"
-            TAG2="${HOST}/${IMAGE_LC}:latest"
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          SHORT_SHA="$(git rev-parse --short=7 HEAD)"
+          if [ -n "$VERSION" ]; then
+            TAGS="$IMAGE:$VERSION"
+            if [ "$PRERELEASE" != "true" ]; then
+              TAGS="$TAGS,$IMAGE:latest"
+            fi
           else
-            SHORT_SHA="$(git rev-parse --short=7 "${GITHUB_SHA}")"
-            TAG1="${HOST}/${IMAGE_LC}:edge"
-            TAG2="${HOST}/${IMAGE_LC}:${SHORT_SHA}"
+            TAGS="$IMAGE:edge,$IMAGE:$SHORT_SHA"
           fi
+          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+          echo "scan=$IMAGE:${VERSION:-edge}" >> "$GITHUB_OUTPUT"
 
-          {
-            echo "image=${HOST}/${IMAGE_LC}"
-            echo "tags<<EOF"
-            echo "${TAG1}"
-            echo "${TAG2}"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Login to registry
+      - name: Login to GHCR
+        if: inputs.push
         uses: docker/login-action@v4
         with:
-          registry: ${{ env.REGISTRY_HOST }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build and push
-        id: build
+      - name: Build image
         uses: docker/build-push-action@v7
         with:
-          push: true
-          tags: ${{ steps.prep.outputs.tags }}
+          push: ${{ inputs.push }}
+          load: ${{ !inputs.push }}
+          tags: ${{ steps.image.outputs.tags }}
           target: prod
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Runs after the push rather than gating it: a failing scan should be visible on an image
-      # that exists, not silently stop the branch tag from being published.
-      - name: Scan the image
+      - name: Scan image
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ steps.prep.outputs.image }}:${{ github.event_name == 'release' && github.event.release.tag_name || 'edge' }}
+          image-ref: ${{ steps.image.outputs.scan }}
           severity: CRITICAL
           ignore-unfixed: true
           exit-code: '1'

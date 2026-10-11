@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, empty to compute it from commits
+        type: string
+      prerelease:
+        description: Pre-release
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    uses: ./.github/workflows/tests.yml
+    secrets: inherit
+
+  prepare:
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    env:
+      GITHUB_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@ab6895351a88b908e96a4697860d4ffea5e57dbe # v2
+        with:
+          tool: git-cliff@2.14.2
+
+      - name: Determine version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          set -euo pipefail
+          VERSION="${INPUT_VERSION:-$(git cliff --bumped-version)}"
+          if [[ ! "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+            echo "Expected a version such as 1.2.3 or 1.2.3-rc.1." >&2
+            exit 1
+          fi
+          if [ "$PRERELEASE" = "false" ] && [[ "$VERSION" == *-* ]]; then
+            echo "Enable pre-release for a version with a pre-release suffix." >&2
+            exit 1
+          fi
+          if git show-ref --verify --quiet "refs/tags/$VERSION"; then
+            echo "Tag $VERSION already exists." >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit changelog and tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git cliff --tag "$VERSION" -o CHANGELOG.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898233+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): 📝 update the changelog for $VERSION"
+          git tag "$VERSION"
+          git push --atomic origin "HEAD:refs/heads/$DEFAULT_BRANCH" "refs/tags/$VERSION"
+
+      - name: Create draft release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          git cliff --current --strip header -o RELEASE_NOTES.md
+          gh release create "$VERSION" --verify-tag --notes-file RELEASE_NOTES.md --draft --prerelease="$PRERELEASE"
+
+  build:
+    needs: prepare
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      ref: ${{ needs.prepare.outputs.version }}
+      version: ${{ needs.prepare.outputs.version }}
+      prerelease: ${{ inputs.prerelease }}
+      push: true
+
+  publish:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      PRERELEASE: ${{ inputs.prerelease }}
+    steps:
+      - name: Publish release
+        run: gh release edit "$VERSION" --draft=false --latest="$([ "$PRERELEASE" = "true" ] && echo false || echo true)"

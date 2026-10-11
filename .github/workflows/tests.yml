@@ -1,13 +1,12 @@
 name: Tests
 
 on:
-  push:
-    branches:
-      - main
-      - '*.x'
-  pull_request:
-  schedule:
-    - cron: '0 0 * * *'
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to test
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -15,38 +14,41 @@ permissions:
 jobs:
   tests:
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: true
-      matrix:
-        php: [8.5]
-
-    name: PHP ${{ matrix.php }}
-
-    # .env.example points at the Sail services, none of which exist here, and every artisan call
-    # boots the application. Laravel loads .env immutably, so these win over the copied file.
     env:
       DB_CONNECTION: sqlite
       DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       SESSION_DRIVER: array
       CACHE_STORE: array
       QUEUE_CONNECTION: sync
+      TWITCH_CLIENT_ID: ci
+      TWITCH_CLIENT_SECRET: ci
 
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
           persist-credentials: false
+
+      - name: Install workflow and changelog tools
+        uses: taiki-e/install-action@ab6895351a88b908e96a4697860d4ffea5e57dbe # v2
+        with:
+          tool: actionlint@1.7.12,git-cliff@2.14.2
+
+      - name: Validate workflows and changelog
+        run: |
+          actionlint
+          git cliff --unreleased --strip header > /dev/null
 
       - name: Setup PHP
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
-          php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          php-version: '8.5'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, intl, fileinfo
           coverage: none
 
-      # composer install runs package:discover, which boots the application, and API Platform reads
-      # the Eloquent metadata from the database. The file has to exist before that happens.
+      # Package discovery boots API Platform, which needs an existing SQLite file.
       - name: Create the sqlite database
         run: touch database/database.sqlite
 
@@ -62,19 +64,14 @@ jobs:
       - name: Copy environment file
         run: cp .env.example .env
 
-      - name: Add twitch client ID and secret to env
-        run: |
-          echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}" >> .env
-          echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env
-
       - name: Generate app key
         run: php artisan key:generate
 
-      - name: Check code style (Pint)
+      - name: Check code style
         run: ./vendor/bin/pint --test
 
-      - name: Static analysis (PHPStan)
+      - name: Static analysis
         run: ./vendor/bin/phpstan analyse --memory-limit=1G
 
       - name: Execute tests
-        run: php artisan test
+        run: php artisan test --compact
