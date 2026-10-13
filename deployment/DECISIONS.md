@@ -35,8 +35,8 @@ values Octane generates.
 are `ENV` in the `Dockerfile` — the first two as `import` of `deployment/php-server.caddyfile` and
 `deployment/site.caddyfile` — so Kubernetes, which never reads the compose files, gets them too.
 `FRANKENPHP_CONFIG` uses the one-line `worker <file>` form because a Dockerfile `ENV` cannot hold
-newlines. Only `CADDY_GLOBAL_OPTIONS` (the runtime log file) is still
-Compose-only.
+newlines. The `prod` stage's `CMD` is the same `octane:start` as `compose.prod.yaml`. Only
+`CADDY_GLOBAL_OPTIONS` (the runtime log file) is still Compose-only.
 
 **If you go back to the stub**, `CADDY_SERVER_EXTRA_DIRECTIVES` has to be removed: there it is
 interpolated inside `route { }`, where `log` is not a handler directive, so config adaptation fails and
