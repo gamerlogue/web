@@ -18,8 +18,13 @@ ARG TZ=Europe/Rome
 ENV APP_ENV=production \
     CADDY_ADMIN="localhost:2019" \
     CADDY_HTTP_PORT=80 \
+    CADDY_PHP_SERVER_OPTIONS="import ${APP_BASE_DIR}/deployment/php-server.caddyfile" \
+    CADDY_SERVER_EXTRA_DIRECTIVES="import ${APP_BASE_DIR}/deployment/site.caddyfile" \
     COMPOSER_FUND=0 \
     FORCE_COLOR=1 \
+    # /etc/frankenphp/Caddyfile takes the worker block from this variable and nowhere else.
+    # Overridden in dev by deployment/dev/start-container-dev.sh, which adds the `watch` directives.
+    FRANKENPHP_CONFIG="worker ${APP_BASE_DIR}/public/frankenphp-worker.php" \
     OCTANE_SERVER=frankenphp \
     PHP_DATE_TIMEZONE=${TZ} \
     PHP_INI_SCAN_DIR=":$APP_BASE_DIR/deployment" \
