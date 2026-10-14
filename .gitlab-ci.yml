@@ -1,7 +1,31 @@
 # Build & deploy pipeline shared by all website templates; see the included file for details.
+# Quality and test jobs (MRs, main and tags) are this template's own, on the shared .composer base.
 # Variables to set on the repo:
 # AWS_WEB_HOST_PROD: The hosts (separated by commas) where the application will be deployed in production
 include:
   - project: 'websites/utils/ci-templates'
     ref: v2.0.0
     file: '/web-app.yml'
+
+quality:
+  extends: .composer
+  stage: quality
+  script:
+    - vendor/bin/pint --test
+
+stylelint:
+  stage: quality
+  interruptible: true
+  image: oven/bun:1
+  rules: !reference [.composer, rules]
+  script:
+    - bun install --frozen-lockfile
+    - bunx stylelint "resources/**/*.{css,scss,vue}"
+
+test:
+  extends: .composer
+  stage: test
+  script:
+    - cp .env.example .env
+    - php artisan key:generate
+    - php artisan test
