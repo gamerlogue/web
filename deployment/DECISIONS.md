@@ -258,7 +258,7 @@ image update. `no-new-privileges`, enabled on every service, already closes the 
 path.
 
 ### `MYSQL_ROOT_PASSWORD` can be separated
-`${DB_ROOT_PASSWORD:-$DB_PASSWORD}`: where it matters you set a root password distinct from the
+`${DB_ROOT_PASSWORD:-$DB_PASSWORD}`: where it matters you set a root password distinct from the <!-- betterleaks:allow -->
 application user's, where it doesn't nothing changes.
 
 ### `env_file: .env` only where it is needed
