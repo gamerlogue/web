@@ -1,5 +1,6 @@
 # git-cliff configuration: https://git-cliff.org/docs/configuration
-# The shared pipeline (websites/utils/ci-templates) renders the notes of each tag into its GitLab Release.
+# The release MR of the shared pipeline (websites/utils/ci-templates) regenerates CHANGELOG.md with
+# it; the GitLab Release of each version takes its section from there.
 
 [changelog]
 header = """
