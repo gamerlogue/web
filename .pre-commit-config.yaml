@@ -1,4 +1,10 @@
 repos:
+  # A GitLab PAT was committed once and stayed in the history; this is what catches the
+  # next one before it gets there. Betterleaks is the gitleaks author's rewrite.
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.7.3
+    hooks:
+      - id: betterleaks
   - repo: https://github.com/commit-check/commit-check
     rev: v2.6.0
     hooks:
