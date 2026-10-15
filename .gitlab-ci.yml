@@ -13,14 +13,30 @@ quality:
   script:
     - vendor/bin/pint --test
 
-stylelint:
+# Shared bun setup: the install cache is keyed on bun.lock so each job's install is mostly linking.
+.bun:
   stage: quality
   interruptible: true
   image: oven/bun:1.4.3-alpine
   rules: !reference [.composer, rules]
-  script:
+  variables:
+    BUN_INSTALL_CACHE_DIR: .bun-cache
+  cache:
+    key:
+      files: [bun.lock]
+    paths: [.bun-cache]
+  before_script:
     - bun install --frozen-lockfile
+
+stylelint:
+  extends: .bun
+  script:
     - bunx stylelint "resources/**/*.{css,scss,vue}"
+
+eslint:
+  extends: .bun
+  script:
+    - bunx --bun eslint .
 
 test:
   extends: .composer
