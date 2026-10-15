@@ -70,6 +70,11 @@ No tags by hand: merge the release MR that the pipeline keeps up to date, then p
 go to prod. The whole flow is in the
 [ci-templates README](https://gitlab.trust-itservices.com/websites/utils/ci-templates#-releasing).
 
+> [!note]
+> This applies to the websites. The templates themselves (`websites/templates`) are not released or
+> deployed: their pipeline only runs the checks. A new site starts with no version of its own: its
+> first release MR proposes `0.1.0`, or the `initial_tag` set in `cliff.toml` (`[bump]`).
+
 ---
 
 ## 🆕 Creating a new template
