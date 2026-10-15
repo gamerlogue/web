@@ -1,106 +1,158 @@
-# 🧱 Base template
+# 🔴 Laravel template
 
-The common base of the **websites** templates: everything a project needs that does not depend on
-its framework, i.e. CI, git hooks, release and dependency configuration.
+Laravel 13 website template: Octane on FrankenPHP, Vite + bun, Pest tests, queue and scheduler
+containers, and the shared CI with release MR and deploys.
 
 ```mermaid
 flowchart LR
-    BASE["🧱 base-template"] -- "git pull" --> D["💧 drupal"] & L["🔴 laravel"] & W["📰 wordpress"]
-    D & L & W -- "sitekit new<br/>(fork)" --> S["🌐 websites"]
+    B["🌍 https://laravel.localhost"] --> L["🔴 laravel<br/>Octane + FrankenPHP"]
+    L --> DB[("🐬 mysql<br/>data, sessions, jobs")] & R[("🔴 redis<br/>cache")]
+    Q["📨 queue<br/>queue:work"] & T["⏰ task<br/>schedule:work"] --> DB
+    L -- mail --> M["📬 mailpit<br/>http://localhost:8025"]
 ```
 
 > [!note]
-> This file is `README.template.md`: each template replaces it with its own, and `README.md` is left
-> to the websites built from the templates.
+> Git hooks, commit format, releases and deploys are common to every template: see
+> [base template README](https://gitlab.trust-itservices.com/websites/templates/base-template/-/blob/main/README.template.md). `README.md` is left to the website built from this template.
 
 [[_TOC_]]
 
 ---
 
-## 📦 What's inside
-
-| File | What it does |
-|---|---|
-| `.gitlab-ci.yml` | includes the shared pipeline of [ci-templates](https://gitlab.trust-itservices.com/websites/utils/ci-templates): security checks, build, deploy, releases |
-| `.pre-commit-config.yaml` | git hooks: secrets ([betterleaks](https://github.com/betterleaks/betterleaks)), branch and author ([commit-check](https://github.com/commit-check/commit-check)), commit messages |
-| `commit-check.toml` | rules of the branch and author checks |
-| `cliff.toml` | [git-cliff](https://git-cliff.org) config: the changelog and release notes written by the release MR |
-| `renovate.json` | dependency updates by [Renovate](https://gitlab.trust-itservices.com/platform/renovate), with the shared preset |
-| `.gitlab/merge_request_templates/Default.md` | description template of every MR |
-| `.gitattributes`, `.gitignore`, `.dockerignore` | the shared basics |
-
----
-
-## 👩‍💻 Working on a project built on it
-
-### Git hooks
-
-`sitekit init` installs them; by hand, with [prek](https://prek.j178.dev) (faster, same CLI) or
-[pre-commit](https://pre-commit.com):
-
-```bash
-prek install    # or: pre-commit install
-```
-
-| Hook | When | Checks |
-|---|---|---|
-| 🔑 betterleaks | before each commit | no secrets in the staged changes |
-| 🌿 check-branch | before each commit | branch name `<type>/<description>`, `type` among `feature`, `feat`, `bugfix`, `fix`, `hotfix`, `release`, `chore` |
-| 👤 check-author-name / -email | before each commit | a real git identity |
-| ✍️ conventional-commit | on the commit message | [Conventional Commits](https://www.conventionalcommits.org), gitmoji allowed |
-
-### Commit messages
-
-```text
-type(scope): gitmoji subject
-feat: ✨ add the newsletter block
-fix(search): 🐛 escape the query
-```
-
-`type` is one of `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `build`, `perf`,
-`revert`. The CI checks every commit of a merge request the same way, and the changelog is built
-from them.
-
-> [!tip]
-> A false positive of betterleaks? Append `betterleaks:allow` to that line, in a comment.
-
-### Releases and deploys
-
-No tags by hand: merge the release MR that the pipeline keeps up to date, then press ▶️ `promote` to
-go to prod. The whole flow is in the
-[ci-templates README](https://gitlab.trust-itservices.com/websites/utils/ci-templates#-releasing).
-
-> [!note]
-> This applies to the websites. The templates themselves (`websites/templates`) are not released or
-> deployed: their pipeline only runs the checks. A new site starts with no version of its own: its
-> first release MR proposes `0.1.0`, or the `initial_tag` set in `cliff.toml` (`[bump]`).
-
----
-
-## 🆕 Creating a new template
-
-1. Create the project, **empty** (no README), in [websites/templates](https://gitlab.trust-itservices.com/websites/templates):
-   `sitekit new` lists every project of that group (except this one) as a template.
-2. Pull this base into it, then add the framework, its `Dockerfile` and its CI jobs:
-
-   ```bash
-   git pull git@gitlab.trust-itservices.com:websites/templates/base-template.git main
-   ```
-
-3. Replace this `README.template.md` with the template's own docs (`README.md` is left to the
-   sites), linking back here for the common parts.
-
-## 🔄 Updating the templates
-
-Change the shared files here, then pull them into each template, as when it was created:
-
-```bash
-git pull git@gitlab.trust-itservices.com:websites/templates/base-template.git main
-```
-
-When this `README.template.md` has changed, the pull conflicts on it: keep the template's version
-(`git checkout --ours README.template.md`, then commit the merge).
+## 🚀 Quick start
 
 > [!important]
-> Sites forked from a template do not follow it: changes reach them only if pulled by hand, the same
-> way. Most of the CI lives in ci-templates anyway, which Renovate keeps up to date everywhere.
+> In the `websites/templates` group this is a template: create a site from it with
+> [SiteKit](https://gitlab.trust-itservices.com/websites/utils/sitekit) (`sitekit new`, then choose
+> `laravel`), which forks, clones and sets it up. In a website, start from the clone.
+
+<details open>
+<summary><b>First time</b></summary>
+
+```bash
+# Enable the Sail environment
+source bin/activate        # bash / zsh
+source bin/activate.fish   # fish
+# Start the services
+sail up -d
+# The containers create files as root: take them back
+sudo chown -R $USER:$USER .
+# App key, Octane, SQLite database, migrations
+sail composer run-script post-create-project-cmd
+# Restart to apply the changes
+sail restart
+```
+</details>
+
+<details>
+<summary><b>Every other time</b></summary>
+
+```bash
+source bin/activate
+sail up -d
+```
+</details>
+
+The site answers on `https://<SERVER_NAME>` (`SERVER_NAME` in `.env`, default `laravel.localhost`).
+
+---
+
+## ⛵ Sail environment
+
+`bin/activate` creates aliases that run the tools in the containers, through
+[Laravel Sail](https://laravel.com/docs/sail), so you don't type `./vendor/bin/sail` every time.
+
+| Command | Runs |
+|---|---|
+| `sail` | Laravel Sail (`sail up -d`, `sail down`, `sail restart`) |
+| `artisan`, `php`, `composer`, `tinker` | in the app container |
+| `node`, `npm`, `bun` | in the app container |
+| `mysql` | the MySQL client |
+| `shell` / `root-shell` | a shell in the container (as user / as root) |
+| `share`, `open` | Sail's `share` (public URL) and `open` (the site in your browser) |
+
+---
+
+## 🧭 Template routes
+
+| Route | What | Docs |
+|---|---|---|
+| `/log-viewer` | log viewer | [opcodesio/log-viewer](https://github.com/opcodesio/log-viewer) |
+| `/pulse` | Pulse dashboard | [Laravel Pulse](https://pulse.laravel.com) |
+| `/telescope` | Telescope dashboard | [Laravel Telescope](https://laravel.com/docs/telescope) |
+
+---
+
+## ✅ Tests and code style
+
+```bash
+artisan test                  # Pest
+vendor/bin/pint               # PHP code style
+bunx stylelint "resources/**/*.{css,scss,vue}"
+```
+
+The CI runs the same checks on every MR and tag.
+
+> [!tip]
+> [Laravel Boost](https://laravel.com/docs/ai) is installed: `artisan boost:install` gives AI coding
+> agents (Claude Code, Cursor, Copilot…) Laravel-aware tools and guidelines.
+
+---
+
+## 🚢 Production image
+
+```bash
+docker compose -f compose.prod.yaml up -d
+```
+
+The deploys build and run it through the shared CI: see [base template README](https://gitlab.trust-itservices.com/websites/templates/base-template/-/blob/main/README.template.md).
+
+---
+
+## 🆘 Troubleshooting
+
+<details>
+<summary><b>Laravel Pulse migrations not found</b></summary>
+
+`artisan migrate` does not find them; run them explicitly (already done in production):
+
+```bash
+sail php artisan migrate --path=vendor/laravel/pulse/database/migrations/2023_06_07_000001_create_pulse_tables.php
+```
+</details>
+
+<details>
+<summary><b>Webserver not starting</b> (<code>could not clean default/global storage</code>)</summary>
+
+```
+WARN   unable to get instance ID; storage clean stamps will be incomplete.
+ERROR  could not clean default/global storage.
+ERROR  job failed.
+```
+
+Give the container user (usually `1000:1000`) access to `.config` and `.data`:
+
+```bash
+for dir in .config .data; do
+    sudo chown -R <your_user>:1000 $dir && sudo chmod 0775 $dir
+done
+```
+
+Fish:
+
+```fish
+for dir in .config .data
+    sudo chown -R <your_user>:1000 $dir && sudo chmod 0775 $dir
+end
+```
+</details>
+
+---
+
+## 🙏 Credits
+
+- Laravel Octane Dockerfile: [exaco/laravel-octane-dockerfile](https://github.com/exaco/laravel-octane-dockerfile)
+- Log viewer: [opcodesio/log-viewer](https://github.com/opcodesio/log-viewer)
+- [Laravel Pulse](https://pulse.laravel.com)
+- Laravel Debug Bar: [barryvdh/laravel-debugbar](https://github.com/barryvdh/laravel-debugbar)
+- Framework: [Laravel](https://laravel.com/docs)
