@@ -8,7 +8,7 @@ ARG PHP_VERSION=8.5
 ###########################################
 # Base Image (Some code from https://github.com/exaco/laravel-docktane)
 ###########################################
-FROM ghcr.io/maicol07/docker-php-dev:${PHP_VERSION}-frankenphp-alpine AS base
+FROM ghcr.io/maicol07/docker-php:${PHP_VERSION}-frankenphp-alpine AS base
 
 USER root
 RUN install-php-extensions apcu bcmath exif intl gd
