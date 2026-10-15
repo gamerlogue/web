@@ -10,8 +10,8 @@ flowchart LR
 ```
 
 > [!note]
-> This file is `README.template.md` so that every project built on it keeps `README.md` for itself:
-> the template's own docs, then the site's.
+> This file is `README.template.md`: each template replaces it with its own, and `README.md` is left
+> to the websites built from the templates.
 
 [[_TOC_]]
 
@@ -70,6 +70,11 @@ No tags by hand: merge the release MR that the pipeline keeps up to date, then p
 go to prod. The whole flow is in the
 [ci-templates README](https://gitlab.trust-itservices.com/websites/utils/ci-templates#-releasing).
 
+> [!note]
+> This applies to the websites. The templates themselves (`websites/templates`) are not released or
+> deployed: their pipeline only runs the checks. A new site starts with no version of its own: its
+> first release MR proposes `0.1.0`, or the `initial_tag` set in `cliff.toml` (`[bump]`).
+
 ---
 
 ## 🆕 Creating a new template
@@ -82,7 +87,8 @@ go to prod. The whole flow is in the
    git pull git@gitlab.trust-itservices.com:websites/templates/base-template.git main
    ```
 
-3. Write its `README.md` for the template users; this `README.template.md` stays as is.
+3. Replace this `README.template.md` with the template's own docs (`README.md` is left to the
+   sites), linking back here for the common parts.
 
 ## 🔄 Updating the templates
 
@@ -91,6 +97,9 @@ Change the shared files here, then pull them into each template, as when it was 
 ```bash
 git pull git@gitlab.trust-itservices.com:websites/templates/base-template.git main
 ```
+
+When this `README.template.md` has changed, the pull conflicts on it: keep the template's version
+(`git checkout --ours README.template.md`, then commit the merge).
 
 > [!important]
 > Sites forked from a template do not follow it: changes reach them only if pulled by hand, the same
