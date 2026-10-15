@@ -1,3 +1,6 @@
+# A plain `prek install` / `pre-commit install` (sitekit init) sets up both kinds of hooks.
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
   # A GitLab PAT was committed once and stayed in the history; this is what catches the
   # next one before it gets there. Betterleaks is the gitleaks author's rewrite.
@@ -13,7 +16,6 @@ repos:
       - id: check-author-email
   # Same rule as the CI commit_lint job; commit-check's check-message rejects a gitmoji after the
   # colon. fixup!/amend! pass here (they are squashed before the merge), not in CI.
-  # Runs once installed with: pre-commit install --hook-type commit-msg
   - repo: local
     hooks:
       - id: conventional-commit
