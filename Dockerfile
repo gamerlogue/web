@@ -90,7 +90,7 @@ RUN docker-php-serversideup-set-id www-data $USER_ID:$GROUP_ID && \
     chown ${USER} /var/log/frankenphp
 
 # Install Dev specific helpers
-COPY --from=oven/bun:alpine /usr/local/bin/bun /usr/local/bin/bunx /usr/local/bin/
+COPY --from=oven/bun:1.4.3-alpine /usr/local/bin/bun /usr/local/bin/bunx /usr/local/bin/
 
 # SSL Certs permissions for Sail/Local dev
 RUN mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates \
@@ -149,7 +149,7 @@ RUN php artisan wayfinder:generate --path=resources/ts
 ###########################################
 # Frontend Build
 ###########################################
-FROM oven/bun:alpine AS build
+FROM oven/bun:1.4.3-alpine AS build
 WORKDIR /app
 COPY --link package.json bun.lock bunfig.toml ./
 
