@@ -25,6 +25,9 @@ stylelint:
 test:
   extends: .composer
   stage: test
+  # composer:2 has no phpredis: artisan would boot Telescope against the .env redis cache.
+  variables:
+    CACHE_STORE: array
   script:
     - cp .env.example .env
     - php artisan key:generate
