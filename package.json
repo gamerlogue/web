@@ -7,29 +7,29 @@
     "build": "bunx --bun vite build"
   },
   "devDependencies": {
-    "@laravel/vite-plugin-wayfinder": "^0.1.7",
-    "@maicol07/eslint-config": "3.0.0",
-    "@types/node": "^26.1.1",
-    "eslint": "^10.8.0",
-    "fontaine": "^0.8.0",
+    "@laravel/vite-plugin-wayfinder": "^0.1.10",
+    "@maicol07/eslint-config": "3.1.2",
+    "@types/node": "^26.6.5",
+    "eslint": "^10.12.0",
+    "fontaine": "^1.0.1",
     "include-media": "^2.0.0",
-    "laravel-vite-plugin": "^3.1.3",
-    "postcss-html": "^1.8.0",
-    "sass-embedded": "^1.100.0",
-    "stylelint": "^17.14.1",
+    "laravel-vite-plugin": "^3.2.0",
+    "postcss-html": "^2.0.0",
+    "sass-embedded": "^1.105.1",
+    "stylelint": "^17.16.0",
     "stylelint-config-clean-order": "^10.0.0",
-    "stylelint-config-html": "^1.1.0",
+    "stylelint-config-html": "^2.0.0",
     "stylelint-config-recommended-scss": "^17.0.1",
-    "stylelint-config-recommended-vue": "^1.6.1",
+    "stylelint-config-recommended-vue": "^2.0.0",
     "stylelint-config-standard": "^40.0.0",
     "stylelint-config-standard-scss": "^17.0.0",
-    "type-fest": "^5.2.0",
+    "type-fest": "^5.10.0",
     "typescript": "^7.0.2",
-    "vite": "^8.1.5"
+    "vite": "^8.3.4"
   },
   "dependencies": {
-    "@sass-fairy/string": "^1.3.1",
+    "@sass-fairy/string": "^1.3.3",
     "modern-normalize": "^3.0.1",
-    "ts-pattern": "^5.9.0"
+    "ts-pattern": "^5.9.2"
   }
 }
