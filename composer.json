@@ -16,7 +16,7 @@
     "opcodesio/log-viewer": "^3.10"
   },
   "require-dev": {
-    "barryvdh/laravel-debugbar": "^3.13",
+    "barryvdh/laravel-debugbar": "^4.0",
     "fakerphp/faker": "^1.23",
     "fumeapp/modeltyper": "^3.0",
     "laravel/boost": "^2.0",
