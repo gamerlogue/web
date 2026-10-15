@@ -16,7 +16,7 @@ quality:
 stylelint:
   stage: quality
   interruptible: true
-  image: oven/bun:1
+  image: oven/bun:1.4.3-alpine
   rules: !reference [.composer, rules]
   script:
     - bun install --frozen-lockfile
