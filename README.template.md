@@ -57,6 +57,38 @@ The site answers on `https://<SERVER_NAME>` (`SERVER_NAME` in `.env`, default `l
 
 ---
 
+## 🔑 Environment variables
+
+Standard Laravel configuration: `.env` locally (start from `.env.example`), on Kubernetes the
+variables below. Those that matter on a deployment:
+
+| Variable | Required | Default | Notes |
+|---|---|---|---|
+| `APP_KEY` | ✅ | — | encryption key, unique per environment: `php artisan key:generate --show` |
+| `APP_URL` | ✅ in production | `http://localhost` | base of the generated URLs |
+| `DB_CONNECTION` | ✅ in production | `sqlite` | the default is a file inside the container, lost on restart: set `mysql` |
+| `DB_HOST`, `DB_PORT` | | `127.0.0.1`, `3306` | |
+| `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | | `laravel`, `root`, empty | |
+| `CACHE_STORE`, `SESSION_DRIVER`, `QUEUE_CONNECTION` | | `database` | `redis` needs the `REDIS_*` below |
+| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | | `127.0.0.1`, `6379`, none | |
+| `APP_ENV`, `APP_DEBUG` | | `production`, `false` | |
+| `SERVER_NAME` | | — | site address(es) of Caddy |
+
+<details>
+<summary><b>Where do they come from on Kubernetes?</b></summary>
+
+- **Secrets** (`APP_KEY`, `DB_PASSWORD`, `REDIS_PASSWORD`, ...): AWS Secrets Manager, secret
+  `external-secrets/<fullname>`, one key per variable. The chart's ExternalSecret copies it into
+  the pod's Secret within an hour, or at once with
+  `kubectl -n burstable annotate externalsecret <fullname> force-sync=$(date +%s) --overwrite`.
+  Pods read it only at startup: `kubectl -n burstable rollout restart deployment/<fullname>`.
+- **`SERVER_NAME`**: written by `helm_deploy` (sitekit) from the CI/CD variable
+  `AWS_WEB_HOST_DEV` / `AWS_WEB_HOST_PROD`.
+- **`APP_ENV`**: `production`, from the image.
+</details>
+
+---
+
 ## ⛵ Sail environment
 
 `bin/activate` creates aliases that run the tools in the containers, through
