@@ -1,8 +1,9 @@
 # API contracts: Profile section
 
 The single source of truth for the client. Covers the phases implemented so far: **Phase 1**
-(public profile and statistics), **Phase 2** (lists) and **Phase 3** (social: follows, blocks,
-reports, activities). Later phases will be added here.
+(public profile and statistics), **Phase 2** (lists), **Phase 3** (social: follows, blocks,
+reports, activities) and **Phase 4** (reactions, comments, notifications). Later phases will be
+added here.
 
 ## Common conventions
 
@@ -10,7 +11,8 @@ reports, activities). Later phases will be added here.
   a session + XSRF (web). Without authentication: `401`.
 - API Platform resources speak JSON:API: `Accept`/`Content-Type: application/vnd.api+json`.
   Endpoints marked **plain JSON** answer `application/json`.
-- Token abilities: `profile` for `users`, follows, blocks and reports; `library` for
+- Token abilities: `profile` for `users`, follows, blocks, reports, reactions, comments and
+  notifications; `library` for
   `library_entries`, lists, statistics and activities. A
   token without the required ability gets `403`.
 - Collections: `page=N` (from 1), a fixed 30 items, `page[size]` ignored, `meta.totalItems` always
@@ -32,6 +34,7 @@ A JSON:API document `{"errors": [{...}]}`. Every error has `status` (a string) a
 | `cannot_follow_self` | 422 | Following yourself |
 | `cannot_block_self` | 422 | Blocking yourself |
 | `invalid_import_batch` | 422 | A malformed `X-Library-Import` header (see Activities) |
+| `review_required` | 422 | Liking or commenting a library entry without a review |
 | *HTTP status* (`"401"`, `"403"`, `"404"`…) | same as the code | Generic errors: the `code` is the status, as today |
 | `<id>/data.attributes.<field>` | 422 | Attribute validation (unchanged): one error per field, the field is the suffix after `/` |
 
@@ -137,6 +140,9 @@ Existing endpoints, attributes, filters and sorts are unchanged. Additions:
 |---|---|---|---|
 | `review_spoiler` | bool | yes | default `false` |
 | `review_updated_at` | datetime? | no (ignored if sent) | changes only when the `review` text changes; `null` ↔ `""` is not an edit |
+| `likes_count` | int | no | likes of the review |
+| `liked_by_me` | bool | no | the caller liked it |
+| `comments_count` | int | no | comments on the review, replies excluded, minus those by users in a block with the caller |
 
 ### Filters and sort
 
@@ -230,6 +236,7 @@ Resource types `List` (integer id) and `ListItem` (integer id). Ability `library
 | `visibility` | `public` \| `private` | yes | default `public` |
 | `is_ranked` | bool | yes | default `false`; a real JSON boolean, not `"true"` |
 | `items_count` | int | no | |
+| `likes_count`, `liked_by_me`, `comments_count` | int, bool, int | no | as on `LibraryEntry` |
 | `user_id` | uuid | no | always the caller on creation |
 | `created_at`, `updated_at` | datetime | no | reordering touches `updated_at` |
 
@@ -357,7 +364,7 @@ Resource type `Report`, ability `profile`. At most 10 per minute.
 
 | Attribute | Type | Writable | Constraints |
 |---|---|---|---|
-| `reportable_type` | `user` \| `library_entry` \| `list` | yes | required (`comment` arrives with comments) |
+| `reportable_type` | `user` \| `library_entry` \| `list` \| `comment` | yes | required |
 | `reportable_id` | string | yes | required; the id **as a string**, UUID for users. Must exist |
 | `reason` | `spam` \| `harassment` \| `hate_speech` \| `spoiler` \| `inappropriate` \| `impersonation` \| `other` | yes | required |
 | `note` | string? | yes | max 1000 |
@@ -471,6 +478,148 @@ GET /api/activities?filter[feed]=true&include=user,subject
 
 ---
 
+## Reaction (likes)
+
+Resource type `Reaction`, integer id, ability `profile`. A like is the reaction `like`. Each user
+has **one** reaction per subject: change it with PATCH. Only the caller's own are listed or
+writable (someone else's: `404`).
+
+| Method and path | Effect |
+|---|---|
+| `GET /reactions?filter[reactable_type]=…&filter[reactable_id]=…` | The caller's reaction to that subject, if any (to unlike, or to change it) |
+| `POST /reactions` | React. Already reacted: `422` |
+| `PATCH /reactions/{id}` | Change `type` |
+| `DELETE /reactions/{id}` | Take it back (also removes the notification it sent) |
+
+| Attribute | Type | Writable | Constraints |
+|---|---|---|---|
+| `reactable_type` | `library_entry` \| `list` \| `comment` | on creation | |
+| `reactable_id` | int | on creation | must exist and be visible to the caller |
+| `type` | string | yes | `like` on reviews and lists; on comments `like` or **any single emoji** (one grapheme: skin tones, ZWJ sequences, flags and keycaps included) |
+| `user_id` | uuid | no | always the caller |
+| `created_at`, `updated_at` | datetime | no | |
+
+Relationship: `reactable`. A library entry needs a review (`422 review_required`); the subject
+must be visible (`403 profile_private`, `403 user_blocked`, `404` for someone else's private
+list).
+
+```http
+POST /api/reactions
+Content-Type: application/vnd.api+json
+
+{"data": {"type": "Reaction", "attributes": {"reactable_type": "comment", "reactable_id": 7, "type": "🔥"}}}
+```
+
+---
+
+## Comment
+
+Resource type `Comment`, integer id, ability `profile`. A comment is on a review (library entry
+with a review), a list, or another comment: a **reply is a comment on a comment**, to any depth.
+Comments are published immediately.
+
+| Method and path | Access |
+|---|---|
+| `GET /comments?filter[commentable_type]=…&filter[commentable_id]=…` | The comments directly on that subject (the roots of a review or list, or the replies of a comment). Both filters are **required** (`422` otherwise) |
+| `GET /comments/{id}` | One comment |
+| `POST /comments` | Comment or reply |
+| `PATCH /comments/{id}` | Author only (`404` otherwise): `comment`, `spoiler` |
+| `DELETE /comments/{id}` | Author, or owner of the review/list the thread is about (`403` otherwise). Deletes the comment **with all its replies**, their reactions and notifications |
+
+Reading follows the thread's subject: a hidden review or list hides its comments (`403
+profile_private` / `user_blocked`, `404`). Comments by users in a block with the caller are left
+out, and so are the replies below them. A private profile's comments on public content stay
+visible, with its public card.
+
+| Attribute | Type | Writable | Constraints |
+|---|---|---|---|
+| `comment` | string | yes | required on creation, max 2000. Stored with profanity masked by `*` (Italian and English) |
+| `spoiler` | bool | yes | default `false`; a real JSON boolean |
+| `commentable_type` | `library_entry` \| `list` \| `comment` | on creation | |
+| `commentable_id` | int | on creation | must exist and be visible; a library entry needs a review (`422 review_required`) |
+| `user_id` | uuid | no | the author, always the caller on creation |
+| `edited` | bool | no | the text or spoiler changed after posting |
+| `replies_count` | int | no | direct replies, minus those by users in a block with the caller |
+| `reactions_summary` | `[{type, count}]` | no | count per reaction type, most used first, e.g. `[{"type": "❤️", "count": 2}, {"type": "like", "count": 1}]`; `[]` without reactions |
+| `my_reaction` | string? | no | the caller's reaction type |
+| `created_at`, `updated_at` | datetime | no | |
+
+Relationships: `user` (the author), `commentable` (LibraryEntry, List or Comment).
+`include=user,commentable`. Sort: by creation, oldest first (`sort=created_at`, the only one).
+
+```http
+POST /api/comments
+Content-Type: application/vnd.api+json
+
+{"data": {"type": "Comment", "attributes": {"commentable_type": "comment", "commentable_id": 7,
+  "comment": "Totally agree", "spoiler": false}}}
+```
+
+```json
+{"data": {"id": "8", "type": "Comment", "attributes": {"comment": "Totally agree",
+  "spoiler": false, "commentable_type": "comment", "commentable_id": 7, "user_id": "0199…",
+  "edited": false, "replies_count": 0, "reactions_summary": [],
+  "created_at": "2026-10-17T16:00:00+02:00", "updated_at": "2026-10-17T16:00:00+02:00"},
+  "relationships": {"user": {"data": {"type": "User", "id": "0199…"}},
+    "commentable": {"data": {"type": "Comment", "id": "7"}}}}}
+```
+
+(`my_reaction` is null, hence missing.)
+
+### Cascades
+
+Clearing a review (`review` null or empty) deletes its likes and comments. Deleting a library
+entry, a list or a comment deletes its reactions, comments (replies included) and the
+notifications about it.
+
+---
+
+## Notification
+
+Resource type `Notification`, UUID id, ability `profile`. The caller's own only (`404`
+otherwise). Newest first, standard pagination.
+
+| Method and path | Effect |
+|---|---|
+| `GET /notifications` | All; `filter[unread]=true\|false` for unread or read ones only |
+| `GET /notifications?filter[unread]=true` | Also the **unread count**: `meta.totalItems` |
+| `GET /notifications/{id}` | One |
+| `PATCH /notifications/{id}` | `{"is_read": true}` or `false`; nothing else is writable (`422`) |
+| `POST /notifications/read-all` | **Plain JSON**, marks every one read, `204` |
+
+| Attribute | Type | Content |
+|---|---|---|
+| `type` | string | see below |
+| `data` | object | `actor` `{id, nickname, picture}`, `subject_type`, `subject_id`, plus the type's keys |
+| `is_read` | bool | writable |
+| `read_at` | datetime? | |
+| `created_at`, `updated_at` | datetime | |
+
+| `type` | Recipient | `subject_type` | Extra keys in `data` |
+|---|---|---|---|
+| `new_follower` | the followed user | null | |
+| `review_liked` | the review's owner | `library_entry` | `game_id`, `reaction_id` |
+| `review_commented` | the review's owner | `library_entry` | `game_id`, `comment_id` |
+| `list_liked` | the list's owner | `list` | `list_name`, `reaction_id` |
+| `list_commented` | the list's owner | `list` | `list_name`, `comment_id` |
+| `comment_replied` | the author of the comment replied to | `comment` | `comment_id` (the reply) |
+| `comment_reacted` | the comment's author | `comment` | `reaction`, `reaction_id` |
+
+Nobody is notified of their own actions, nor by a user they are in a block with. Taking back a
+reaction or deleting a comment deletes its notification; deleting content deletes the
+notifications about it. Push notifications are not part of this phase.
+
+```json
+{"data": [{"id": "9f1c…", "type": "Notification", "attributes": {"type": "review_liked",
+  "data": {"actor": {"id": "0199…", "nickname": "fan", "picture": "https://…"},
+    "subject_type": "library_entry", "subject_id": 77, "reaction_id": 5, "game_id": 1942},
+  "is_read": false, "created_at": "2026-10-17T16:00:00+02:00",
+  "updated_at": "2026-10-17T16:00:00+02:00"}}],
+ "meta": {"totalItems": 1, "itemsPerPage": 30, "currentPage": 1}}
+```
+
+---
+
 ## Choices left to the server
 
 | Topic | Choice |
@@ -489,12 +638,16 @@ GET /api/activities?filter[feed]=true&include=user,subject
 | Report reasons | `spam`, `harassment`, `hate_speech`, `spoiler`, `inappropriate`, `impersonation`, `other`; one report per author and subject |
 | Follow and block | JSON:API resources `Follow` and `Block`; a duplicate is `422` |
 | Self follow/block | `422` with `cannot_follow_self` / `cannot_block_self` |
+| Likes | The `like` reaction of `/reactions`, not a separate `/likes` resource; one reaction per user and subject |
+| Comment reactions | Any single emoji; the notification is `comment_reacted` (with the emoji) instead of `comment_liked` |
+| Comment text | Attribute `comment`, max 2000; profanity masked with `*`, Italian and English dictionaries, nothing waits for approval |
+| Threads | Replies are comments on comments, any depth; no `reply_to_user`; `comments_count` counts direct comments only |
+| Comment deletion | Hard delete of the comment and its whole subtree; no soft-deleted placeholder |
+| Unread count | `meta.totalItems` of `GET /notifications?filter[unread]=true` |
 
 ## Not implemented or deferred
 
-- Blocks on likes and comments: Phase 4.
 - Removing a game from a list does not shrink the `game_ids` of an earlier `list_item_added`.
-- `likes_count`, `liked_by_me`, `comments_count` on lists: Phase 4.
 
 ## Differences from the existing contract
 
@@ -503,6 +656,7 @@ GET /api/activities?filter[feed]=true&include=user,subject
 - On a private profile, others no longer see `first_name`, `last_name`, `created_at`, `updated_at`.
 - The OIDC login no longer overwrites `nickname` on every sign-in.
 - `User` gains `followers_count`, `following_count`, `is_followed_by_me`, `follows_me` (additions).
+- `LibraryEntry` and `List` gain `likes_count`, `liked_by_me`, `comments_count` (additions).
 
 Everything else (pagination, `current_user=true`, `library_entries` filters and sorts, date format,
 generic errors) is unchanged.
