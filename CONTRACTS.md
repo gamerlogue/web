@@ -1,7 +1,8 @@
 # API contracts: Profile section
 
 The single source of truth for the client. Covers the phases implemented so far: **Phase 1**
-(public profile and statistics) and **Phase 2** (lists). Later phases will be added here.
+(public profile and statistics), **Phase 2** (lists) and **Phase 3** (social: follows, blocks,
+reports, activities). Later phases will be added here.
 
 ## Common conventions
 
@@ -9,7 +10,8 @@ The single source of truth for the client. Covers the phases implemented so far:
   a session + XSRF (web). Without authentication: `401`.
 - API Platform resources speak JSON:API: `Accept`/`Content-Type: application/vnd.api+json`.
   Endpoints marked **plain JSON** answer `application/json`.
-- Token abilities: `profile` for `users`; `library` for `library_entries`, lists and statistics. A
+- Token abilities: `profile` for `users`, follows, blocks and reports; `library` for
+  `library_entries`, lists, statistics and activities. A
   token without the required ability gets `403`.
 - Collections: `page=N` (from 1), a fixed 30 items, `page[size]` ignored, `meta.totalItems` always
   present.
@@ -26,6 +28,10 @@ A JSON:API document `{"errors": [{...}]}`. Every error has `status` (a string) a
 | `code` | Status | Meaning |
 |---|---|---|
 | `profile_private` | 403 | The profile is private and the caller is not its owner |
+| `user_blocked` | 403 | The caller and the profile's owner are in a block, whoever blocked whom |
+| `cannot_follow_self` | 422 | Following yourself |
+| `cannot_block_self` | 422 | Blocking yourself |
+| `invalid_import_batch` | 422 | A malformed `X-Library-Import` header (see Activities) |
 | *HTTP status* (`"401"`, `"403"`, `"404"`…) | same as the code | Generic errors: the `code` is the status, as today |
 | `<id>/data.attributes.<field>` | 422 | Attribute validation (unchanged): one error per field, the field is the suffix after `/` |
 
@@ -44,7 +50,9 @@ Resource type `User`, UUID id.
 |---|---|
 | `GET /users` | Without `filter[search]`: holds only the current user (unchanged) |
 | `GET /users?filter[search]=<text>` | Searches every user, private ones included (with the reduced profile) |
-| `GET /users/{id}` | Any user; the visible fields depend on ownership and visibility |
+| `GET /users/{id}` | Any user outside a block (otherwise `403 user_blocked`); the visible fields depend on ownership and visibility |
+| `GET /users/{id}/followers` | Who follows that user. Visible profile required: `403 profile_private` / `user_blocked` |
+| `GET /users/{id}/following` | Whom that user follows, same rules |
 | `PATCH /users/{id}` | Owner only; `404` for anyone else |
 
 ### Attributes
@@ -61,11 +69,15 @@ Resource type `User`, UUID id.
 | `banner_image_id` | string? | yes | visible profile | IGDB `image_id`, max 255 |
 | `platforms_ids` | int[] | yes | visible profile | IGDB platforms the user **owns**; positive integers, no duplicates. Not to be confused with `LibraryEntry.platforms_ids`, the platforms of that entry |
 | `created_at`, `updated_at` | datetime | no | visible profile | |
+| `followers_count`, `following_count` | int | no | visible profile | |
+| `is_followed_by_me` | bool | no | visible profile | the caller follows this user |
+| `follows_me` | bool | no | visible profile | this user follows the caller |
 | `email` | string | no | owner only | |
 | `email_verified_at` | datetime? | no | owner only | |
 | `picture_edit_url` | string? | no | owner only | null when the server has none configured |
 
-"Visible profile" means the caller is the owner or the profile is `public`. On a private profile
+"Visible profile" means the caller is the owner, or the profile is `public` and neither user
+blocked the other. On a private profile
 everyone else gets only `id`, `nickname`, `name`, `picture` and `visibility`. The same rules apply
 when `User` is included as a relationship (e.g. `library_entries?include=user`).
 
@@ -77,7 +89,9 @@ PATCH that sends back the whole profile does not fail on a legacy nickname with 
 - `filter[search]`: max 100 characters. Every word (space separated) must appear in `nickname`,
   `first_name` or `last_name`, regardless of case. `%` and `_` are literal. It covers private
   profiles too: their `name` (first + last name) is part of the public card anyway, so the search
-  reveals nothing more.
+  reveals nothing more. Users in a block with the caller are left out.
+
+`/users/{id}/followers` and `/users/{id}/following` leave out users in a block with the caller.
 
 ### Errors
 
@@ -282,6 +296,181 @@ Content-Type: application/vnd.api+json
 
 ---
 
+## Follow and Block
+
+Resource types `Follow` and `Block` (integer ids), ability `profile`. Both are the caller's own:
+the collection lists only theirs, and someone else's is a `404`.
+
+| Method and path | Effect | Errors |
+|---|---|---|
+| `GET /follows` | Whom the caller follows; `filter[followable_id]=<uuid>` tells whether they follow that user | |
+| `POST /follows` | Follow `followable_id` | `422 cannot_follow_self` · `403 profile_private` · `403 user_blocked` · `422` unknown or already followed user |
+| `GET /follows/{id}`, `DELETE /follows/{id}` | Read, unfollow. Unfollowing is always allowed, even once the profile is private or in a block | `404` |
+| `GET /blocks` | Whom the caller blocked | |
+| `POST /blocks` | Block `blocked_id`; also ends the follows in both directions | `422 cannot_block_self` · `422` unknown or already blocked user |
+| `GET /blocks/{id}`, `DELETE /blocks/{id}` | Read, unblock. Follows are not restored | `404` |
+
+| Resource | Attribute | Type | Writable | Notes |
+|---|---|---|---|---|
+| `Follow` | `followable_id` | uuid | on creation | the followed user |
+| `Follow` | `user_id` | uuid | no | the follower, always the caller |
+| `Follow` | `created_at`, `updated_at` | datetime | no | |
+| `Block` | `blocked_id` | uuid | on creation | the blocked user |
+| `Block` | `user_id` | uuid | no | the blocker, always the caller |
+| `Block` | `created_at` | datetime | no | |
+
+Relationships: `Follow.followable` (User), `Block.blocked` (User, public card only), `Block.user` (the caller).
+`include=followable` / `include=blocked`. Relationships are not writable: use the id attributes.
+
+A follow survives the followed profile turning private: it just shows nothing until it is public
+again. A block in either direction makes each user invisible to the other: profile (`403
+user_blocked`), library, lists, statistics, followers/following, activities, search and feed. Who
+blocked whom is never exposed to anyone else.
+
+```http
+POST /api/follows
+Content-Type: application/vnd.api+json
+
+{"data": {"type": "Follow", "attributes": {"followable_id": "0199…"}}}
+```
+
+```json
+{"data": {"id": "12", "type": "Follow", "attributes": {"followable_id": "0199…",
+  "user_id": "0198…", "created_at": "2026-10-17T16:00:00+02:00",
+  "updated_at": "2026-10-17T16:00:00+02:00"},
+  "relationships": {"followable": {"data": {"type": "User", "id": "0199…"}}}}}
+```
+
+To unfollow from a profile page: `GET /follows?filter[followable_id]=0199…`, then `DELETE` the
+returned id.
+
+---
+
+## Report
+
+Resource type `Report`, ability `profile`. At most 10 per minute.
+
+| Method and path | Access |
+|---|---|
+| `POST /reports` | Anyone, including about a user they are in a block with |
+| `GET /reports/{id}` | The author only (`404` for anyone else) |
+
+| Attribute | Type | Writable | Constraints |
+|---|---|---|---|
+| `reportable_type` | `user` \| `library_entry` \| `list` | yes | required (`comment` arrives with comments) |
+| `reportable_id` | string | yes | required; the id **as a string**, UUID for users. Must exist |
+| `reason` | `spam` \| `harassment` \| `hate_speech` \| `spoiler` \| `inappropriate` \| `impersonation` \| `other` | yes | required |
+| `note` | string? | yes | max 1000 |
+| `user_id` | uuid | no | the author, always the caller |
+| `created_at`, `updated_at` | datetime | no | |
+
+One report per author and subject: a second one is `422`. Errors: `422` validation, `429` too many.
+
+```http
+POST /api/reports
+Content-Type: application/vnd.api+json
+
+{"data": {"type": "Report", "attributes": {"reportable_type": "list", "reportable_id": "12",
+  "reason": "spam", "note": "Advertising"}}}
+```
+
+```json
+{"data": {"id": "3", "type": "Report", "attributes": {"user_id": "0199…", "reportable_type": "list",
+  "reportable_id": "12", "reason": "spam", "note": "Advertising",
+  "created_at": "2026-10-17T16:00:00+02:00", "updated_at": "2026-10-17T16:00:00+02:00"}}}
+```
+
+---
+
+## Activity
+
+Resource type `Activity`, integer id, read-only. Ability `library`. Recorded by the server, for
+private profiles too; filtered when read.
+
+| Method and path | Content |
+|---|---|
+| `GET /activities` | The caller's own |
+| `GET /activities?filter[user]=<uuid>` | That user's. `403 profile_private` / `403 user_blocked` |
+| `GET /activities?filter[feed]=true` | Those of the users the caller follows, leaving out private profiles and users in a block with the caller |
+| `GET /activities/{id}` | One activity |
+
+Always newest first. `sort=-created_at` may be sent explicitly; any other sort is ignored, as on
+every resource. Standard
+pagination. Activities about someone else's private list are never shown, nor is "A followed B"
+when B is in a block with the caller.
+
+### Attributes
+
+| Attribute | Type | Content |
+|---|---|---|
+| `verb` | string | see below |
+| `subject_type` | `library_entry` \| `list` \| `user` | the kind of subject |
+| `payload` | object | what the activity renders from, by verb (below) |
+| `created_at` | datetime | when it happened first |
+| `updated_at` | datetime | when it was last folded (see grouping) |
+
+Relationships: `user` (who did it), `subject` (polymorphic: `LibraryEntry`, `List` or `User`).
+`include=user,subject`.
+
+| `verb` | `subject_type` | `payload` |
+|---|---|---|
+| `library_added` | `library_entry` | `game_id`, `status` |
+| `status_changed` | `library_entry` | `game_id`, `old`, `new` (statuses) |
+| `completed` | `library_entry` | `game_id`, `completion_status` (may be missing) |
+| `rated` | `library_entry` | `game_id`, `rating` |
+| `reviewed` | `library_entry` | `game_id`, `review_spoiler` |
+| `list_created` | `list` | `name` |
+| `list_item_added` | `list` | `name`, `game_ids` (every game added during the grouping window) |
+| `followed` | `user` (the followed one) | `nickname` |
+| `library_imported` | `user` (the importer) | `batch`, `count` |
+
+### Grouping
+
+The same user repeating the same verb on the same subject within **30 minutes** of the activity's
+`created_at` updates that activity instead of creating a new one: the payload becomes the latest,
+except `old`, which keeps the first value (so PLAYING → PAUSED → ABANDONED reads `old: PLAYING, new:
+ABANDONED`).
+
+### Deletion
+
+Deleting an entry or a list deletes its activities. Unfollowing (also through a block) deletes the
+`followed` activity.
+
+### Library imports
+
+When a connected service syncs many entries, send the header
+
+```
+X-Library-Import: <batch id>
+```
+
+on **every** `library_entries` write (POST/PATCH/DELETE) of that sync, with the same id for the
+whole sync: 1–64 characters among letters, digits, `_` and `-` (otherwise `422
+invalid_import_batch`), e.g. a UUID generated when the sync starts. Those writes record no
+activity of their own. Each entry they **create** counts into one `library_imported` activity per
+batch, `payload: {"batch": "<id>", "count": N}`. Updates within the batch count nothing. A new
+sync must use a new id.
+
+### Example
+
+```http
+GET /api/activities?filter[feed]=true&include=user,subject
+```
+
+```json
+{"links": {"self": "/api/activities?filter%5Bfeed%5D=true&include=user%2Csubject"},
+ "meta": {"totalItems": 1, "itemsPerPage": 30, "currentPage": 1},
+ "data": [{"id": "41", "type": "Activity", "attributes": {
+   "verb": "status_changed", "subject_type": "library_entry",
+   "payload": {"old": "PLAYING", "game_id": 1942, "new": "COMPLETED"},
+   "created_at": "2026-10-17T16:00:00+02:00", "updated_at": "2026-10-17T16:12:00+02:00"},
+   "relationships": {"user": {"data": {"type": "User", "id": "0199…"}},
+     "subject": {"data": {"type": "LibraryEntry", "id": "77"}}}}],
+ "included": ["…"]}
+```
+
+---
+
 ## Choices left to the server
 
 | Topic | Choice |
@@ -294,12 +483,17 @@ Content-Type: application/vnd.api+json
 | Rating scale | 0–100, as the existing validation says; histogram in tens |
 | Someone else's private list | `404` (its existence is not revealed); `403 profile_private` stays for private profiles |
 | Reorder format | Plain JSON `{"ids": [...]}` with every id, `204` |
+| Activity grouping window | 30 minutes from the activity's creation; `old` keeps the first value |
+| Library imports | Header `X-Library-Import: <batch id>` on every write of a sync; one `library_imported` per batch counting the created entries |
+| Type names | `reportable_type` and `subject_type` use `user`, `library_entry`, `list` (and `comment` from Phase 4) |
+| Report reasons | `spam`, `harassment`, `hate_speech`, `spoiler`, `inappropriate`, `impersonation`, `other`; one report per author and subject |
+| Follow and block | JSON:API resources `Follow` and `Block`; a duplicate is `422` |
+| Self follow/block | `422` with `cannot_follow_self` / `cannot_block_self` |
 
 ## Not implemented or deferred
 
-- Blocks and their effects on profiles and search: Phase 3.
-- Followers/following and activities under the `profile_private` rule: they come with their
-  phases.
+- Blocks on likes and comments: Phase 4.
+- Removing a game from a list does not shrink the `game_ids` of an earlier `list_item_added`.
 - `likes_count`, `liked_by_me`, `comments_count` on lists: Phase 4.
 
 ## Differences from the existing contract
@@ -308,6 +502,7 @@ Content-Type: application/vnd.api+json
 - The owner gets `email` (never exposed before) and `email_verified_at`.
 - On a private profile, others no longer see `first_name`, `last_name`, `created_at`, `updated_at`.
 - The OIDC login no longer overwrites `nickname` on every sign-in.
+- `User` gains `followers_count`, `following_count`, `is_followed_by_me`, `follows_me` (additions).
 
 Everything else (pagination, `current_user=true`, `library_entries` filters and sorts, date format,
 generic errors) is unchanged.
