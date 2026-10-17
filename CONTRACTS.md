@@ -1,7 +1,7 @@
 # API contracts: Profile section
 
 The single source of truth for the client. Covers the phases implemented so far: **Phase 1**
-(public profile and statistics). Later phases will be added here.
+(public profile and statistics) and **Phase 2** (lists). Later phases will be added here.
 
 ## Common conventions
 
@@ -9,7 +9,7 @@ The single source of truth for the client. Covers the phases implemented so far:
   a session + XSRF (web). Without authentication: `401`.
 - API Platform resources speak JSON:API: `Accept`/`Content-Type: application/vnd.api+json`.
   Endpoints marked **plain JSON** answer `application/json`.
-- Token abilities: `profile` for `users`; `library` for `library_entries` and statistics. A
+- Token abilities: `profile` for `users`; `library` for `library_entries`, lists and statistics. A
   token without the required ability gets `403`.
 - Collections: `page=N` (from 1), a fixed 30 items, `page[size]` ignored, `meta.totalItems` always
   present.
@@ -187,6 +187,101 @@ changes made outside the model show up within a day.
 
 ---
 
+## List and ListItem
+
+Resource types `List` (integer id) and `ListItem` (integer id). Ability `library`.
+
+### Endpoints
+
+| Method and path | Access |
+|---|---|
+| `GET /lists` | Your lists, private ones included |
+| `GET /lists?filter[user]=<uuid>` | That user's **public** lists; private profile: `403 profile_private` |
+| `GET /lists/{id}` | Yours, or public on a visible profile. Someone else's private list: `404`. Private profile: `403 profile_private` |
+| `POST /lists` | Creates a list of yours |
+| `PATCH /lists/{id}`, `DELETE /lists/{id}` | Owner only; `404` for anyone else. Deleting also deletes its games |
+| `GET /list_items?filter[list]=<id>` | The games of a list, under the list's rules (someone else's private list: empty `data`) |
+| `GET /list_items` | Without `filter[list]`: the games of all your lists |
+| `GET /list_items/{id}` | As the list holding it |
+| `POST /list_items` | Adds a game to one of **your** lists |
+| `PATCH /list_items/{id}`, `DELETE /list_items/{id}` | List owner only; `404` for anyone else |
+| `POST /lists/{id}/reorder` | **Plain JSON**, owner only (otherwise `404`): see below |
+
+### `List` attributes
+
+| Attribute | Type | Writable | Constraints |
+|---|---|---|---|
+| `name` | string | yes | required on creation, max 100 |
+| `description` | string? | yes | max 5000 |
+| `visibility` | `public` \| `private` | yes | default `public` |
+| `is_ranked` | bool | yes | default `false`; a real JSON boolean, not `"true"` |
+| `items_count` | int | no | |
+| `user_id` | uuid | no | always the caller on creation |
+| `created_at`, `updated_at` | datetime | no | reordering touches `updated_at` |
+
+Relationships: `user` (User), `items` (ListItem, in `position` order). `include=user,items`.
+
+### `ListItem` attributes
+
+| Attribute | Type | Writable | Constraints |
+|---|---|---|---|
+| `list_id` | int | on creation only | required, must be one of your lists (otherwise `422`) |
+| `game_id` | int | on creation only | required, positive integer; unique within the list (`422` if already there). The game need not be in the library |
+| `position` | int | yes | ≥ 0; when omitted on creation it goes last (last + 1). Not unique: ties fall back to creation order |
+| `note` | string? | yes | max 2000 |
+| `created_at`, `updated_at` | datetime | no | |
+
+Relationship: `list`. `include=list`. To move a game to another list, delete and recreate it.
+Relationships are not writable: use `list_id`.
+
+### Filters and ordering
+
+| Parameter | Resource | Semantics |
+|---|---|---|
+| `filter[user]` | `List` | uuid; that user's public lists instead of yours |
+| `current_user=true` | `List` | always yours, even alongside `filter[user]` |
+| `filter[contains_game]` | `List` | IGDB id; only the lists holding the game, among those already selected (yours, or the public ones of `filter[user]`) |
+| `filter[list]` | `ListItem` | the list id |
+
+`List` is ordered by creation; `ListItem` by `position`, then creation. Standard pagination.
+
+### Reordering
+
+```http
+POST /api/lists/12/reorder
+Content-Type: application/json
+
+{"ids": [31, 29, 30]}
+```
+
+`ids` holds **every** id of the list's games, once each, in the desired order: the index in the
+array becomes `position` (from 0). Answers `204`. Transactional: if `ids` does not match the list's
+games exactly (missing, duplicated, from other lists, not integers) the answer is `422` and nothing
+changes.
+
+### Errors
+
+`404` unknown list/game, someone else's private one, or a write to someone else's list · `403
+profile_private` · `403` token without `library` · `422` validation.
+
+### Example
+
+```http
+POST /api/list_items
+Content-Type: application/vnd.api+json
+
+{"data": {"type": "ListItem", "attributes": {"list_id": 12, "game_id": 1942, "note": "The best"}}}
+```
+
+```json
+{"data": {"id": "31", "type": "ListItem", "attributes": {
+  "list_id": 12, "game_id": 1942, "position": 3, "note": "The best",
+  "created_at": "2026-10-17T16:00:00+02:00", "updated_at": "2026-10-17T16:00:00+02:00"},
+  "relationships": {"list": {"data": {"type": "List", "id": "12"}}}}}
+```
+
+---
+
 ## Choices left to the server
 
 | Topic | Choice |
@@ -197,12 +292,15 @@ changes made outside the model show up within a day.
 | Statistics format | Plain JSON, keys described above |
 | Played time unit | `played_time` has no unit defined server-side: statistics sum the value as is (`total_played_time`) |
 | Rating scale | 0–100, as the existing validation says; histogram in tens |
+| Someone else's private list | `404` (its existence is not revealed); `403 profile_private` stays for private profiles |
+| Reorder format | Plain JSON `{"ids": [...]}` with every id, `204` |
 
 ## Not implemented or deferred
 
 - Blocks and their effects on profiles and search: Phase 3.
-- Lists, followers/following and activities under the `profile_private` rule: they come with
-  their phases.
+- Followers/following and activities under the `profile_private` rule: they come with their
+  phases.
+- `likes_count`, `liked_by_me`, `comments_count` on lists: Phase 4.
 
 ## Differences from the existing contract
 
