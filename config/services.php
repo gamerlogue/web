@@ -52,6 +52,11 @@ return [
         'event_stale_lifetime' => (int) env('IGDB_PROXY_EVENT_STALE_LIFETIME', 10),
     ],
 
+    'oidc' => [
+        // The identity provider's page where users change their picture, exposed as picture_edit_url.
+        'picture_edit_url' => env('OIDC_PICTURE_EDIT_URL'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

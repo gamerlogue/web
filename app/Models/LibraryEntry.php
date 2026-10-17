@@ -30,6 +30,8 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     description: "A user's entry in their game library, representing their interaction with a specific game.",
     rules: LibraryEntryFormRequest::class
 )]
+#[ApiProperty(description: 'Whether the review reveals plot details.', property: 'review_spoiler')]
+#[ApiProperty(description: 'When the review text last changed, null if there never was one.', property: 'review_updated_at', writable: false)]
 #[ApiProperty(description: 'The unique identifier of the game associated with this library entry.', property: 'game_id')]
 #[ApiProperty(description: 'The unique identifier of the user who owns this library entry.', property: 'user_id')]
 #[ApiProperty(description: 'The user who owns this library entry, always the authenticated user.', writable: false, property: 'user')]
@@ -43,6 +45,8 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     property: 'platforms_ids',
     nativeType: new BuiltinType(TypeIdentifier::ARRAY)
 )]
+#[QueryParameter('filter[user]', description: "Read another user's library instead of the caller's, subject to their profile visibility", constraints: ['uuid'])]
+#[QueryParameter('filter[has_review]', description: 'Filter library entries by whether they have a non-empty review', constraints: ['in:true,false'])]
 #[QueryParameter('filter[game_id]', filter: EqualsFilter::class, property: 'game_id', description: 'Filter library entries by the associated game ID')]
 #[QueryParameter('filter[status]', filter: EqualsFilter::class, property: 'status', description: 'Filter library entries by play status, one of the values of the status attribute', constraints: [new Enum(LibraryEntryStatus::class)])]
 #[QueryParameter('filter[completion_status]', filter: EqualsFilter::class, property: 'completion_status', description: 'Filter library entries by completion status, one of the values of the completion_status attribute', constraints: [new Enum(LibraryEntryCompletionStatus::class)])]
@@ -55,7 +59,7 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     'sort',
     filter: SortFilter::class,
     description: 'Comma-separated fields to sort by, descending when prefixed with "-" (e.g. "-rating,start_date")',
-    properties: ['start_date', 'end_date', 'rating', 'played_time', 'created_at', 'updated_at']
+    properties: ['start_date', 'end_date', 'rating', 'played_time', 'created_at', 'updated_at', 'review_updated_at']
 )]
 class LibraryEntry extends Model
 {
@@ -75,7 +79,11 @@ class LibraryEntry extends Model
         'rating',
         'rating_details',
         'review',
+        'review_spoiler',
     ];
+
+    /** @var array<string, mixed> */
+    protected $attributes = ['review_spoiler' => false];
 
     /**
      * The owner cannot be taken from the request body: API Platform persists the deserialized
@@ -90,6 +98,13 @@ class LibraryEntry extends Model
                 $entry->user_id = auth()->id();
             }
         });
+
+        // Null and empty both mean "no review", so moving between them is not an edit.
+        static::saving(static function (self $entry): void {
+            if ((string) $entry->review !== (string) $entry->getOriginal('review')) {
+                $entry->review_updated_at = now();
+            }
+        });
     }
 
     /**
@@ -101,6 +116,8 @@ class LibraryEntry extends Model
     {
         return [
             'game_id' => 'int',
+            'review_spoiler' => 'boolean',
+            'review_updated_at' => 'datetime',
             'owned' => 'boolean',
             'editions_ids' => 'array',
             'platforms_ids' => 'array',

@@ -52,7 +52,7 @@ test('an unauthenticated request cannot reach the user collection', function () 
         ->assertUnauthorized();
 });
 
-test('a user can read their own resource but not someone elses', function () {
+test('a user can read their own resource and other profiles', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
 
@@ -61,14 +61,13 @@ test('a user can read their own resource but not someone elses', function () {
         ->assertOk()
         ->assertJsonPath('data.id', $user->id);
 
-    // 404, not 403: OwnedResourcesExtension scopes the query, so someone else's resource does not
-    // exist as far as this caller is concerned. Same shape as library entries.
     actingAsNative($user)
         ->getJson("/api/users/{$other->id}", ['Accept' => 'application/vnd.api+json'])
-        ->assertNotFound();
+        ->assertOk()
+        ->assertJsonPath('data.id', $other->id);
 });
 
-test('the api never exposes a users email', function () {
+test('the api exposes a users email only to that user', function () {
     $user = User::factory()->create(['email' => 'private@example.test']);
     LibraryEntry::create([
         'user_id' => $user->id,
@@ -77,9 +76,15 @@ test('the api never exposes a users email', function () {
         'owned' => true,
     ]);
 
-    $response = actingAsNative($user)
+    actingAsNative($user)
         ->getJson("/api/users/{$user->id}", ['Accept' => 'application/vnd.api+json'])
+        ->assertOk()
+        ->assertJsonPath('data.attributes.email', 'private@example.test');
+
+    $response = actingAsNative(User::factory()->create())
+        ->getJson("/api/library_entries?filter[user]={$user->id}&include=user", ['Accept' => 'application/vnd.api+json'])
         ->assertOk();
 
-    expect($response->getContent())->not->toContain('private@example.test');
+    expect($response->getContent())->not->toContain('private@example.test')
+        ->and($response->json('included.0.attributes'))->not->toHaveKey('email_verified_at');
 });
