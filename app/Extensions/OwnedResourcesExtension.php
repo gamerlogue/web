@@ -11,10 +11,13 @@ use ApiPlatform\State\ParameterNotFound;
 use App\Enums\Visibility;
 use App\Exceptions\ApiDomainException;
 use App\Models\Activity;
+use App\Models\Comment;
 use App\Models\Follow;
 use App\Models\GameList;
 use App\Models\LibraryEntry;
 use App\Models\ListItem;
+use App\Models\Notification;
+use App\Models\Reaction;
 use App\Models\Report;
 use App\Models\User;
 use App\Models\UserBlock;
@@ -22,6 +25,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
  * Scopes every query to what the authenticated user may see. Discovered automatically: API
@@ -48,7 +52,14 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
             ListItem::class => $reading
                 ? $this->listItems($builder, $uriVariables, $operation)
                 : $builder->whereHas('list', static fn (Builder $list) => $list->where('user_id', auth()->id())),
-            Report::class, Follow::class, UserBlock::class => $builder->where('user_id', auth()->id()),
+            Report::class, Follow::class, UserBlock::class, Reaction::class => $builder->where('user_id', auth()->id()),
+            Notification::class => $this->notifications($builder, $operation),
+            Comment::class => match (request()->method()) {
+                'GET' => $this->comments($builder, $uriVariables, $operation),
+                // CommentRequest authorizes deletions, open to the thread's owner too.
+                'DELETE' => $builder,
+                default => $builder->where('user_id', auth()->id()),
+            },
             Activity::class => $this->activities($builder, $operation),
             default => $builder,
         };
@@ -64,7 +75,7 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
         if ($ownerId !== null) {
             $this->assertProfileVisible(User::findOrFail($ownerId));
         }
-        $builder->where('user_id', $ownerId ?? auth()->id())->with(['user' => $this->socialContext(...)]);
+        $builder->where('user_id', $ownerId ?? auth()->id())->with(['user' => $this->socialContext(...)])->withInteractionCounts();
 
         return match ($this->parameter($operation, 'filter[has_review]')) {
             'true' => $builder->whereNotNull('review')->where('review', '<>', ''),
@@ -84,7 +95,7 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
     private function lists(Builder $builder, array $uriVariables, Operation $operation): Builder
     {
         // The JSON:API document links every list to its owner and items, included or not.
-        $builder->withCount('items')->with(['user' => $this->socialContext(...), 'items']);
+        $builder->withCount('items')->with(['user' => $this->socialContext(...), 'items'])->withInteractionCounts();
         if ($uriVariables !== []) {
             $this->assertProfileVisible(GameList::find($uriVariables['id'])?->user);
 
@@ -116,7 +127,7 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
     private function listItems(Builder $builder, array $uriVariables, Operation $operation): Builder
     {
         // An included list carries its items_count and its own item linkage.
-        $builder->with(['list' => static fn ($list) => $list->withCount('items'), 'list.items']);
+        $builder->with(['list' => static fn ($list) => $list->withCount('items')->withInteractionCounts(), 'list.items']);
         $listId = $uriVariables === [] ? $this->parameter($operation, 'filter[list]') : ListItem::find($uriVariables['id'])?->list_id;
         if ($listId === null) {
             return $builder->whereHas('list', static fn (Builder $list) => $list->where('user_id', auth()->id()));
@@ -209,7 +220,8 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
             'subject' => fn (MorphTo $subject) => $subject
                 ->constrain([
                     User::class => static fn (Builder $user) => $user->withSocialContext(),
-                    GameList::class => static fn (Builder $list) => $list->withCount('items'),
+                    GameList::class => static fn (Builder $list) => $list->withCount('items')->withInteractionCounts(),
+                    LibraryEntry::class => static fn (Builder $entry) => $entry->withInteractionCounts(),
                 ])
                 ->morphWith([
                     LibraryEntry::class => ['user' => $this->socialContext(...)],
@@ -238,6 +250,53 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
             ->where(static fn (Builder $query) => $query
                 ->where('subject_class', '<>', User::class)
                 ->orWhereNotIn('subject_id', $viewer->blockedUserIds()));
+    }
+
+    /**
+     * The comments on one review, list or comment, in a thread the caller may see. Comments by
+     * users in a block with the caller are left out, as are their replies (unreachable without
+     * them).
+     *
+     * @param  Builder<Comment>  $builder
+     * @param  array<string, mixed>  $uriVariables
+     * @return Builder<Comment>
+     */
+    private function comments(Builder $builder, array $uriVariables, Operation $operation): Builder
+    {
+        /** @var User $viewer */
+        $viewer = auth()->user();
+        if ($uriVariables !== []) {
+            Comment::find($uriVariables['id'])?->ensureVisibleTo($viewer);
+        } else {
+            $type = (string) $this->parameter($operation, 'filter[commentable_type]');
+            $id = (int) $this->parameter($operation, 'filter[commentable_id]');
+            /** @var class-string<LibraryEntry|GameList|Comment> $class */
+            $class = Relation::getMorphedModel($type);
+            $class::findOrFail($id)->ensureVisibleTo($viewer);
+            $builder->where('commentable_type', $type)->where('commentable_id', $id);
+        }
+
+        $blocked = $viewer->blockedUserIds();
+
+        return $builder->whereNotIn('user_id', $blocked)
+            ->with(['user' => $this->socialContext(...), 'commentable', 'reactionCounts'])
+            ->withCount(['comments as replies_count' => static fn (Builder $replies) => $replies->whereNotIn('user_id', $blocked)])
+            ->withMax(['reactions as my_reaction' => static fn (Builder $reactions) => $reactions->where('user_id', $viewer->id)], 'type');
+    }
+
+    /**
+     * @param  Builder<Notification>  $builder
+     * @return Builder<Notification>
+     */
+    private function notifications(Builder $builder, Operation $operation): Builder
+    {
+        $builder->where('notifiable_type', User::class)->where('notifiable_id', auth()->id());
+
+        return match ($this->parameter($operation, 'filter[unread]')) {
+            'true' => $builder->whereNull('read_at'),
+            'false' => $builder->whereNotNull('read_at'),
+            default => $builder,
+        };
     }
 
     /**

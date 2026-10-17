@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d8e6a7321b9ad9a25402516ebe2a70c",
+    "content-hash": "57a230068f588f3d7c3294d51267947e",
     "packages": [
         {
             "name": "api-platform/documentation",
@@ -1040,6 +1040,127 @@
                 "source": "https://github.com/archtechx/enums/tree/v1.1.2"
             },
             "time": "2025-06-06T23:15:09+00:00"
+        },
+        {
+            "name": "beyondcode/laravel-comments",
+            "version": "1.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/beyondcode/laravel-comments.git",
+                "reference": "5cb0357b706febcc1ebdfb710f1d15a5ae9d86b5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/beyondcode/laravel-comments/zipball/5cb0357b706febcc1ebdfb710f1d15a5ae9d86b5",
+                "reference": "5cb0357b706febcc1ebdfb710f1d15a5ae9d86b5",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^3.6|^5.0|^6.0|^7.0|^8.0",
+                "phpunit/phpunit": "^9.5.8|^10.0.7"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "BeyondCode\\Comments\\CommentsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "BeyondCode\\Comments\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marcel Pociot",
+                    "email": "marcel@beyondco.de",
+                    "homepage": "https://beyondcode.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Add comments to your Laravel application",
+            "homepage": "https://github.com/beyondcode/laravel-comments",
+            "keywords": [
+                "beyondcode",
+                "comments",
+                "laravel-comments"
+            ],
+            "support": {
+                "issues": "https://github.com/beyondcode/laravel-comments/issues",
+                "source": "https://github.com/beyondcode/laravel-comments/tree/1.9.0"
+            },
+            "time": "2026-10-02T09:04:08+00:00"
+        },
+        {
+            "name": "blaspsoft/blasp",
+            "version": "v4.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Blaspsoft/blasp.git",
+                "reference": "e0a2ea52cbe7987bcb06a07aedc5ff5b5d730ad6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Blaspsoft/blasp/zipball/e0a2ea52cbe7987bcb06a07aedc5ff5b5d730ad6",
+                "reference": "e0a2ea52cbe7987bcb06a07aedc5ff5b5d730ad6",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0|^11.0",
+                "phpunit/phpunit": "^11.0|^12.5.12"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Blasp": "Blaspsoft\\Blasp\\Facades\\Blasp"
+                    },
+                    "providers": [
+                        "Blaspsoft\\Blasp\\BlaspServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Blaspsoft\\Blasp\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Deeming",
+                    "email": "michael.deeming90@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Blasp is a powerful and customisable profanity filter package for Laravel applications",
+            "homepage": "https://github.com/blaspsoft/blasp",
+            "keywords": [
+                "blasp",
+                "blaspsoft"
+            ],
+            "support": {
+                "issues": "https://github.com/Blaspsoft/blasp/issues",
+                "source": "https://github.com/Blaspsoft/blasp/tree/v4.0.1"
+            },
+            "time": "2026-03-27T07:00:36+00:00"
         },
         {
             "name": "brick/math",
@@ -6511,6 +6632,86 @@
                 "source": "https://github.com/bobthecow/psysh/tree/v0.12.24"
             },
             "time": "2026-06-29T15:41:09+00:00"
+        },
+        {
+            "name": "qirolab/laravel-reactions",
+            "version": "3.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/qirolab/laravel-reactions.git",
+                "reference": "985f6b1e9d4364d39a071812bac2dae81108bcc2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/qirolab/laravel-reactions/zipball/985f6b1e9d4364d39a071812bac2dae81108bcc2",
+                "reference": "985f6b1e9d4364d39a071812bac2dae81108bcc2",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^11.0|^12.0|^13.0",
+                "illuminate/events": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "phpunit/phpunit": "^11.5.50",
+                "vimeo/psalm": "^5.22|^6.6"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Qirolab\\Laravel\\Reactions\\ReactionsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Qirolab\\Laravel\\Reactions\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Harish Kumar",
+                    "email": "harish@qirolab.com",
+                    "homepage": "https://qirolab.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Implement reactions (like, dislike, love, emotion etc) on Laravel Eloquent models.",
+            "homepage": "https://qirolab.com",
+            "keywords": [
+                "Rate",
+                "Rating",
+                "Unlike",
+                "dislike",
+                "eloquent",
+                "emotion",
+                "favorite",
+                "favourite",
+                "kudos",
+                "laravel",
+                "like",
+                "love",
+                "reaction",
+                "star"
+            ],
+            "support": {
+                "issues": "https://github.com/qirolab/laravel-reactions/issues",
+                "source": "https://github.com/qirolab/laravel-reactions/tree/3.2.2"
+            },
+            "funding": [
+                {
+                    "url": "https://www.buymeacoffee.com/qirolab",
+                    "type": "other"
+                }
+            ],
+            "time": "2026-04-27T19:33:14+00:00"
         },
         {
             "name": "ralouphie/getallheaders",

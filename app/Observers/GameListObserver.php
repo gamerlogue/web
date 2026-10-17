@@ -20,5 +20,6 @@ class GameListObserver
     public function deleted(GameList $list): void
     {
         Activity::forget($list);
+        $list->forgetCommunity();
     }
 }

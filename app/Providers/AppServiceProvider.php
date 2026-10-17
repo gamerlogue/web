@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use ApiPlatform\JsonApi\Serializer\ErrorNormalizer;
 use ApiPlatform\JsonApi\Serializer\ItemDenormalizer;
+use App\Models\Comment;
 use App\Models\GameList;
 use App\Models\LibraryEntry;
 use App\Models\ListItem;
@@ -31,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
             'library_entry' => LibraryEntry::class,
             'list' => GameList::class,
             'list_item' => ListItem::class,
+            'comment' => Comment::class,
         ]);
 
         RateLimiter::for('igdb', function (Request $request) {

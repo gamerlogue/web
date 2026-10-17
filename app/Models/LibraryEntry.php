@@ -16,6 +16,7 @@ use App\Enums\LibraryEntryCompletionStatus;
 use App\Enums\LibraryEntryStatus;
 use App\Http\Middleware\LibraryImport;
 use App\Http\Requests\LibraryEntryFormRequest;
+use App\Models\Concerns\HasLikesAndComments;
 use App\Observers\LibraryEntryObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
@@ -38,6 +39,12 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     rules: LibraryEntryFormRequest::class
 )]
 #[ApiProperty(description: 'Whether the review reveals plot details.', property: 'review_spoiler')]
+#[ApiProperty(description: 'How many users liked the review.', property: 'likes_count', writable: false)]
+#[ApiProperty(description: 'Whether the caller liked the review.', property: 'liked_by_me', writable: false)]
+#[ApiProperty(description: 'How many comments the review has, replies excluded.', property: 'comments_count', writable: false)]
+#[ApiProperty(property: 'comments', readable: false, writable: false)]
+#[ApiProperty(property: 'reactions', readable: false, writable: false)]
+#[ApiProperty(property: 'reaction_counts', readable: false, writable: false)]
 #[ApiProperty(description: 'When the review text last changed, null if there never was one.', property: 'review_updated_at', writable: false)]
 #[ApiProperty(description: 'The unique identifier of the game associated with this library entry.', property: 'game_id')]
 #[ApiProperty(description: 'The unique identifier of the user who owns this library entry.', property: 'user_id')]
@@ -70,6 +77,8 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
 )]
 class LibraryEntry extends Model
 {
+    use HasLikesAndComments;
+
     private const string STATS_VERSION_KEY = 'profile_stats_version:';
 
     protected $hidden = ['id'];
@@ -120,6 +129,20 @@ class LibraryEntry extends Model
         $invalidateStats = static fn (self $entry) => Cache::forever(self::STATS_VERSION_KEY . $entry->user_id, (string) Str::uuid());
         static::saved($invalidateStats);
         static::deleted($invalidateStats);
+    }
+
+    /**
+     * Refuses a caller who may not see this entry's owner. Only reviews are interacted with, so
+     * an entry without one has nothing to show either.
+     */
+    public function ensureVisibleTo(User $viewer): void
+    {
+        User::findOrFail($this->user_id)->ensureProfileVisibleTo($viewer);
+    }
+
+    public function hasReview(): bool
+    {
+        return (string) $this->review !== '';
     }
 
     public static function statsVersion(string $userId): string

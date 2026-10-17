@@ -10,6 +10,8 @@
     "ext-intl": "*",
     "ext-pdo": "*",
     "api-platform/laravel": "^5.0",
+    "beyondcode/laravel-comments": "^1.9",
+    "blaspsoft/blasp": "^4.0",
     "emargareten/inertia-modal": "^3.4",
     "inertiajs/inertia-laravel": "^3.0",
     "laravel-lang/locales": "^2.10",
@@ -27,6 +29,7 @@
     "opcodesio/log-viewer": "^3.10",
     "overtrue/laravel-follow": "^6.0",
     "phpdocumentor/type-resolver": "^2.0",
+    "qirolab/laravel-reactions": "^3.2",
     "reiarseni/sanctum-refresh-token": "^0.2",
     "soved/laravel-gdpr": "^1.9"
   },
@@ -101,7 +104,8 @@
   "extra": {
     "laravel": {
       "dont-discover": [
-        "nesbot/carbon"
+        "nesbot/carbon",
+        "qirolab/laravel-reactions"
       ]
     }
   },

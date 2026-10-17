@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Model;
     ],
     rules: ReportRequest::class
 )]
-#[ApiProperty(description: 'What is reported: user, library_entry or list.', property: 'reportable_type')]
+#[ApiProperty(description: 'What is reported: user, library_entry, list or comment.', property: 'reportable_type')]
 #[ApiProperty(description: 'The id of the reported user or content.', property: 'reportable_id')]
 #[ApiProperty(property: 'user_id', writable: false)]
 class Report extends Model
@@ -39,6 +39,7 @@ class Report extends Model
         'user' => User::class,
         'library_entry' => LibraryEntry::class,
         'list' => GameList::class,
+        'comment' => Comment::class,
     ];
 
     protected $hidden = ['id'];

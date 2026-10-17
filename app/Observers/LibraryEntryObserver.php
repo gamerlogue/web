@@ -26,8 +26,14 @@ class LibraryEntryObserver
         $this->recordFacts($entry, true);
     }
 
+    /**
+     * Likes and comments belong to the review: clearing it clears them.
+     */
     public function updated(LibraryEntry $entry): void
     {
+        if ($entry->wasChanged('review') && ! $entry->hasReview()) {
+            $entry->forgetCommunity();
+        }
         if (Activity::importing()) {
             return;
         }
@@ -46,6 +52,7 @@ class LibraryEntryObserver
     public function deleted(LibraryEntry $entry): void
     {
         Activity::forget($entry);
+        $entry->forgetCommunity();
     }
 
     /**

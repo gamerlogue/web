@@ -332,5 +332,6 @@ test('the included owner of library entries is loaded once', function () {
     DB::enableQueryLog();
     actingAsNative($user)->getJson('/api/library_entries?include=user', jsonApiHeaders())->assertOk();
 
-    expect(count(DB::getQueryLog()))->toBeLessThan(5);
+    // Constant: the caller's blocks (2), the count, the page and its owner.
+    expect(count(DB::getQueryLog()))->toBeLessThan(6);
 });

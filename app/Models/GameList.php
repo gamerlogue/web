@@ -14,6 +14,7 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Enums\Visibility;
 use App\Http\Requests\GameListRequest;
+use App\Models\Concerns\HasLikesAndComments;
 use App\Observers\GameListObserver;
 use Database\Factories\GameListFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -40,12 +41,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[ApiProperty(property: 'user_id', writable: false)]
 #[ApiProperty(description: 'The games of the list, ordered by position.', property: 'items', writable: false)]
 #[ApiProperty(description: 'How many games the list holds.', property: 'items_count', writable: false)]
+#[ApiProperty(description: 'How many users liked the list.', property: 'likes_count', writable: false)]
+#[ApiProperty(description: 'Whether the caller liked the list.', property: 'liked_by_me', writable: false)]
+#[ApiProperty(description: 'How many comments the list has, replies excluded.', property: 'comments_count', writable: false)]
+#[ApiProperty(property: 'comments', readable: false, writable: false)]
+#[ApiProperty(property: 'reactions', readable: false, writable: false)]
+#[ApiProperty(property: 'reaction_counts', readable: false, writable: false)]
 #[QueryParameter('filter[user]', description: "Read another user's public lists instead of the caller's", constraints: ['uuid'])]
 #[QueryParameter('filter[contains_game]', description: 'Only lists holding this IGDB game', constraints: ['integer', 'min:1'])]
 class GameList extends Model
 {
     /** @use HasFactory<GameListFactory> */
     use HasFactory;
+
+    use HasLikesAndComments;
 
     protected $hidden = ['id'];
 
@@ -72,6 +81,19 @@ class GameList extends Model
     protected function casts(): array
     {
         return ['is_ranked' => 'boolean', 'visibility' => Visibility::class];
+    }
+
+    /**
+     * Someone else's private list does not exist for the caller; a list of a profile they may not
+     * see is refused like the profile.
+     */
+    public function ensureVisibleTo(User $viewer): void
+    {
+        if ($this->user_id === $viewer->id) {
+            return;
+        }
+        User::findOrFail($this->user_id)->ensureProfileVisibleTo($viewer);
+        abort_if($this->visibility !== Visibility::Public, 404);
     }
 
     /**
