@@ -279,3 +279,28 @@ sliding, family capped at 180 days — the forced re-authentication interval.
 - `POST /logout` (`routes/web.php`) is the web client's sign-out: 204, session invalidated, CSRF
   token regenerated, idempotent for a guest. The OIDC package's `GET /oidc/logout` still exists and
   still works; it is just not navigable-safe and answers 302.
+
+### Profile section (social, comments)
+
+`CONTRACTS.md` is the client's contract for every profile endpoint: change it with the code.
+
+- No morph alias for `User`: Sanctum tokens, refresh tokens and notifications already store the
+  class name, and an alias would orphan them. Activities keep the class in `subject_class` and
+  expose `subject_type` through an accessor.
+- API Platform turns every public relation method into a JSON:API relationship, packages' included
+  (follow, comments, reactions). Hide the ones that must not leak or fan out with
+  `#[ApiProperty(property: '<snake_case>', readable: false, writable: false)]`; the query-count
+  tests are what catch a new one.
+- A `#[QueryParameter]` on the class applies to every operation, POST included. Required ones go
+  in the operation's `parameters`, as on `Comment`'s collection.
+- A package model that sets its table in the constructor needs an explicit `$table`: API Platform
+  reads the columns through `newInstanceWithoutConstructor()` (see `Follow`).
+- Models deserialized by API Platform carry empty relations: load related users by id in model
+  events, never through `$model->user`.
+- `User::blockedUserIds()` is memoized on the instance. In production every request gets a fresh
+  user; in tests `actingAsNative()` reuses one, so call `forgetBlockedUserIds()` after creating a
+  block outside the API.
+- Library imports are flagged per request in `Context` by the `X-Library-Import` middleware, never
+  in static or singleton state (Octane).
+- There is no `.env.testing`: `--env=testing` falls back to the development database. Check
+  migrations with `vendor/bin/sail exec -e DB_CONNECTION=sqlite -e DB_DATABASE=database/testing.sqlite laravel php artisan …`.
