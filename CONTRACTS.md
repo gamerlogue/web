@@ -1,9 +1,9 @@
 # API contracts: Profile section
 
-The single source of truth for the client. Covers the phases implemented so far: **Phase 1**
+The single source of truth for the client, covering the whole Profile section: **Phase 1**
 (public profile and statistics), **Phase 2** (lists), **Phase 3** (social: follows, blocks,
-reports, activities) and **Phase 4** (reactions, comments, notifications). Later phases will be
-added here.
+reports, activities), **Phase 4** (reactions, comments, notifications) and **Phase 5** (account
+deletion and export).
 
 ## Common conventions
 
@@ -12,7 +12,7 @@ added here.
 - API Platform resources speak JSON:API: `Accept`/`Content-Type: application/vnd.api+json`.
   Endpoints marked **plain JSON** answer `application/json`.
 - Token abilities: `profile` for `users`, follows, blocks, reports, reactions, comments and
-  notifications; `library` for
+  notifications and the account; `library` for
   `library_entries`, lists, statistics and activities. A
   token without the required ability gets `403`.
 - Collections: `page=N` (from 1), a fixed 30 items, `page[size]` ignored, `meta.totalItems` always
@@ -620,6 +620,35 @@ notifications about it. Push notifications are not part of this phase.
 
 ---
 
+## Account
+
+**Plain JSON**, ability `profile`, the caller's own account.
+
+| Method and path | Effect |
+|---|---|
+| `DELETE /account` | Deletes the account for good, answers `204` |
+| `GET /account/export` | Downloads every piece of the caller's data as one JSON file (`Content-Disposition: attachment; filename="gamerlogue-export.json"`) |
+
+Deletion removes the user and all of their data: library (and the likes, comments and activities
+on it), lists, comments (with the replies others wrote below them), reactions, follows in both
+directions, blocks, reports they wrote, notifications they received or caused,
+activities, API tokens, refresh tokens, web sessions and identity-provider links. Reports **about**
+the user are kept for moderation. After it, every token of the user answers `401`.
+
+The export holds `exported_at` and `profile`, `library`, `lists` (with `items`), `comments`,
+`reactions`, `following` and `followers` (user ids), `blocked` (user ids) and `reports`.
+
+```json
+{"exported_at": "2026-10-17T16:00:00+02:00",
+ "profile": {"id": "0199…", "email": "me@example.com", "nickname": "maicol", "…": "…"},
+ "library": [{"id": 77, "game_id": 1942, "status": "COMPLETED", "…": "…"}],
+ "lists": [{"id": 12, "name": "Top", "items": [{"game_id": 1942, "position": 0}]}],
+ "comments": [], "reactions": [], "following": ["0198…"], "followers": [], "blocked": [],
+ "reports": []}
+```
+
+---
+
 ## Choices left to the server
 
 | Topic | Choice |
@@ -644,10 +673,20 @@ notifications about it. Push notifications are not part of this phase.
 | Threads | Replies are comments on comments, any depth; no `reply_to_user`; `comments_count` counts direct comments only |
 | Comment deletion | Hard delete of the comment and its whole subtree; no soft-deleted placeholder |
 | Unread count | `meta.totalItems` of `GET /notifications?filter[unread]=true` |
+| Account endpoints | Plain JSON: `DELETE /account`, `GET /account/export` |
 
 ## Not implemented or deferred
 
+- Push notifications (out of scope by request).
+- A moderation interface: reports are only stored.
+- Statistics by genre or developer: computed by the client from IGDB, as requested.
 - Removing a game from a list does not shrink the `game_ids` of an earlier `list_item_added`.
+- `filter[contains_game]` looks among the caller's lists, or the public ones of `filter[user]`;
+  not across every public list.
+- Bulk library changes made outside the API (not through models) refresh the statistics within a
+  day.
+- The web route of `soved/laravel-gdpr` (`POST /gdpr/download`) predates this work and is unused
+  by the client; `GET /account/export` is the export.
 
 ## Differences from the existing contract
 
@@ -657,6 +696,8 @@ notifications about it. Push notifications are not part of this phase.
 - The OIDC login no longer overwrites `nickname` on every sign-in.
 - `User` gains `followers_count`, `following_count`, `is_followed_by_me`, `follows_me` (additions).
 - `LibraryEntry` and `List` gain `likes_count`, `liked_by_me`, `comments_count` (additions).
+
+All the other changes are new attributes, resources and endpoints.
 
 Everything else (pagination, `current_user=true`, `library_entries` filters and sorts, date format,
 generic errors) is unchanged.
