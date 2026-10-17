@@ -17,6 +17,8 @@ use App\Enums\LibraryEntryStatus;
 use App\Http\Requests\LibraryEntryFormRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\TypeInfo\Type\BuiltinType;
 use Symfony\Component\TypeInfo\TypeIdentifier;
@@ -63,6 +65,8 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
 )]
 class LibraryEntry extends Model
 {
+    private const string STATS_VERSION_KEY = 'profile_stats_version:';
+
     protected $hidden = ['id'];
 
     protected $fillable = [
@@ -105,6 +109,17 @@ class LibraryEntry extends Model
                 $entry->review_updated_at = now();
             }
         });
+
+        // Any write changes the owner's statistics; bumping the version orphans every cached year.
+        // Bulk queries skip model events, so their changes show once the cache expires (a day).
+        $invalidateStats = static fn (self $entry) => Cache::forever(self::STATS_VERSION_KEY . $entry->user_id, (string) Str::uuid());
+        static::saved($invalidateStats);
+        static::deleted($invalidateStats);
+    }
+
+    public static function statsVersion(string $userId): string
+    {
+        return Cache::get(self::STATS_VERSION_KEY . $userId, 'initial');
     }
 
     /**

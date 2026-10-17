@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\IgdbProxyController;
+use App\Http\Controllers\ProfileStatsController;
 use App\Http\Controllers\SanctumTokenController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,3 +28,5 @@ Route::middleware('throttle:igdb')
     ->post('/igdb/{path}', [IgdbProxyController::class, 'handle'])
     ->where('path', '[a-z_]+(\.pb)?')
     ->name('igdb.proxy');
+
+Route::get('/users/{user}/stats', ProfileStatsController::class)->middleware('auth:sanctum');
