@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\IgdbProxyController;
 use App\Http\Controllers\ProfileStatsController;
+use App\Http\Controllers\ReorderListController;
 use App\Http\Controllers\SanctumTokenController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,3 +31,5 @@ Route::middleware('throttle:igdb')
     ->name('igdb.proxy');
 
 Route::get('/users/{user}/stats', ProfileStatsController::class)->middleware('auth:sanctum');
+
+Route::post('/lists/{list}/reorder', ReorderListController::class)->middleware('auth:sanctum')->whereNumber('list');
