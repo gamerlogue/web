@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\IgdbProxyController;
 use App\Http\Controllers\ProfileStatsController;
 use App\Http\Controllers\ReadAllNotificationsController;
@@ -36,3 +37,8 @@ Route::get('/users/{user}/stats', ProfileStatsController::class)->middleware('au
 Route::post('/lists/{list}/reorder', ReorderListController::class)->middleware('auth:sanctum')->whereNumber('list');
 
 Route::post('/notifications/read-all', ReadAllNotificationsController::class)->middleware('auth:sanctum');
+
+Route::middleware('auth:sanctum')->controller(AccountController::class)->group(static function (): void {
+    Route::delete('/account', 'destroy');
+    Route::get('/account/export', 'export');
+});
