@@ -5,16 +5,23 @@ declare(strict_types=1);
 namespace App\Extensions;
 
 use ApiPlatform\Laravel\Eloquent\Extension\QueryExtensionInterface;
+use ApiPlatform\Metadata\HttpOperation;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ParameterNotFound;
 use App\Enums\Visibility;
 use App\Exceptions\ApiDomainException;
+use App\Models\Activity;
+use App\Models\Follow;
 use App\Models\GameList;
 use App\Models\LibraryEntry;
 use App\Models\ListItem;
+use App\Models\Report;
 use App\Models\User;
+use App\Models\UserBlock;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * Scopes every query to what the authenticated user may see. Discovered automatically: API
@@ -32,10 +39,8 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
             LibraryEntry::class => $reading
                 ? $this->libraryEntries($builder, $operation)
                 : $builder->where('user_id', auth()->id()),
-            User::class => $reading && ($uriVariables !== [] || $this->parameter($operation, 'filter[search]') !== null)
-                ? $this->users($builder, $operation)
-                // Without a search the collection is the "current user" endpoint: it holds the
-                // caller and no one else, so a client that does not know its own id can still fetch itself.
+            User::class => $reading
+                ? $this->users($builder->withSocialContext(), $uriVariables, $operation)
                 : $builder->whereKey(auth()->id()),
             GameList::class => $reading
                 ? $this->lists($builder, $uriVariables, $operation)
@@ -43,6 +48,8 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
             ListItem::class => $reading
                 ? $this->listItems($builder, $uriVariables, $operation)
                 : $builder->whereHas('list', static fn (Builder $list) => $list->where('user_id', auth()->id())),
+            Report::class, Follow::class, UserBlock::class => $builder->where('user_id', auth()->id()),
+            Activity::class => $this->activities($builder, $operation),
             default => $builder,
         };
     }
@@ -57,7 +64,7 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
         if ($ownerId !== null) {
             $this->assertProfileVisible(User::findOrFail($ownerId));
         }
-        $builder->where('user_id', $ownerId ?? auth()->id())->with('user');
+        $builder->where('user_id', $ownerId ?? auth()->id())->with(['user' => $this->socialContext(...)]);
 
         return match ($this->parameter($operation, 'filter[has_review]')) {
             'true' => $builder->whereNotNull('review')->where('review', '<>', ''),
@@ -77,7 +84,7 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
     private function lists(Builder $builder, array $uriVariables, Operation $operation): Builder
     {
         // The JSON:API document links every list to its owner and items, included or not.
-        $builder->withCount('items')->with(['user', 'items']);
+        $builder->withCount('items')->with(['user' => $this->socialContext(...), 'items']);
         if ($uriVariables !== []) {
             $this->assertProfileVisible(GameList::find($uriVariables['id'])?->user);
 
@@ -121,17 +128,44 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
     }
 
     /**
-     * Any profile can be read; the serializer hides what a private one does not share.
+     * Any profile can be read, except across a block; the serializer hides what a private one does
+     * not share.
      *
      * @param  Builder<User>  $builder
+     * @param  array<string, mixed>  $uriVariables
      * @return Builder<User>
      */
-    private function users(Builder $builder, Operation $operation): Builder
+    private function users(Builder $builder, array $uriVariables, Operation $operation): Builder
     {
-        $search = $this->parameter($operation, 'filter[search]');
-        if (! is_string($search)) {
+        /** @var User $viewer */
+        $viewer = auth()->user();
+        $template = $operation instanceof HttpOperation ? $operation->getUriTemplate() : null;
+
+        if ($template === '/users/{id}/followers' || $template === '/users/{id}/following') {
+            $owner = User::findOrFail($uriVariables['id']);
+            $this->assertProfileVisible($owner);
+            $relation = $template === '/users/{id}/followers' ? $owner->followers() : $owner->followings();
+
+            return $builder->whereIn('users.id', $relation->getQuery()->select($template === '/users/{id}/followers' ? 'followables.user_id' : 'followable_id'))
+                ->whereNotIn('users.id', $viewer->blockedUserIds());
+        }
+        if ($uriVariables !== []) {
+            $user = User::find($uriVariables['id']);
+            if ($user !== null && $viewer->isBlockedWith($user)) {
+                throw ApiDomainException::userBlocked();
+            }
+
             return $builder;
         }
+
+        $search = $this->parameter($operation, 'filter[search]');
+        if (! is_string($search)) {
+            // Without a search the collection is the "current user" endpoint: it holds the caller
+            // and no one else, so a client that does not know its own id can still fetch itself.
+            return $builder->whereKey($viewer->id);
+        }
+
+        $builder->whereNotIn('users.id', $viewer->blockedUserIds());
 
         // Every word has to appear in the nickname, first or last name, so "mario ros" finds Mario Rossi.
         foreach (preg_split('/\s+/', mb_strtolower(trim($search)), flags: PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
@@ -157,13 +191,71 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
     }
 
     /**
+     * A profile's activities: the caller's own by default, another user's with filter[user], or
+     * those of everyone the caller follows with filter[feed]=true. Activities of private profiles
+     * and across blocks are recorded but never read by others, and neither is anything about
+     * someone else's private list.
+     *
+     * @param  Builder<Activity>  $builder
+     * @return Builder<Activity>
+     */
+    private function activities(Builder $builder, Operation $operation): Builder
+    {
+        /** @var User $viewer */
+        $viewer = auth()->user();
+        $builder->with([
+            'user' => $this->socialContext(...),
+            // Each kind of subject with what its own document links or counts.
+            'subject' => fn (MorphTo $subject) => $subject
+                ->constrain([
+                    User::class => static fn (Builder $user) => $user->withSocialContext(),
+                    GameList::class => static fn (Builder $list) => $list->withCount('items'),
+                ])
+                ->morphWith([
+                    LibraryEntry::class => ['user' => $this->socialContext(...)],
+                    GameList::class => ['user' => $this->socialContext(...), 'items'],
+                ]),
+        ]);
+
+        if ($this->parameter($operation, 'filter[feed]') === 'true') {
+            $builder->whereIn('user_id', $viewer->followings()->select('followable_id'))
+                ->whereNotIn('user_id', $viewer->blockedUserIds())
+                ->whereIn('user_id', User::where('visibility', Visibility::Public)->select('id'));
+        } else {
+            $ownerId = $this->parameter($operation, 'filter[user]');
+            if ($ownerId !== null && $ownerId !== $viewer->id) {
+                $this->assertProfileVisible(User::findOrFail($ownerId));
+            }
+            $builder->where('user_id', $ownerId ?? $viewer->id);
+        }
+
+        return $builder
+            ->where(static fn (Builder $query) => $query
+                ->where('subject_class', '<>', (new GameList)->getMorphClass())
+                ->orWhere('user_id', $viewer->id)
+                ->orWhereIn('subject_id', GameList::where('visibility', Visibility::Public)->select('id')))
+            // "A followed B" names B too, who may have blocked the caller.
+            ->where(static fn (Builder $query) => $query
+                ->where('subject_class', '<>', User::class)
+                ->orWhereNotIn('subject_id', $viewer->blockedUserIds()));
+    }
+
+    /**
+     * Counters and flags for every user a document embeds.
+     *
+     * @param  BelongsTo<User, Model>  $relation
+     */
+    private function socialContext(BelongsTo $relation): void
+    {
+        $relation->getQuery()->withSocialContext();
+    }
+
+    /**
      * A missing owner means a missing resource, which the query itself turns into a 404.
      */
     private function assertProfileVisible(?User $owner): void
     {
-        if ($owner !== null && Gate::denies('viewProfile', $owner)) {
-            throw ApiDomainException::profilePrivate();
-        }
+        $owner?->ensureProfileVisibleTo(auth()->user());
     }
 
     /**

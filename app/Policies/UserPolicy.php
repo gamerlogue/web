@@ -28,10 +28,11 @@ final class UserPolicy
 
     /**
      * Everything beyond the public card (id, nickname, name, picture, visibility): profile fields,
-     * library, statistics and the rest.
+     * library, statistics and the rest. A block in either direction hides it like a private profile.
      */
     public function viewProfile(User $viewer, ?User $user = null): bool
     {
-        return $user === null || $viewer->is($user) || $user->visibility === Visibility::Public;
+        return $user === null || $viewer->is($user)
+            || ($user->visibility === Visibility::Public && ! $viewer->isBlockedWith($user));
     }
 }

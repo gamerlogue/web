@@ -25,6 +25,11 @@ final class ApiDomainException extends HttpException
         return new self(403, 'profile_private', 'This profile is private.');
     }
 
+    public static function userBlocked(): self
+    {
+        return new self(403, 'user_blocked', 'One of you has blocked the other.');
+    }
+
     public function render(): JsonResponse
     {
         return response()->json([

@@ -6,11 +6,15 @@ namespace App\Providers;
 
 use ApiPlatform\JsonApi\Serializer\ErrorNormalizer;
 use ApiPlatform\JsonApi\Serializer\ItemDenormalizer;
+use App\Models\GameList;
+use App\Models\LibraryEntry;
+use App\Models\ListItem;
 use App\Models\User;
 use App\Serializer\DomainErrorNormalizer;
 use App\Serializer\JsonApiResourceTypeDenormalizer;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -21,6 +25,14 @@ class AppServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        // Aliases for polymorphic columns. Not for users: their existing morphs (Sanctum tokens
+        // first) store the class name, and an alias would orphan them.
+        Relation::morphMap([
+            'library_entry' => LibraryEntry::class,
+            'list' => GameList::class,
+            'list_item' => ListItem::class,
+        ]);
+
         RateLimiter::for('igdb', function (Request $request) {
             $limit = (int) config('services.igdb_proxy.rate_limit', 30);
 

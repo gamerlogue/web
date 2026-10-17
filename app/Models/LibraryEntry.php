@@ -14,7 +14,10 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Enums\LibraryEntryCompletionStatus;
 use App\Enums\LibraryEntryStatus;
+use App\Http\Middleware\LibraryImport;
 use App\Http\Requests\LibraryEntryFormRequest;
+use App\Observers\LibraryEntryObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
@@ -27,9 +30,11 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
  * @property int[] $editions_ids
  * @property int[] $platforms_ids
  */
+#[ObservedBy(LibraryEntryObserver::class)]
 #[ApiResource(
     shortName: 'LibraryEntry',
     description: "A user's entry in their game library, representing their interaction with a specific game.",
+    middleware: [LibraryImport::class],
     rules: LibraryEntryFormRequest::class
 )]
 #[ApiProperty(description: 'Whether the review reveals plot details.', property: 'review_spoiler')]

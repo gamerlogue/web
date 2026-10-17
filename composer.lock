@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8b6fc7467b2e59e777c7fc34f0a4ee7c",
+    "content-hash": "4d8e6a7321b9ad9a25402516ebe2a70c",
     "packages": [
         {
             "name": "api-platform/documentation",
@@ -5606,6 +5606,77 @@
                 "source": "https://github.com/opcodesio/mail-parser/tree/v0.2.4"
             },
             "time": "2026-06-11T08:50:37+00:00"
+        },
+        {
+            "name": "overtrue/laravel-follow",
+            "version": "6.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/overtrue/laravel-follow.git",
+                "reference": "4ce0e3cc7857b37b971946503b048ce79cf6de0d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/overtrue/laravel-follow/zipball/4ce0e3cc7857b37b971946503b048ce79cf6de0d",
+                "reference": "4ce0e3cc7857b37b971946503b048ce79cf6de0d",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/framework": "^13.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "brainmaestro/composer-git-hooks": "dev-master",
+                "laravel/pint": "^1.29",
+                "mockery/mockery": "^1.6.10",
+                "orchestra/testbench": "^11.0",
+                "phpunit/phpunit": "^12.0"
+            },
+            "type": "library",
+            "extra": {
+                "hooks": {
+                    "pre-push": [
+                        "composer test",
+                        "composer check-style"
+                    ],
+                    "pre-commit": [
+                        "composer fix-style",
+                        "composer test"
+                    ]
+                },
+                "laravel": {
+                    "providers": [
+                        "Overtrue\\LaravelFollow\\FollowServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Overtrue\\LaravelFollow\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "overtrue",
+                    "email": "anzhengchao@gmail.com"
+                }
+            ],
+            "description": "User follow unfollow system for Laravel.",
+            "support": {
+                "issues": "https://github.com/overtrue/laravel-follow/issues",
+                "source": "https://github.com/overtrue/laravel-follow/tree/6.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/overtrue",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-03-19T15:11:41+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",

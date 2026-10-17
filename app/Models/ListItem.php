@@ -13,11 +13,14 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Http\Requests\ListItemRequest;
+use App\Observers\ListItemObserver;
 use Database\Factories\ListItemFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy(ListItemObserver::class)]
 #[ApiResource(
     shortName: 'ListItem',
     description: 'A game in a custom list.',

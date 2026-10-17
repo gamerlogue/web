@@ -6,13 +6,11 @@ namespace App\Http\Controllers;
 
 use App\Enums\LibraryEntryCompletionStatus;
 use App\Enums\LibraryEntryStatus;
-use App\Exceptions\ApiDomainException;
 use App\Models\LibraryEntry;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * Library statistics of a profile, as plain JSON: a computed summary, not a resource.
@@ -22,9 +20,7 @@ class ProfileStatsController
     public function __invoke(Request $request, User $user): JsonResponse
     {
         abort_unless($request->user()?->tokenCan('library'), 403);
-        if (Gate::denies('viewProfile', $user)) {
-            throw ApiDomainException::profilePrivate();
-        }
+        $user->ensureProfileVisibleTo($request->user());
         $year = $request->validate(['year' => ['sometimes', 'integer', 'between:1900,9999']])['year'] ?? null;
         $year = $year === null ? null : (int) $year;
 

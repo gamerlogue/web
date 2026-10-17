@@ -14,13 +14,16 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\QueryParameter;
 use App\Enums\Visibility;
 use App\Http\Requests\GameListRequest;
+use App\Observers\GameListObserver;
 use Database\Factories\GameListFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy(GameListObserver::class)]
 #[ApiResource(
     shortName: 'List',
     description: 'A custom, optionally ranked list of games curated by a user.',
