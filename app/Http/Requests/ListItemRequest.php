@@ -34,8 +34,7 @@ class ListItemRequest extends FormRequest
                 Rule::unique('list_items', 'game_id')->where('list_id', $this->input('data.attributes.list_id')),
             ],
             'data.attributes.position' => ['sometimes', 'integer:strict', 'min:0'],
-            'data.attributes.note' => ['sometimes', 'nullable', 'string', 'max:2000'],
-            'data.relationships' => ['missing'],
+            'data.attributes.note' => ['sometimes', 'nullable', 'string', 'max:2000']
         ];
     }
 

@@ -36,8 +36,7 @@ class ReactionRequest extends FormRequest
                 // One reaction per subject: changing it is a PATCH.
                 Rule::unique('reactions', 'reactable_id')->where('user_id', $this->user()?->id)->where('reactable_type', $this->input('data.attributes.reactable_type')),
             ],
-            'data.attributes.type' => ['required', 'string', 'max:32'],
-            'data.relationships' => ['missing'],
+            'data.attributes.type' => ['required', 'string', 'max:32']
         ];
     }
 

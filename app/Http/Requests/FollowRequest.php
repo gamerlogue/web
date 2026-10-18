@@ -28,8 +28,7 @@ class FollowRequest extends FormRequest
                 'uuid',
                 'exists:users,id',
                 Rule::unique('followables', 'followable_id')->where('user_id', $this->user()?->id),
-            ],
-            'data.relationships' => ['missing'],
+            ]
         ];
     }
 

@@ -19,8 +19,7 @@ class GameListRequest extends FormRequest
             'data.attributes.name' => [Rule::requiredIf($this->isMethod('POST')), 'string', 'max:100'],
             'data.attributes.description' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'data.attributes.visibility' => ['sometimes', Rule::enum(Visibility::class)],
-            'data.attributes.is_ranked' => ['sometimes', 'boolean:strict'],
-            'data.relationships' => ['missing'],
+            'data.attributes.is_ranked' => ['sometimes', 'boolean:strict']
         ];
     }
 

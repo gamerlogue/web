@@ -27,8 +27,7 @@ class BlockRequest extends FormRequest
                 'uuid',
                 'exists:users,id',
                 Rule::unique('user_blocks', 'blocked_id')->where('user_id', $this->user()?->id),
-            ],
-            'data.relationships' => ['missing'],
+            ]
         ];
     }
 

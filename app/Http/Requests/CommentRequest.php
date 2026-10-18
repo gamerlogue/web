@@ -30,8 +30,7 @@ class CommentRequest extends FormRequest
             'data.attributes.commentable_type' => [Rule::requiredIf($creating), Rule::prohibitedIf(! $creating), Rule::in(self::INTERACTION_TYPES)],
             'data.attributes.commentable_id' => [Rule::requiredIf($creating), Rule::prohibitedIf(! $creating), 'integer:strict', 'min:1'],
             'data.attributes.comment' => [Rule::requiredIf($creating), 'string', 'max:2000'],
-            'data.attributes.spoiler' => ['sometimes', 'boolean:strict'],
-            'data.relationships' => ['missing'],
+            'data.attributes.spoiler' => ['sometimes', 'boolean:strict']
         ];
     }
 
