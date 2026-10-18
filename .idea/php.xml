@@ -259,6 +259,21 @@
       <path value="$PROJECT_DIR$/vendor/spatie/backtrace" />
       <path value="$PROJECT_DIR$/vendor/sebastian/file-filter" />
       <path value="$PROJECT_DIR$/vendor/sebastian/git-state" />
+      <path value="$PROJECT_DIR$/vendor/bacon/bacon-qr-code" />
+      <path value="$PROJECT_DIR$/vendor/dasprid/enum" />
+      <path value="$PROJECT_DIR$/vendor/laravel/fortify" />
+      <path value="$PROJECT_DIR$/vendor/laravel/horizon" />
+      <path value="$PROJECT_DIR$/vendor/pragmarx/google2fa" />
+      <path value="$PROJECT_DIR$/vendor/paragonie/constant_time_encoding" />
+      <path value="$PROJECT_DIR$/vendor/laravel/passkeys" />
+      <path value="$PROJECT_DIR$/vendor/spomky-labs/cbor-php" />
+      <path value="$PROJECT_DIR$/vendor/web-auth/webauthn-lib" />
+      <path value="$PROJECT_DIR$/vendor/web-auth/cose-lib" />
+      <path value="$PROJECT_DIR$/vendor/reiarseni/sanctum-refresh-token" />
+      <path value="$PROJECT_DIR$/vendor/overtrue/laravel-follow" />
+      <path value="$PROJECT_DIR$/vendor/blaspsoft/blasp" />
+      <path value="$PROJECT_DIR$/vendor/beyondcode/laravel-comments" />
+      <path value="$PROJECT_DIR$/vendor/qirolab/laravel-reactions" />
     </include_path>
   </component>
   <component name="PhpInterpreters">
