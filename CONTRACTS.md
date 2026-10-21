@@ -64,7 +64,7 @@ Resource type `User`, UUID id.
 |---|---|---|---|---|
 | `nickname` | string? | yes | everyone | 3–30 characters among letters (accented ones too), digits, `_`, `.`, `-`; unique regardless of case |
 | `name` | string | yes | everyone | `first_name` + `last_name` |
-| `picture` | string? | yes | everyone | URL, max 2048. Comes from the identity provider |
+| `picture` | string? | yes | everyone | URL http(s) o null; Gravatar calcolato dal server quando il provider non fornisce un URL |
 | `visibility` | `public` \| `private` | yes | everyone | default `public` |
 | `first_name`, `last_name` | string? | yes | visible profile | max 255 |
 | `bio` | string? | yes | visible profile | max 500 |

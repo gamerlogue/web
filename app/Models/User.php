@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use LaravelGravatar\Facades\Gravatar;
 use Maicol07\OIDCClient\Models\OidcAuthMapping;
 use Maicol07\OIDCClient\Models\Traits\LogsInWithOidc;
 use Maicol07\OpenIDConnect\UserInfo;
@@ -154,6 +155,26 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
                 'last_name' => explode(' ', $value, 2)[1] ?? null,
             ]
         );
+    }
+
+    /**
+     * Always an http(s) URL or null. The provider may send a keyword such as "gravatar" instead of
+     * a URL: then the Gravatar of the email is used, with d=404 so a user without one falls back to
+     * the client's initial. The stored value stays the provider's.
+     *
+     * @return Attribute<string|null, string|null>
+     */
+    protected function picture(): Attribute
+    {
+        return Attribute::get(function (?string $value): ?string {
+            if (in_array(parse_url($value ?? '', PHP_URL_SCHEME), ['http', 'https'], true)) {
+                return $value;
+            }
+
+            $email = mb_strtolower(trim((string) $this->email));
+
+            return $email === '' ? null : Gravatar::image($email)->defaultImageNotFound()->url();
+        });
     }
 
     /**

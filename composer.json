@@ -13,6 +13,7 @@
     "beyondcode/laravel-comments": "^1.9",
     "blaspsoft/blasp": "^4.0",
     "emargareten/inertia-modal": "^3.4",
+    "forxer/laravel-gravatar": "^6.0",
     "inertiajs/inertia-laravel": "^3.0",
     "laravel-lang/locales": "^2.10",
     "laravel/framework": "^13.0",

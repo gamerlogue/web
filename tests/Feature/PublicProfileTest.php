@@ -335,3 +335,19 @@ test('the included owner of library entries is loaded once', function () {
     // Constant: the caller's blocks (2), the count, the page and its owner.
     expect(count(DB::getQueryLog()))->toBeLessThan(6);
 });
+
+test('picture is the provider URL, else the email Gravatar, else null', function (?string $picture, string $email, ?string $expected) {
+    $owner = User::factory()->create(['visibility' => Visibility::Private, 'picture' => $picture, 'email' => $email]);
+
+    $attributes = actingAsNative(User::factory()->create())
+        ->getJson("/api/users/{$owner->id}", jsonApiHeaders())
+        ->assertOk()
+        ->assertJsonMissingPath('data.attributes.email')
+        ->json('data.attributes');
+
+    expect($attributes['picture'] ?? null)->toBe($expected);
+})->with([
+    'provider URL' => ['https://example.test/me.png', 'me@example.test', 'https://example.test/me.png'],
+    'gravatar with email' => ['gravatar', '  Me@Example.TEST ', 'https://gravatar.com/avatar/' . hash('sha256', 'me@example.test') . '?d=404'],
+    'no email' => ['gravatar', '', null],
+]);
