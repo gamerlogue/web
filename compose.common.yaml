@@ -104,7 +104,7 @@ services:
 
   mysql:
     restart: unless-stopped
-    image: 'mysql'
+    image: 'mysql:9.7'
     environment:
       MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:-$DB_PASSWORD}'
       MYSQL_DATABASE: '${DB_DATABASE}'
