@@ -59,6 +59,8 @@ services:
     extends:
       file: compose.common.yaml
       service: mysql
+    # Dev only: performance_schema is unused here and costs ~200 MiB of idle RAM.
+    command: [--performance-schema=OFF]
     ports:
       - '${FORWARD_DB_PORT:-3306}:3306'
     environment:
