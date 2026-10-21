@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GitLabRepoState">
+    <option name="selectedRepo">
+      <Repo>
+        <option name="authType" value="BASIC" />
+        <option name="projectPath" value="websites/templates/laravel" />
+        <option name="type" value="SELF" />
+        <option name="url" value="https://gitlab.trust-itservices.com" />
+      </Repo>
+    </option>
+    <option name="repos">
+      <set>
+        <Repo>
+          <option name="authType" value="BASIC" />
+          <option name="projectPath" value="websites/templates/laravel" />
+          <option name="type" value="SELF" />
+          <option name="url" value="https://gitlab.trust-itservices.com" />
+        </Repo>
+      </set>
+    </option>
+  </component>
+</project>
