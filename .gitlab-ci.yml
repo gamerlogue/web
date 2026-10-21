@@ -3,9 +3,9 @@
 # Variables to set on the repo:
 # AWS_WEB_HOST_PROD: The hosts (separated by commas) where the application will be deployed in production
 include:
-  - project: 'websites/utils/ci-templates'
+  - project: websites/utils/ci-templates
     ref: 2.7.1
-    file: '/web-app.yml'
+    file: /web-app.yml
 
 quality:
   extends: .composer
