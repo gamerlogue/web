@@ -15,14 +15,6 @@ services:
     healthcheck:
       test: ["CMD", "healthcheck-octane"]
       start_period: 10s
-    environment:
-      CADDY_GLOBAL_OPTIONS: |
-        log file {
-            output file /var/log/frankenphp/frankenphp.log {
-                roll_size 10MiB
-                roll_keep 5
-            }
-        }
     volumes:
       - caddy_config:/config:rw
       - caddy_data:/data:rw

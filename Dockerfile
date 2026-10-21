@@ -17,6 +17,7 @@ ARG TZ=Europe/Rome
 
 ENV APP_ENV=production \
     CADDY_ADMIN="localhost:2019" \
+    CADDY_GLOBAL_OPTIONS="import ${APP_BASE_DIR}/deployment/global.caddyfile" \
     CADDY_HTTP_PORT=80 \
     CADDY_PHP_SERVER_OPTIONS="import ${APP_BASE_DIR}/deployment/php-server.caddyfile" \
     CADDY_SERVER_EXTRA_DIRECTIVES="import ${APP_BASE_DIR}/deployment/site.caddyfile" \

@@ -1,0 +1,9 @@
+# Global options, imported by the base image Caddyfile through CADDY_GLOBAL_OPTIONS (Dockerfile).
+# The default logger already writes errors to stdout; these keep a copy on disk.
+
+log file {
+    output file /var/log/frankenphp/frankenphp.log {
+        roll_size 10MiB
+        roll_keep 5
+    }
+}

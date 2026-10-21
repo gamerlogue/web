@@ -31,12 +31,11 @@ either ignored or overwritten. In particular **the `worker` block comes exclusiv
 through `octane.caddy.env`, which is spread last in `StartFrankenPhpCommand` and therefore wins over the
 values Octane generates.
 
-**Where they are set**: `CADDY_PHP_SERVER_OPTIONS`, `CADDY_SERVER_EXTRA_DIRECTIVES` and `FRANKENPHP_CONFIG`
-are `ENV` in the `Dockerfile` — the first two as `import` of `deployment/php-server.caddyfile` and
-`deployment/site.caddyfile` — so Kubernetes, which never reads the compose files, gets them too.
+**Where they are set**: all four are `ENV` in the `Dockerfile` — the Caddy ones as `import` of
+`deployment/global.caddyfile`, `deployment/php-server.caddyfile` and `deployment/site.caddyfile` — so
+Kubernetes, which never reads the compose files, gets them too.
 `FRANKENPHP_CONFIG` uses the one-line `worker <file>` form because a Dockerfile `ENV` cannot hold
-newlines. The `prod` stage's `CMD` is the same `octane:start` as `compose.prod.yaml`. Only
-`CADDY_GLOBAL_OPTIONS` (the runtime log file) is still Compose-only.
+newlines. The `prod` stage's `CMD` is the same `octane:start` as `compose.prod.yaml`.
 
 **If you go back to the stub**, `CADDY_SERVER_EXTRA_DIRECTIVES` has to be removed: there it is
 interpolated inside `route { }`, where `log` is not a handler directive, so config adaptation fails and
@@ -179,7 +178,7 @@ that looks enabled and isn't. In dev, with Xdebug loaded, the JIT is counterprod
 ## Observability
 
 ### Logs to file **and** to stdout
-`CADDY_GLOBAL_OPTIONS` writes the runtime log to `/var/log/frankenphp/frankenphp.log`,
+`deployment/global.caddyfile` writes the runtime log to `/var/log/frankenphp/frankenphp.log`,
 `deployment/site.caddyfile` writes the access log to `access.log`, both with `roll_size`/`roll_keep`.
 
 **Why the rotation**: Docker does not rotate files inside the container; `logging: json-file` with
