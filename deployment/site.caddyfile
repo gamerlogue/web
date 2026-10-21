@@ -1,10 +1,8 @@
 # Site directives, imported by the base image Caddyfile through CADDY_SERVER_EXTRA_DIRECTIVES
 # (Dockerfile). Lives in the image, so Compose and Kubernetes serve the same rules.
 
+# Access log: discarded unless CADDY_ACCESS_LOG_OUTPUT is set (the prod stage sets stdout).
 log access {
     format json
-    output file /var/log/frankenphp/access.log {
-        roll_size 10MiB
-        roll_keep 5
-    }
+    output {$CADDY_ACCESS_LOG_OUTPUT:discard}
 }

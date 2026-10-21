@@ -178,8 +178,11 @@ that looks enabled and isn't. In dev, with Xdebug loaded, the JIT is counterprod
 ## Observability
 
 ### Logs to file **and** to stdout
-`deployment/global.caddyfile` writes the runtime log to `/var/log/frankenphp/frankenphp.log`,
-`deployment/site.caddyfile` writes the access log to `access.log`, both with `roll_size`/`roll_keep`.
+`deployment/global.caddyfile` writes the runtime log to `/var/log/frankenphp/frankenphp.log` (access
+entries excluded) and the access log to `access.log`, both with `roll_size`/`roll_keep`, in every stage.
+The site's `access` logger in `deployment/site.caddyfile` goes to `CADDY_ACCESS_LOG_OUTPUT`: `stdout` in
+the prod stage, discarded elsewhere; the file copy is a global logger subscribed to its namespace,
+because a site keeps a single access logger.
 
 **Why the rotation**: Docker does not rotate files inside the container; `logging: json-file` with
 `max-size` only covers stdout.
