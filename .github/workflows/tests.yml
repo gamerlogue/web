@@ -31,15 +31,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Install workflow and changelog tools
+      - name: Validate workflows
+        uses: docker://rhysd/actionlint:1.7.12
+
+      - name: Install git-cliff
         uses: taiki-e/install-action@ab6895351a88b908e96a4697860d4ffea5e57dbe # v2
         with:
-          tool: actionlint@1.7.12,git-cliff@2.14.2
+          tool: git-cliff@2.14.2
 
-      - name: Validate workflows and changelog
-        run: |
-          actionlint
-          git cliff --unreleased --strip header > /dev/null
+      - name: Validate changelog
+        run: git cliff --unreleased --strip header > /dev/null
 
       - name: Setup PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
