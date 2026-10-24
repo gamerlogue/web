@@ -219,6 +219,9 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/beyondcode/laravel-comments" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/blaspsoft/blasp" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/qirolab/laravel-reactions" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/forxer/gravatar" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/forxer/laravel-gravatar" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-time" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

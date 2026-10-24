@@ -274,6 +274,9 @@
       <path value="$PROJECT_DIR$/vendor/blaspsoft/blasp" />
       <path value="$PROJECT_DIR$/vendor/beyondcode/laravel-comments" />
       <path value="$PROJECT_DIR$/vendor/qirolab/laravel-reactions" />
+      <path value="$PROJECT_DIR$/vendor/forxer/gravatar" />
+      <path value="$PROJECT_DIR$/vendor/forxer/laravel-gravatar" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-time" />
     </include_path>
   </component>
   <component name="PhpInterpreters">
