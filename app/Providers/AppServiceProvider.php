@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use ApiPlatform\JsonApi\Serializer\CollectionNormalizer;
 use ApiPlatform\JsonApi\Serializer\ErrorNormalizer;
 use ApiPlatform\JsonApi\Serializer\ItemDenormalizer;
 use App\Models\Comment;
@@ -11,6 +12,7 @@ use App\Models\GameList;
 use App\Models\LibraryEntry;
 use App\Models\ListItem;
 use App\Models\User;
+use App\Serializer\CollectionMetaNormalizer;
 use App\Serializer\DomainErrorNormalizer;
 use App\Serializer\JsonApiResourceTypeDenormalizer;
 use Illuminate\Auth\Middleware\Authenticate;
@@ -60,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->extend(ItemDenormalizer::class, fn (ItemDenormalizer $service) => new JsonApiResourceTypeDenormalizer($service));
         $this->app->extend(ErrorNormalizer::class, fn (ErrorNormalizer $service) => new DomainErrorNormalizer($service));
+        $this->app->extend(CollectionNormalizer::class, fn (CollectionNormalizer $service) => new CollectionMetaNormalizer($service));
 
         LogViewer::auth(static fn ($request): bool => Gate::forUser($request->user())->allows('admin'));
     }

@@ -69,7 +69,7 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
 )]
 #[QueryParameter('filter[user]', description: "Read another user's library instead of the caller's, subject to their profile visibility", constraints: ['uuid'])]
 #[QueryParameter('filter[has_review]', description: 'Filter library entries by whether they have a non-empty review', constraints: ['in:true,false'])]
-#[QueryParameter('filter[game_id]', filter: EqualsFilter::class, property: 'game_id', description: 'Filter library entries by the associated game ID')]
+#[QueryParameter('filter[game_id]', filter: EqualsFilter::class, property: 'game_id', description: 'Filter library entries by the associated game ID; with filter[has_review]=true and no filter[user], the reviews of that game by every visible user')]
 #[QueryParameter('filter[status]', filter: EqualsFilter::class, property: 'status', description: 'Filter library entries by play status, one of the values of the status attribute', constraints: [new Enum(LibraryEntryStatus::class)])]
 #[QueryParameter('filter[completion_status]', filter: EqualsFilter::class, property: 'completion_status', description: 'Filter library entries by completion status, one of the values of the completion_status attribute', constraints: [new Enum(LibraryEntryCompletionStatus::class)])]
 #[QueryParameter('filter[owned]', filter: BooleanFilter::class, property: 'owned', description: 'Filter library entries by whether the user owns the game')]
@@ -81,7 +81,7 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     'sort',
     filter: SortFilter::class,
     description: 'Comma-separated fields to sort by, descending when prefixed with "-" (e.g. "-rating,start_date")',
-    properties: ['start_date', 'end_date', 'rating', 'played_time', 'created_at', 'updated_at', 'review_updated_at']
+    properties: ['start_date', 'end_date', 'rating', 'played_time', 'created_at', 'updated_at', 'review_updated_at', 'likes_count']
 )]
 class LibraryEntry extends Model
 {

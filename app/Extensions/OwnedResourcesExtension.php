@@ -21,11 +21,13 @@ use App\Models\Reaction;
 use App\Models\Report;
 use App\Models\User;
 use App\Models\UserBlock;
+use App\Serializer\CollectionMetaNormalizer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Context;
 
 /**
  * Scopes every query to what the authenticated user may see. Discovered automatically: API
@@ -66,22 +68,21 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
     }
 
     /**
+     * The caller's library, another user's with filter[user], or with filter[game_id] and
+     * filter[has_review]=true alone the reviews of that game by everyone the caller may see.
+     *
      * @param  Builder<LibraryEntry>  $builder
      * @return Builder<LibraryEntry>
      */
     private function libraryEntries(Builder $builder, Operation $operation): Builder
     {
-        $ownerId = $this->ownerFilter($operation);
-        if ($ownerId !== null) {
-            $this->assertProfileVisible(User::findOrFail($ownerId));
-        }
-        $builder->where('user_id', $ownerId ?? auth()->id())->with(['user' => $this->socialContext(...)])->withInteractionCounts();
+        $builder->with(['user' => $this->socialContext(...)])->withInteractionCounts();
 
         // Mirrors LibraryEntry::hasReview(): `{}` is what the mutator stores for no details, `[]` and
         // null what older rows may hold. `<>` and `NOT IN` are never true on null.
         $noDetails = ['{}', '[]'];
-
-        return match ($this->parameter($operation, 'filter[has_review]')) {
+        $hasReview = $this->parameter($operation, 'filter[has_review]');
+        match ($hasReview) {
             'true' => $builder->where(static fn (Builder $query) => $query->where('review', '<>', '')->orWhereNotIn('rating_details', $noDetails)->orWhereNotNull('rating')),
             'false' => $builder
                 ->whereNull('rating')
@@ -89,6 +90,30 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
                 ->where(static fn (Builder $query) => $query->whereNull('rating_details')->orWhereIn('rating_details', $noDetails)),
             default => $builder,
         };
+
+        $gameReviews = $hasReview === 'true' && $this->parameter($operation, 'filter[game_id]') !== null
+            && $this->parameter($operation, 'filter[user]') === null && ! request()->boolean('current_user');
+        if (! $gameReviews) {
+            $ownerId = $this->ownerFilter($operation);
+            if ($ownerId !== null) {
+                $this->assertProfileVisible(User::findOrFail($ownerId));
+            }
+
+            return $builder->where('user_id', $ownerId ?? auth()->id());
+        }
+
+        /** @var User $viewer */
+        $viewer = auth()->user();
+        $builder->whereNotIn('user_id', $viewer->blockedUserIds())
+            ->where(static fn (Builder $query) => $query
+                ->where('user_id', $viewer->id)
+                ->orWhereIn('user_id', User::where('visibility', Visibility::Public)->select('id')));
+
+        // FilterQueryExtension runs first, so every other filter is already on the builder.
+        $average = (clone $builder)->toBase()->reorder()->avg('rating');
+        Context::addHidden(CollectionMetaNormalizer::CONTEXT, ['average_rating' => $average === null ? null : round((float) $average, 2)]);
+
+        return $builder;
     }
 
     /**

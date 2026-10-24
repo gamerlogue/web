@@ -152,10 +152,22 @@ Existing endpoints, attributes, filters and sorts are unchanged. Additions:
 | `filter[user]` | UUID | That user's library. A private profile that is not yours: `403 profile_private`. Invalid UUID: `422` |
 | `current_user=true` | | The caller's library, even alongside `filter[user]` (unchanged) |
 | `filter[has_review]` | `true` \| `false` | `true` = has a review: `review` non-empty, `rating_details` non-empty **or** `rating` set; `false` = all three empty. Other values: `422` |
-| `sort` | adds `review_updated_at` | e.g. `sort=-review_updated_at` |
+| `filter[game_id]` | int | Entries of that game. Together with `filter[has_review]=true` and without `filter[user]` / `current_user=true`: **the reviews of that game by every user**, see below. Otherwise within the one library being read (unchanged) |
+| `sort` | adds `review_updated_at`, `likes_count` | e.g. `sort=-likes_count,-review_updated_at` |
 
 Another user's entries are read-only: PATCH/DELETE stay `404`. `GET /library_entries/{id}` stays
 limited to your own entries.
+
+### A game's reviews
+
+`GET /library_entries?filter[game_id]=<int>&filter[has_review]=true` lists the reviews of that game
+by every user, the caller included. Left out: private profiles other than the caller's, and users in
+a block with the caller in either direction. Every other filter, `sort` and pagination apply as
+usual; `include=user` works as with `filter[user]`.
+
+`meta` adds `average_rating` to `totalItems`: the mean `rating` (0–100) of all the entries matching
+the same filters, every page included, rounded to 2 decimals; entries without a rating do not count;
+`null` when none has one. It is present only in this mode.
 
 ### Example
 
@@ -169,6 +181,20 @@ GET /api/library_entries?filter[user]=0199…&filter[has_review]=true&sort=-revi
 ```
 
 (the answer when profile `0199…` is private)
+
+```http
+GET /api/library_entries?filter[game_id]=1942&filter[has_review]=true&sort=-likes_count,-review_updated_at&include=user
+```
+
+```json
+{"data": [{"id": "12", "type": "LibraryEntry", "attributes": {
+    "game_id": 1942, "user_id": "0199…", "rating": 90, "review": "Great", "review_spoiler": false,
+    "likes_count": 4, "liked_by_me": false, "comments_count": 1,
+    "review_updated_at": "2026-10-20T18:00:00+02:00"},
+   "relationships": {"user": {"data": {"type": "User", "id": "0199…"}}}}],
+ "included": [{"id": "0199…", "type": "User", "attributes": {"nickname": "maicol"}}],
+ "meta": {"totalItems": 1, "itemsPerPage": 30, "currentPage": 1, "average_rating": 90}}
+```
 
 ---
 

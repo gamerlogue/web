@@ -6,6 +6,7 @@ use App\Enums\LibraryEntryStatus;
 use App\Enums\Visibility;
 use App\Models\LibraryEntry;
 use App\Models\User;
+use App\Models\UserBlock;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Maicol07\OIDCClient\Models\OidcAuthMapping;
@@ -278,6 +279,49 @@ test('entries are filtered by whether they have a review', function () {
     actingAsNative($user)
         ->getJson('/api/library_entries?filter[has_review]=maybe', jsonApiHeaders())
         ->assertUnprocessable();
+});
+
+test("a game's reviews come from every user the caller may see", function () {
+    $viewer = User::factory()->create(['visibility' => Visibility::Private]);
+    $popular = User::factory()->create();
+    $quiet = User::factory()->create();
+    $private = User::factory()->create(['visibility' => Visibility::Private]);
+    $blocked = User::factory()->create();
+    $blocker = User::factory()->create();
+    UserBlock::create(['user_id' => $viewer->id, 'blocked_id' => $blocked->id]);
+    UserBlock::create(['user_id' => $blocker->id, 'blocked_id' => $viewer->id]);
+
+    $mine = libraryEntryFor($viewer, 7, ['rating' => 50]);
+    $liked = libraryEntryFor($popular, 7, ['review' => 'Great', 'rating' => 90]);
+    $liked->reactions()->forceCreate(['user_id' => $quiet->id, 'type' => 'like']);
+    $unrated = libraryEntryFor($quiet, 7, ['review' => 'Fine']);
+    libraryEntryFor($quiet, 8, ['review' => 'Other game', 'rating' => 10]);
+    libraryEntryFor($private, 7, ['review' => 'Hidden', 'rating' => 10]);
+    libraryEntryFor($blocked, 7, ['review' => 'Blocked', 'rating' => 10]);
+    libraryEntryFor($blocker, 7, ['review' => 'Blocker', 'rating' => 10]);
+    libraryEntryFor(User::factory()->create(), 7);
+
+    $response = actingAsNative($viewer)
+        ->getJson('/api/library_entries?filter[game_id]=7&filter[has_review]=true&sort=-likes_count,rating&include=user', jsonApiHeaders())
+        ->assertOk()
+        ->assertJsonPath('meta.totalItems', 3)
+        ->assertJsonPath('meta.average_rating', 70);
+
+    expect(collect($response->json('data'))->pluck('attributes.user_id')->all())->toBe([$popular->id, $unrated->user_id, $mine->user_id])
+        ->and(collect($response->json('included'))->pluck('id')->all())->toEqualCanonicalizing([$popular->id, $quiet->id, $viewer->id]);
+
+    actingAsNative($viewer)
+        ->getJson('/api/library_entries?filter[game_id]=9&filter[has_review]=true', jsonApiHeaders())
+        ->assertOk()
+        ->assertJsonPath('meta.totalItems', 0)
+        ->assertJsonPath('meta.average_rating', null);
+
+    // Without has_review=true, or with filter[user], filter[game_id] stays within one library.
+    actingAsNative($viewer)
+        ->getJson('/api/library_entries?filter[game_id]=7', jsonApiHeaders())
+        ->assertOk()
+        ->assertJsonPath('meta.totalItems', 1)
+        ->assertJsonMissingPath('meta.average_rating');
 });
 
 test('review_updated_at follows the review text only and cannot be written', function () {
