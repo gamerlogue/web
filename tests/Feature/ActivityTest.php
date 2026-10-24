@@ -54,6 +54,21 @@ test('library writes become activities', function () {
     ]);
 });
 
+test('rating details alone are a review, and so are reviewed', function () {
+    $user = User::factory()->create();
+    $id = postEntry($user, ['game_id' => 7]);
+    patchEntry($user, $id, ['rating_details' => ['story' => ['rating' => 80, 'review' => '']]]);
+
+    expect(activities($user))->toContain(['verb' => 'reviewed', 'game_id' => 7, 'review_spoiler' => false]);
+});
+
+test('a rating alone is rated, not reviewed', function () {
+    $user = User::factory()->create();
+    postEntry($user, ['game_id' => 7, 'rating' => 70]);
+
+    expect(collect(activities($user))->pluck('verb')->all())->toEqualCanonicalizing(['library_added', 'rated']);
+});
+
 test('repeating a verb on the same subject folds into one activity until the window closes', function () {
     $user = User::factory()->create();
     $id = postEntry($user, ['game_id' => 7]);

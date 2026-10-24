@@ -66,6 +66,10 @@ test('likes and comments are refused where they do not belong', function () {
     $hidden = reviewOf($privateOwner);
     $privateList = GameList::factory()->for($owner)->private()->create();
     $review = reviewOf($owner);
+    $detailsOnly = reviewOf($owner, null);
+    $detailsOnly->update(['rating_details' => ['story' => ['rating' => 80, 'review' => '']]]);
+    $ratingOnly = reviewOf($owner, null);
+    $ratingOnly->update(['rating' => 60]);
 
     react($fan, 'library_entry', $bare->id, 'like')->assertUnprocessable()->assertJsonPath('errors.0.code', 'review_required');
     comment($fan, 'library_entry', $bare->id)->assertUnprocessable()->assertJsonPath('errors.0.code', 'review_required');
@@ -73,6 +77,8 @@ test('likes and comments are refused where they do not belong', function () {
     comment($fan, 'library_entry', $hidden->id)->assertForbidden()->assertJsonPath('errors.0.code', 'profile_private');
     react($fan, 'list', $privateList->id, 'like')->assertNotFound();
     react($fan, 'library_entry', $review->id, '🔥')->assertUnprocessable();
+    react($fan, 'library_entry', $detailsOnly->id, 'like')->assertCreated();
+    react($fan, 'library_entry', $ratingOnly->id, 'like')->assertCreated();
     react($fan, 'list', 999, 'like')->assertUnprocessable();
 
     actingAsNative($owner)->postJson('/api/blocks', ['data' => ['type' => 'Block', 'attributes' => ['blocked_id' => $fan->id]]], jsonApiHeaders())->assertCreated();
@@ -183,7 +189,17 @@ test('clearing a review or deleting content removes its likes and comments', fun
     comment($fan, 'list', $list->id);
 
     actingAsNative($owner)->patchJson("/api/library_entries/{$entry->id}", [
-        'data' => ['type' => 'LibraryEntry', 'attributes' => ['review' => '']],
+        'data' => ['type' => 'LibraryEntry', 'attributes' => ['review' => '', 'rating' => 60]],
+    ], jsonApiHeaders())->assertOk();
+    expect(Comment::count())->toBe(3)->and(Reaction::count())->toBe(2);
+
+    actingAsNative($owner)->patchJson("/api/library_entries/{$entry->id}", [
+        'data' => ['type' => 'LibraryEntry', 'attributes' => ['rating_details' => ['story' => ['rating' => 80, 'review' => '']], 'rating' => null]],
+    ], jsonApiHeaders())->assertOk();
+    expect(Comment::count())->toBe(3)->and(Reaction::count())->toBe(2);
+
+    actingAsNative($owner)->patchJson("/api/library_entries/{$entry->id}", [
+        'data' => ['type' => 'LibraryEntry', 'attributes' => ['rating_details' => null]],
     ], jsonApiHeaders())->assertOk();
     expect(Comment::count())->toBe(1)->and(Reaction::count())->toBe(1);
 

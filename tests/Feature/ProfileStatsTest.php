@@ -11,16 +11,16 @@ use App\Models\User;
 beforeEach(function () {
     $this->owner = User::factory()->create();
     foreach ([
-        [1, LibraryEntryStatus::Completed, LibraryEntryCompletionStatus::MainStory, true, '2025-12-20', '2026-01-05', 95, 30, [6, 48], 'Great'],
-        [2, LibraryEntryStatus::Completed, LibraryEntryCompletionStatus::Full100, false, '2024-03-01', '2024-04-01', 100, 50, [6], ''],
-        [3, LibraryEntryStatus::Playing, null, true, '2026-02-01', null, 42.5, 10, [48, 48], null],
-        [4, LibraryEntryStatus::Backlog, null, false, null, null, null, null, [], 'Meh'],
-    ] as [$gameId, $status, $completion, $owned, $start, $end, $rating, $playedTime, $platforms, $review]) {
+        [1, LibraryEntryStatus::Completed, LibraryEntryCompletionStatus::MainStory, true, '2025-12-20', '2026-01-05', 95, 30, [6, 48], 'Great', null],
+        [2, LibraryEntryStatus::Completed, LibraryEntryCompletionStatus::Full100, false, '2024-03-01', '2024-04-01', 100, 50, [6], '', null],
+        [3, LibraryEntryStatus::Playing, null, true, '2026-02-01', null, 42.5, 10, [48, 48], null, ['story' => ['rating' => 80, 'review' => '']]],
+        [4, LibraryEntryStatus::Backlog, null, false, null, null, null, null, [], 'Meh', null],
+    ] as [$gameId, $status, $completion, $owned, $start, $end, $rating, $playedTime, $platforms, $review, $details]) {
         LibraryEntry::create([
             'user_id' => $this->owner->id, 'game_id' => $gameId, 'status' => $status,
             'completion_status' => $completion, 'owned' => $owned, 'start_date' => $start,
             'end_date' => $end, 'rating' => $rating, 'played_time' => $playedTime,
-            'platforms_ids' => $platforms, 'review' => $review,
+            'platforms_ids' => $platforms, 'review' => $review, 'rating_details' => $details,
         ]);
     }
 });
@@ -43,7 +43,7 @@ test('statistics summarise the whole library', function () {
         ])
         ->and($stats['completed_by_year'])->toBe(['2024' => 1, '2026' => 1])
         ->and($stats['started_by_year'])->toBe(['2024' => 1, '2025' => 1, '2026' => 1])
-        ->and($stats['reviews_count'])->toBe(2);
+        ->and($stats['reviews_count'])->toBe(4);
 });
 
 test('statistics can be limited to a year', function () {

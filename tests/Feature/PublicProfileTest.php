@@ -264,13 +264,15 @@ test('entries are filtered by whether they have a review', function () {
     libraryEntryFor($user, 1, ['review' => 'Great']);
     libraryEntryFor($user, 2, ['review' => '']);
     libraryEntryFor($user, 3);
+    libraryEntryFor($user, 4, ['rating_details' => ['story' => ['rating' => 80, 'review' => '']]]);
+    libraryEntryFor($user, 5, ['rating' => 60]);
 
     $gameIds = fn (string $value) => collect(actingAsNative($user)
         ->getJson("/api/library_entries?filter[has_review]=$value", jsonApiHeaders())
         ->assertOk()
         ->json('data'))->pluck('attributes.game_id')->all();
 
-    expect($gameIds('true'))->toBe([1])
+    expect($gameIds('true'))->toEqualCanonicalizing([1, 4, 5])
         ->and($gameIds('false'))->toEqualCanonicalizing([2, 3]);
 
     actingAsNative($user)

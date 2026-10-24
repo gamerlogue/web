@@ -86,7 +86,7 @@ class ProfileStatsController
             if ($entry->start_date !== null) {
                 $stats['started_by_year'][$entry->start_date->year] = ($stats['started_by_year'][$entry->start_date->year] ?? 0) + 1;
             }
-            $stats['reviews_count'] += (int) ((string) $entry->review !== '');
+            $stats['reviews_count'] += (int) $entry->hasReview();
         }
 
         $stats['average_rating'] = $ratings === [] ? null : round(array_sum($ratings) / count($ratings), 2);

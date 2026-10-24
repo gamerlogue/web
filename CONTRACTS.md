@@ -34,7 +34,7 @@ A JSON:API document `{"errors": [{...}]}`. Every error has `status` (a string) a
 | `cannot_follow_self` | 422 | Following yourself |
 | `cannot_block_self` | 422 | Blocking yourself |
 | `invalid_import_batch` | 422 | A malformed `X-Library-Import` header (see Activities) |
-| `review_required` | 422 | Liking or commenting a library entry without a review |
+| `review_required` | 422 | Liking or commenting a library entry without a review (`review`, `rating_details` and `rating` all empty) |
 | *HTTP status* (`"401"`, `"403"`, `"404"`…) | same as the code | Generic errors: the `code` is the status, as today |
 | `<id>/data.attributes.<field>` | 422 | Attribute validation (unchanged): one error per field, the field is the suffix after `/` |
 
@@ -151,7 +151,7 @@ Existing endpoints, attributes, filters and sorts are unchanged. Additions:
 |---|---|---|
 | `filter[user]` | UUID | That user's library. A private profile that is not yours: `403 profile_private`. Invalid UUID: `422` |
 | `current_user=true` | | The caller's library, even alongside `filter[user]` (unchanged) |
-| `filter[has_review]` | `true` \| `false` | `true` = `review` neither null nor empty. Other values: `422` |
+| `filter[has_review]` | `true` \| `false` | `true` = has a review: `review` non-empty, `rating_details` non-empty **or** `rating` set; `false` = all three empty. Other values: `422` |
 | `sort` | adds `review_updated_at` | e.g. `sort=-review_updated_at` |
 
 Another user's entries are read-only: PATCH/DELETE stay `404`. `GET /library_entries/{id}` stays
@@ -191,7 +191,7 @@ year of its `end_date`, else of its `start_date`, else of the moment it was adde
 | `platforms` | `[{platform_id, entries_count, played_time}]` | per IGDB platform, sorted by id; a platform repeated within an entry counts once |
 | `completed_by_year` | `{"YYYY": int}` | `COMPLETED` entries by year of `end_date` |
 | `started_by_year` | `{"YYYY": int}` | entries by year of `start_date` |
-| `reviews_count` | int | entries with a non-empty review |
+| `reviews_count` | int | entries with a review (`review` or `rating_details` non-empty, or `rating` set) |
 
 The result is cached per user and year. Any write to an entry invalidates it immediately; bulk
 changes made outside the model show up within a day.
@@ -426,7 +426,7 @@ Relationships: `user` (who did it), `subject` (polymorphic: `LibraryEntry`, `Lis
 | `status_changed` | `library_entry` | `game_id`, `old`, `new` (statuses) |
 | `completed` | `library_entry` | `game_id`, `completion_status` (may be missing) |
 | `rated` | `library_entry` | `game_id`, `rating` |
-| `reviewed` | `library_entry` | `game_id`, `review_spoiler` |
+| `reviewed` | `library_entry` | `game_id`, `review_spoiler`. When `review` or `rating_details` changes and one of them is non-empty; a rating alone gives only `rated` |
 | `list_created` | `list` | `name` |
 | `list_item_added` | `list` | `name`, `game_ids` (every game added during the grouping window) |
 | `followed` | `user` (the followed one) | `nickname` |
@@ -569,7 +569,8 @@ Content-Type: application/vnd.api+json
 
 ### Cascades
 
-Clearing a review (`review` null or empty) deletes its likes and comments. Deleting a library
+Clearing a review (`review`, `rating_details` and `rating` all empty) deletes its likes and comments;
+while any one of them remains they stay. Deleting a library
 entry, a list or a comment deletes its reactions, comments (replies included) and the
 notifications about it.
 

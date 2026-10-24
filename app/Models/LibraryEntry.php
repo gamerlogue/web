@@ -148,9 +148,12 @@ class LibraryEntry extends Model
         User::findOrFail($this->user_id)->ensureProfileVisibleTo($viewer);
     }
 
+    /**
+     * A review is its text, its per-aspect details or its rating: any one is enough.
+     */
     public function hasReview(): bool
     {
-        return (string) $this->review !== '';
+        return (string) $this->review !== '' || $this->rating_details !== null || $this->rating !== null;
     }
 
     public static function statsVersion(string $userId): string

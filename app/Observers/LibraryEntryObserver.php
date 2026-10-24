@@ -27,11 +27,11 @@ class LibraryEntryObserver
     }
 
     /**
-     * Likes and comments belong to the review: clearing it clears them.
+     * Likes and comments belong to the review: clearing it, text, details and rating, clears them.
      */
     public function updated(LibraryEntry $entry): void
     {
-        if ($entry->wasChanged('review') && ! $entry->hasReview()) {
+        if ($entry->wasChanged(['review', 'rating_details', 'rating']) && ! $entry->hasReview()) {
             $entry->forgetCommunity();
         }
         if (Activity::importing()) {
@@ -69,7 +69,8 @@ class LibraryEntryObserver
         if ($changed('rating') && $entry->rating !== null) {
             Activity::record($entry->user_id, 'rated', $entry, $payload + ['rating' => $entry->rating]);
         }
-        if ($changed('review') && (string) $entry->review !== '') {
+        // A rating alone is already told by `rated`: `reviewed` needs text or details.
+        if (($changed('review') || $changed('rating_details')) && ((string) $entry->review !== '' || $entry->rating_details !== null)) {
             Activity::record($entry->user_id, 'reviewed', $entry, $payload + ['review_spoiler' => $entry->review_spoiler]);
         }
     }

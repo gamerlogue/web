@@ -77,9 +77,16 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
         }
         $builder->where('user_id', $ownerId ?? auth()->id())->with(['user' => $this->socialContext(...)])->withInteractionCounts();
 
+        // Mirrors LibraryEntry::hasReview(): `{}` is what the mutator stores for no details, `[]` and
+        // null what older rows may hold. `<>` and `NOT IN` are never true on null.
+        $noDetails = ['{}', '[]'];
+
         return match ($this->parameter($operation, 'filter[has_review]')) {
-            'true' => $builder->whereNotNull('review')->where('review', '<>', ''),
-            'false' => $builder->where(static fn (Builder $query) => $query->whereNull('review')->orWhere('review', '')),
+            'true' => $builder->where(static fn (Builder $query) => $query->where('review', '<>', '')->orWhereNotIn('rating_details', $noDetails)->orWhereNotNull('rating')),
+            'false' => $builder
+                ->whereNull('rating')
+                ->where(static fn (Builder $query) => $query->whereNull('review')->orWhere('review', ''))
+                ->where(static fn (Builder $query) => $query->whereNull('rating_details')->orWhereIn('rating_details', $noDetails)),
             default => $builder,
         };
     }
