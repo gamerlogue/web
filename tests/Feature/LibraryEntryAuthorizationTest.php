@@ -247,6 +247,57 @@ test('validates library entry boundaries', function () {
     );
 });
 
+test('rating details serialize as an object, or null when empty', function (?array $sent, ?array $expected) {
+    $user = User::factory()->create();
+
+    $id = actingAsNative($user)
+        ->json('POST', '/api/library_entries', [
+            'data' => [
+                'type' => 'LibraryEntry',
+                'attributes' => ['game_id' => 1, 'status' => LibraryEntryStatus::Playing, 'owned' => false, 'rating_details' => $sent],
+            ],
+        ], jsonApiHeaders())
+        ->assertCreated()
+        ->json('data.id');
+
+    // assertJsonPath would not tell [] from {}; decoding to objects does. Null attributes are omitted.
+    $body = actingAsNative($user)->getJson("/api/library_entries/{$id}", jsonApiHeaders())->assertOk()->getContent();
+
+    expect(json_decode($body, false)->data->attributes->rating_details ?? null)
+        ->toEqual($expected === null ? null : json_decode(json_encode($expected), false));
+})->with([
+    'details' => [
+        ['gameplay' => ['rating' => 80, 'review' => 'Tight'], 'Boss fights' => ['rating' => 0, 'review' => ''], 'audio' => ['rating' => 100, 'review' => null]],
+        ['gameplay' => ['rating' => 80, 'review' => 'Tight'], 'Boss fights' => ['rating' => 0, 'review' => ''], 'audio' => ['rating' => 100, 'review' => '']],
+    ],
+    'empty' => [[], null],
+    'null' => [null, null],
+]);
+
+test('malformed rating details are rejected', function (array $details) {
+    $user = User::factory()->create();
+
+    actingAsNative($user)
+        ->json('POST', '/api/library_entries', [
+            'data' => [
+                'type' => 'LibraryEntry',
+                'attributes' => ['game_id' => 1, 'status' => LibraryEntryStatus::Playing, 'owned' => false, 'rating_details' => $details],
+            ],
+        ], jsonApiHeaders())
+        ->assertUnprocessable();
+
+    expect(LibraryEntry::query()->count())->toBe(0);
+})->with([
+    'list' => [[['rating' => 50, 'review' => 'x']]],
+    'blank key' => [[' ' => ['rating' => 50, 'review' => 'x']]],
+    'rating above 100' => [['story' => ['rating' => 101, 'review' => 'x']]],
+    'rating as string' => [['story' => ['rating' => '50', 'review' => 'x']]],
+    'fractional rating' => [['story' => ['rating' => 50.5, 'review' => 'x']]],
+    'missing review' => [['story' => ['rating' => 50]]],
+    'unknown field' => [['story' => ['rating' => 50, 'review' => 'x', 'extra' => 1]]],
+    'scalar detail' => [['story' => 50]],
+]);
+
 test('an unknown resource type is rejected', function () {
     $user = User::factory()->create();
     $entry = LibraryEntry::create([

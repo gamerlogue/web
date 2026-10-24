@@ -19,17 +19,20 @@ use App\Http\Requests\LibraryEntryFormRequest;
 use App\Models\Concerns\HasLikesAndComments;
 use App\Observers\LibraryEntryObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\TypeInfo\Type\BuiltinType;
+use Symfony\Component\TypeInfo\Type\NullableType;
 use Symfony\Component\TypeInfo\TypeIdentifier;
 
 /**
  * @property int[] $editions_ids
  * @property int[] $platforms_ids
+ * @property array<string, array{rating: int, review: string}>|null $rating_details
  */
 #[ObservedBy(LibraryEntryObserver::class)]
 #[ApiResource(
@@ -58,6 +61,11 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     description: 'The unique identifiers of the platforms associated with this library entry.',
     property: 'platforms_ids',
     nativeType: new BuiltinType(TypeIdentifier::ARRAY)
+)]
+#[ApiProperty(
+    description: 'Per-aspect ratings keyed by a predefined aspect (gameplay, story, cast, technical, audio, longevity) or a free title, each {rating: int 0-100, review: string}; null when there are none.',
+    property: 'rating_details',
+    nativeType: new NullableType(new BuiltinType(TypeIdentifier::ARRAY))
 )]
 #[QueryParameter('filter[user]', description: "Read another user's library instead of the caller's, subject to their profile visibility", constraints: ['uuid'])]
 #[QueryParameter('filter[has_review]', description: 'Filter library entries by whether they have a non-empty review', constraints: ['in:true,false'])]
@@ -172,6 +180,24 @@ class LibraryEntry extends Model
             'status' => LibraryEntryStatus::class,
             'completion_status' => LibraryEntryCompletionStatus::class,
         ];
+    }
+
+    /**
+     * Stored as a JSON object, never a list: PHP decodes `{}` to an empty array, which would
+     * serialize back as `[]`, so an empty set reads as null instead. A null review reads as "":
+     * ConvertEmptyStringsToNull makes the validator see "" as null, so both pass validation.
+     *
+     * @return Attribute<array<string, array{rating: int, review: string}>|null, array<string, array{rating: int, review: string|null}>|null>
+     */
+    protected function ratingDetails(): Attribute
+    {
+        return Attribute::make(
+            get: static fn (?string $value): ?array => array_map(
+                static fn (array $detail): array => ['rating' => $detail['rating'], 'review' => (string) $detail['review']],
+                json_decode($value ?? '{}', true, flags: JSON_THROW_ON_ERROR),
+            ) ?: null,
+            set: static fn (?array $value): string => json_encode((object) ($value ?? []), JSON_THROW_ON_ERROR),
+        );
     }
 
     /**

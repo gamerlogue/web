@@ -143,6 +143,7 @@ Existing endpoints, attributes, filters and sorts are unchanged. Additions:
 | `likes_count` | int | no | likes of the review |
 | `liked_by_me` | bool | no | the caller liked it |
 | `comments_count` | int | no | comments on the review, replies excluded, minus those by users in a block with the caller |
+| `rating_details` | object? | yes | `{"<key>": {"rating": int, "review": string}}`. Keys: `gameplay`, `story`, `cast`, `technical`, `audio`, `longevity` or a free, non-blank title. `rating` integer 0–100 (`"50"` and `50.5` are `422`); `review` required, `""` or `null` both read back as `""`; no other fields. A JSON list is `422`. Empty (`{}`, `[]`, `null`) reads back as `null`, hence missing — never `[]` |
 
 ### Filters and sort
 

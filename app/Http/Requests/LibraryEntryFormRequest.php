@@ -7,6 +7,7 @@ namespace App\Http\Requests;
 use App\Enums\LibraryEntryCompletionStatus;
 use App\Enums\LibraryEntryStatus;
 use App\Traits\DenormalizesIris;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
@@ -46,7 +47,18 @@ class LibraryEntryFormRequest extends FormRequest
             'data.attributes.end_date' => ['nullable', 'date', 'after_or_equal:data.attributes.start_date'],
             'data.attributes.played_time' => ['nullable', 'integer', 'min:0'],
             'data.attributes.rating' => ['nullable', 'numeric:strict', 'between:0,100'],
-            'data.attributes.rating_details' => ['nullable', 'array'],
+            'data.attributes.rating_details' => ['bail', 'nullable', 'array', static function (string $attribute, array $value, Closure $fail): void {
+                // A JSON list decodes to sequential keys; an object always has named, non-blank ones.
+                if (array_is_list($value) && $value !== []) {
+                    $fail('The :attribute field must be an object keyed by aspect.');
+                }
+                if (collect($value)->keys()->contains(static fn (int|string $key): bool => trim((string) $key) === '')) {
+                    $fail('The :attribute keys must not be blank.');
+                }
+            }],
+            'data.attributes.rating_details.*' => ['array:rating,review'],
+            'data.attributes.rating_details.*.rating' => ['required', 'integer:strict', 'between:0,100'],
+            'data.attributes.rating_details.*.review' => ['present', 'nullable', 'string'],
             'data.attributes.review' => ['nullable', 'string'],
             'data.relationships.user' => [Rule::prohibitedIf(! $this->isMethod('POST'))],
         ];
