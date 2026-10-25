@@ -7,11 +7,6 @@ use Illuminate\Support\Carbon;
 use Maicol07\OIDCClient\Models\OidcAuthMapping;
 use Maicol07\OpenIDConnect\UserInfo;
 
-/**
- * mapOIDCUserinfo assigns a date string rather than a Carbon instance, so that Larastan can type
- * the attribute from the migration. These assertions fail if that string ever stops being parsed
- * back by the 'datetime' cast.
- */
 function userInfo(bool $emailVerified): UserInfo
 {
     return new UserInfo(collect([
@@ -40,4 +35,15 @@ test('an unverified OIDC user has no verification timestamp', function () {
     $user->mapOIDCUserinfo('https://issuer.example.test', userInfo(false), new OidcAuthMapping);
 
     expect($user->email_verified_at)->toBeNull();
+});
+
+test('OIDC mapping accepts a missing nickname claim', function () {
+    $user = new User;
+    $info = userInfo(true);
+    $info->attrs()->forget('nickname');
+
+    $user->mapOIDCUserinfo('https://issuer.example.test', $info, new OidcAuthMapping);
+
+    expect($user->nickname)->toBeNull()
+        ->and($user->email_verified_at)->toBeInstanceOf(Carbon::class);
 });

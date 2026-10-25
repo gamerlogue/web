@@ -24,6 +24,8 @@ use Qirolab\Laravel\Reactions\Models\Reaction as PackageReaction;
 /**
  * The caller's reaction to a review, a list or a comment. A like is the `like` reaction, the
  * only one reviews and lists accept; comments accept any single emoji too.
+ *
+ * @property LibraryEntry|GameList|Comment $reactable
  */
 #[ObservedBy(ReactionObserver::class)]
 #[ApiResource(

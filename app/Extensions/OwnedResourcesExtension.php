@@ -41,30 +41,65 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
     {
         $reading = request()->isMethod('GET');
 
-        return match ($operation->getClass()) {
-            LibraryEntry::class => $reading
-                ? $this->libraryEntries($builder, $operation)
-                : $builder->where('user_id', auth()->id()),
-            User::class => $reading
-                ? $this->users($builder->withSocialContext(), $uriVariables, $operation)
-                : $builder->whereKey(auth()->id()),
-            GameList::class => $reading
-                ? $this->lists($builder, $uriVariables, $operation)
-                : $builder->where('user_id', auth()->id()),
-            ListItem::class => $reading
-                ? $this->listItems($builder, $uriVariables, $operation)
-                : $builder->whereHas('list', static fn (Builder $list) => $list->where('user_id', auth()->id())),
-            Report::class, Follow::class, UserBlock::class, Reaction::class => $builder->where('user_id', auth()->id()),
-            Notification::class => $this->notifications($builder, $operation),
-            Comment::class => match (request()->method()) {
-                'GET' => $this->comments($builder, $uriVariables, $operation),
-                // CommentRequest authorizes deletions, open to the thread's owner too.
-                'DELETE' => $builder,
-                default => $builder->where('user_id', auth()->id()),
-            },
-            Activity::class => $this->activities($builder, $operation),
-            default => $builder,
-        };
+        switch ($operation->getClass()) {
+            case LibraryEntry::class:
+                /** @var Builder<LibraryEntry> $query */
+                $query = $builder;
+                $builder = $reading
+                    ? $this->libraryEntries($query, $operation)
+                    : $query->where('user_id', auth()->id());
+                break;
+            case User::class:
+                /** @var Builder<User> $query */
+                $query = $builder;
+                $builder = $reading
+                    ? $this->users($query->withSocialContext(), $uriVariables, $operation)
+                    : $query->whereKey(auth()->id());
+                break;
+            case GameList::class:
+                /** @var Builder<GameList> $query */
+                $query = $builder;
+                $builder = $reading
+                    ? $this->lists($query, $uriVariables, $operation)
+                    : $query->where('user_id', auth()->id());
+                break;
+            case ListItem::class:
+                /** @var Builder<ListItem> $query */
+                $query = $builder;
+                $builder = $reading
+                    ? $this->listItems($query, $uriVariables, $operation)
+                    : $query->whereHas('list', static fn (Builder $list) => $list->where('user_id', auth()->id()));
+                break;
+            case Report::class:
+            case Follow::class:
+            case UserBlock::class:
+            case Reaction::class:
+                $builder->where('user_id', auth()->id());
+                break;
+            case Notification::class:
+                /** @var Builder<Notification> $query */
+                $query = $builder;
+                $builder = $this->notifications($query, $operation);
+                break;
+            case Comment::class:
+                /** @var Builder<Comment> $query */
+                $query = $builder;
+                $builder = match (request()->method()) {
+                    'GET' => $this->comments($query, $uriVariables, $operation),
+                    // CommentRequest authorizes deletions, open to the thread's owner too.
+                    'DELETE' => $query,
+                    default => $query->where('user_id', auth()->id()),
+                };
+                break;
+            case Activity::class:
+                /** @var Builder<Activity> $query */
+                $query = $builder;
+                $builder = $this->activities($query, $operation);
+                break;
+        }
+
+        /** @var Builder<Model> $builder */
+        return $builder;
     }
 
     /**
@@ -251,9 +286,18 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
             // Each kind of subject with what its own document links or counts.
             'subject' => fn (MorphTo $subject) => $subject
                 ->constrain([
-                    User::class => static fn (Builder $user) => $user->withSocialContext(),
-                    GameList::class => static fn (Builder $list) => $list->withCount('items')->withInteractionCounts(),
-                    LibraryEntry::class => static fn (Builder $entry) => $entry->withInteractionCounts(),
+                    User::class => static function (Builder $user): void {
+                        /** @var Builder<User> $user */
+                        $user->withSocialContext();
+                    },
+                    GameList::class => static function (Builder $list): void {
+                        /** @var Builder<GameList> $list */
+                        $list->withCount('items')->withInteractionCounts();
+                    },
+                    LibraryEntry::class => static function (Builder $entry): void {
+                        /** @var Builder<LibraryEntry> $entry */
+                        $entry->withInteractionCounts();
+                    },
                 ])
                 ->morphWith([
                     LibraryEntry::class => ['user' => $this->socialContext(...)],
@@ -334,7 +378,7 @@ final class OwnedResourcesExtension implements QueryExtensionInterface
     /**
      * Counters and flags for every user a document embeds.
      *
-     * @param  BelongsTo<User, Model>  $relation
+     * @param  BelongsTo<User, covariant Model>  $relation
      */
     private function socialContext(BelongsTo $relation): void
     {

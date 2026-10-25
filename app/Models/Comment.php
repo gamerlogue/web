@@ -30,6 +30,8 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
 /**
  * A comment on a review (library entry), a list, or another comment: a reply is a comment on a
  * comment, to any depth. Always published; profanity is masked when saved.
+ *
+ * @property LibraryEntry|GameList|Comment $commentable
  */
 #[ObservedBy(CommentObserver::class)]
 #[ApiResource(
@@ -165,7 +167,7 @@ class Comment extends PackageComment
      * Counted by the query when it eager-loads `reactionCounts`. A list rather than a map: the
      * serializer would turn an empty map into a JSON array anyway, and the order is meaningful.
      *
-     * @return Attribute<list<array{type: string, count: int}>, never>
+     * @return Attribute<array<int, array{type: string, count: int}>, never>
      */
     protected function reactionsSummary(): Attribute
     {

@@ -312,14 +312,13 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
         $this->first_name = $user_info->given_name;
         $this->last_name = $user_info->family_name;
         // The nickname is the user's to edit: the provider only seeds it, and only while it is free.
-        if ($this->nickname === null && $user_info->nickname !== null
-            && ! self::where('nickname_key', mb_strtolower($user_info->nickname))->exists()) {
-            $this->nickname = $user_info->nickname;
+        $nickname = $user_info->attrs()->get('nickname');
+        if ($this->nickname === null && is_string($nickname)
+            && ! self::where('nickname_key', mb_strtolower($nickname))->exists()) {
+            $this->nickname = $nickname;
         }
         $this->picture = $user_info->picture;
         $this->email = $user_info->email;
-        // A date string, not a Carbon instance: the 'datetime' cast parses it back on read, and
-        // Larastan types the column from the migration because it does not read the casts() method.
-        $this->email_verified_at = $user_info->email_verified ? now()->toDateTimeString() : null;
+        $this->email_verified_at = $user_info->email_verified ? now() : null;
     }
 }

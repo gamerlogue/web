@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models\Concerns;
 
-use App\Models\Comment;
 use App\Models\Reaction;
 use BeyondCode\Comments\Traits\HasComments;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,7 +40,7 @@ trait HasLikesAndComments
      */
     public function forgetCommunity(): void
     {
-        $this->comments()->get()->each(static fn (Comment $comment) => $comment->delete());
+        $this->comments()->get()->each->delete();
         $this->forgetInteractions();
     }
 

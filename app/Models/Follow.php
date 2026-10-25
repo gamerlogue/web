@@ -55,7 +55,7 @@ class Follow extends Followable
     {
         static::creating(static function (self $follow): void {
             $follow->followable_type = (new User)->getMorphClass();
-            $follow->accepted_at = now();
+            $follow->accepted_at = now()->toDateTimeString();
         });
     }
 }
