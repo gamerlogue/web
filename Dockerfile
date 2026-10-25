@@ -138,7 +138,8 @@ COPY --chown=${USER} composer.json composer.lock ./
 # Optimization: Use BuildKit cache mount for Composer
 # This prevents re-downloading all deps if you change one package
 RUN --mount=type=cache,target=/tmp/composer-cache,uid=${USER_ID},gid=${GROUP_ID}  \
-    COMPOSER_CACHE_DIR=/tmp/composer-cache \
+    composer config --json audit.ignore-abandoned '["dragon-code/contracts", "dragon-code/pretty-array", "dragon-code/support"]' \
+    && COMPOSER_CACHE_DIR=/tmp/composer-cache \
     TMPDIR=/tmp/php-build  \
     composer install \
     --no-dev \
