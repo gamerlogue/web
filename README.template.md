@@ -64,7 +64,7 @@ variables below. Those that matter on a deployment:
 
 | Variable | Required | Default | Notes |
 |---|---|---|---|
-| `APP_KEY` | ✅ | — | encryption key, unique per environment: `php artisan key:generate --show` |
+| `APP_KEY` | ✅ | | encryption key, unique per environment: `php artisan key:generate --show` |
 | `APP_URL` | ✅ in production | `http://localhost` | base of the generated URLs |
 | `DB_CONNECTION` | ✅ in production | `sqlite` | the default is a file inside the container, lost on restart: set `mysql` |
 | `DB_HOST`, `DB_PORT` | | `127.0.0.1`, `3306` | |
@@ -72,7 +72,7 @@ variables below. Those that matter on a deployment:
 | `CACHE_STORE`, `SESSION_DRIVER`, `QUEUE_CONNECTION` | | `database` | `redis` needs the `REDIS_*` below |
 | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | | `127.0.0.1`, `6379`, none | |
 | `APP_ENV`, `APP_DEBUG` | | `production`, `false` | |
-| `SERVER_NAME` | | — | site address(es) of Caddy |
+| `SERVER_NAME` | | | site address(es) of Caddy |
 
 <details>
 <summary><b>Where do they come from on Kubernetes?</b></summary>

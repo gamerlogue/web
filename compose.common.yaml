@@ -4,7 +4,7 @@ services:
     build:
       context: .
       target: prod
-    user: "${WWWUSER-www-data}"
+    user: '${WWWUSER-www-data}'
     extra_hosts:
       - '${SERVER_NAME:-laravel.localhost}:127.0.0.1'
     ports:
@@ -13,7 +13,7 @@ services:
       - .env
     # Set healthcheck to use our native healthcheck script for Octane
     healthcheck:
-      test: ["CMD", "healthcheck-octane"]
+      test: [CMD, healthcheck-octane]
       start_period: 10s
     volumes:
       - caddy_config:/config:rw
@@ -36,10 +36,10 @@ services:
     build:
       context: .
       target: prod
-    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    command: [php, /var/www/html/artisan, 'schedule:work']
     stop_signal: SIGTERM
     healthcheck:
-      test: ["CMD", "healthcheck-schedule"]
+      test: [CMD, healthcheck-schedule]
       start_period: 10s
     logging:
       driver: json-file
@@ -56,11 +56,11 @@ services:
     build:
       context: .
       target: prod
-    command: ["php", "/var/www/html/artisan", "queue:work", "--tries=3"]
+    command: [php, /var/www/html/artisan, 'queue:work', --tries=3]
     stop_signal: SIGTERM
     healthcheck:
       # This is our native healthcheck script for the queue
-      test: ["CMD", "healthcheck-queue"]
+      test: [CMD, healthcheck-queue]
       start_period: 10s
     logging:
       driver: json-file
@@ -82,10 +82,10 @@ services:
     build:
       context: .
       target: prod
-    command: ["php", "/var/www/html/artisan", "horizon"]
+    command: [php, /var/www/html/artisan, horizon]
     stop_signal: SIGTERM
     healthcheck:
-      test: ["CMD", "healthcheck-horizon"]
+      test: [CMD, healthcheck-horizon]
       start_period: 10s
     logging:
       driver: json-file
@@ -113,7 +113,7 @@ services:
     volumes:
       - 'mysql:/var/lib/mysql'
     healthcheck:
-      test: [ CMD, mysqladmin, ping, '-p${DB_PASSWORD:?DB_PASSWORD required}' ]
+      test: [CMD, mysqladmin, ping, '-p${DB_PASSWORD:?DB_PASSWORD required}']
       retries: 3
       timeout: 5s
     logging:
@@ -129,11 +129,11 @@ services:
   redis:
     restart: unless-stopped
     image: 'redis:alpine'
-    command: ["redis-server", "--maxmemory", "${REDIS_MAXMEMORY:-384mb}", "--maxmemory-policy", "allkeys-lru"]
+    command: [redis-server, --maxmemory, '${REDIS_MAXMEMORY:-384mb}', --maxmemory-policy, allkeys-lru]
     volumes:
       - 'redis:/data'
     healthcheck:
-      test: [ CMD, redis-cli, ping ]
+      test: [CMD, redis-cli, ping]
       retries: 3
       timeout: 5s
     logging:

@@ -7,7 +7,7 @@ services:
       target: dev
     depends_on:
       - mailpit
-    user: "${WWWUSER-www-data}"
+    user: '${WWWUSER-www-data}'
     ports:
       - '443:443'
       - '443:443/udp'
@@ -16,11 +16,11 @@ services:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     # Start Octane in worker mode
-    command: ["${APP_BASE_PATH:-/var/www/html}/deployment/dev/start-container-dev.sh"]
+    command: ['${APP_BASE_PATH:-/var/www/html}/deployment/dev/start-container-dev.sh']
     environment:
       # noinspection HttpUrlsUsage
-      CADDY_HTTP_SERVER_ADDRESS: "http://${SERVER_NAME:-laravel.localhost}"
-      CADDY_HTTPS_SERVER_ADDRESS: "https://${SERVER_NAME:-laravel.localhost}"
+      CADDY_HTTP_SERVER_ADDRESS: 'http://${SERVER_NAME:-laravel.localhost}'
+      CADDY_HTTPS_SERVER_ADDRESS: 'https://${SERVER_NAME:-laravel.localhost}'
       LARAVEL_SAIL: 1
       PHP_IDE_CONFIG: '${PHP_IDE_CONFIG:-serverName=Sail}'
       TERMINAL_EMULATOR: ${TERMINAL_EMULATOR:-Jetbrains-JediTerm}
@@ -64,7 +64,7 @@ services:
     ports:
       - '${FORWARD_DB_PORT:-3306}:3306'
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
       MYSQL_ROOT_HOST: '%'
     volumes:
       - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
@@ -82,7 +82,7 @@ services:
       - '${FORWARD_MAILPIT_PORT:-1025}:1025'
       - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
     healthcheck:
-      test: [ "CMD", "/mailpit", "readyz" ]
+      test: [CMD, /mailpit, readyz]
       interval: 15s
 
 volumes:
