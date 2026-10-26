@@ -3,5 +3,5 @@
 # AWS_WEB_HOST_PROD: The hosts (separated by commas) where the application will be deployed in production
 include:
   - project: websites/utils/ci-templates
-    ref: 2.7.1
+    ref: 2.7.2
     file: /web-app.yml
