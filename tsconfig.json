@@ -8,7 +8,7 @@
     ],
     "experimentalDecorators": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "paths": {
       "~/*": [
         "./resources/ts/*"
@@ -25,12 +25,14 @@
     ],
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
   //  "extends": "@vue/tsconfig/tsconfig.json",
   "include": [
     "resources/ts/**/*.ts",
     "resources/ts/**/*.vue",
-    "vite.config.ts"
+    "vite.config.ts",
+    "eslint.config.ts"
   ]
 }
