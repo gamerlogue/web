@@ -82,6 +82,10 @@ variables below. Those that matter on a deployment:
   the pod's Secret within an hour, or at once with
   `kubectl -n burstable annotate externalsecret <fullname> force-sync=$(date +%s) --overwrite`.
   Pods read it only at startup: `kubectl -n burstable rollout restart deployment/<fullname>`.
+- **Database** (`DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`):
+  in the same secret, created by `helm_deploy` on the RDS instance `RDS_INSTANCE_DEV` / `_PROD` when
+  the secret has no `DB_HOST`; ▶️ `db_reconfigure` gives it a new password. See
+  [ci-templates](https://gitlab.trust-itservices.com/websites/utils/ci-templates#database).
 - **`SERVER_NAME`**: written by `helm_deploy` (sitekit) from the CI/CD variable
   `AWS_WEB_HOST_DEV` / `AWS_WEB_HOST_PROD`.
 - **`APP_ENV`**: `production`, from the image.
