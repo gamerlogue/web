@@ -47,7 +47,7 @@ return [
     ],
 
     'igdb_proxy' => [
-        'rate_limit' => (int) env('IGDB_PROXY_RATE_LIMIT', 30),
+        'rate_limit' => (int) env('IGDB_PROXY_RATE_LIMIT', 100),
         'event_cache_lifetime' => (int) env('IGDB_PROXY_EVENT_CACHE_LIFETIME', 5),
         'event_stale_lifetime' => (int) env('IGDB_PROXY_EVENT_STALE_LIFETIME', 10),
     ],
