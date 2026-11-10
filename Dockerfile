@@ -53,6 +53,7 @@ RUN apk add --no-cache --update \
     fish \
     git \
     iputils \
+    jq \
     mariadb-client \
     micro \
     nss-tools \
