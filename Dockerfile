@@ -6,6 +6,14 @@
 ARG PHP_VERSION=8.5
 
 ###########################################
+# Fresh editor: Alpine doesn't package it, so the static (musl) binary of its release.
+# min-size build: no plugins, tree-sitter grammars or networking (update checks, telemetry).
+###########################################
+FROM alpine:3.23 AS fresh
+RUN wget -qO- "https://github.com/sinelaw/fresh/releases/download/v0.5.8/fresh-min-size-$(uname -m)-unknown-linux-musl.tar.xz" \
+    | tar -xJ -C /usr/local/bin --strip-components=1 "fresh-min-size-$(uname -m)-unknown-linux-musl/fresh"
+
+###########################################
 # Base Image (Some code from https://github.com/exaco/laravel-docktane)
 ###########################################
 FROM ghcr.io/maicol07/docker-php:${PHP_VERSION}-frankenphp-alpine AS base
@@ -53,6 +61,8 @@ RUN apk add --no-cache --update \
     vim \
     wget \
     xh
+
+COPY --from=fresh /usr/local/bin/fresh /usr/local/bin/fresh
 
 # Setup User (Fish as default shell), Timezone & Permissions
 RUN set -eux; \
