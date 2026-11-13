@@ -17,7 +17,9 @@ services:
       - 'host.docker.internal:host-gateway'
     # Start Octane in worker mode
     command: ['${APP_BASE_PATH:-/var/www/html}/deployment/dev/start-container-dev.sh']
+    # Laravel reads .env itself (bind mount); only vars consumed outside PHP go here.
     environment:
+      SERVER_NAME: '${SERVER_NAME:-laravel.localhost}' # start-container-dev.sh, vite.caddyfile
       # noinspection HttpUrlsUsage
       CADDY_HTTP_SERVER_ADDRESS: 'http://${SERVER_NAME:-laravel.localhost}'
       CADDY_HTTPS_SERVER_ADDRESS: 'https://${SERVER_NAME:-laravel.localhost}'

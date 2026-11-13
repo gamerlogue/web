@@ -3,6 +3,8 @@ services:
     extends:
       file: compose.common.yaml
       service: laravel
+    # The image ships without .env (see .dockerignore).
+    env_file: [.env]
     # OCTANE_PORT, not PORT: PORT is a name too many things set (PaaS platforms, and plain
     # interactive shells: it was already set to 0 on a dev machine here, which silently made
     # Octane bind a random port while the publish still pointed at 80). It must stay in sync with
@@ -14,11 +16,13 @@ services:
     extends:
       file: compose.common.yaml
       service: task
+    env_file: [.env]
 
   queue:
     extends:
       file: compose.common.yaml
       service: queue
+    env_file: [.env]
 
   mysql:
     extends:

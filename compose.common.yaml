@@ -9,8 +9,6 @@ services:
       - '${SERVER_NAME:-laravel.localhost}:127.0.0.1'
     ports:
       - '${APP_PORT:-80}:80'
-    env_file:
-      - .env
     # Set healthcheck to use our native healthcheck script for Octane
     healthcheck:
       test: [CMD, healthcheck-octane]
@@ -46,8 +44,6 @@ services:
       options:
         max-size: 10m
         max-file: 3
-    env_file:
-      - .env
     security_opt:
       - no-new-privileges:true
 
@@ -67,8 +63,6 @@ services:
       options:
         max-size: 10m
         max-file: 3
-    env_file:
-      - .env
     depends_on:
       mysql:
         condition: service_healthy
@@ -92,8 +86,6 @@ services:
       options:
         max-size: 10m
         max-file: 3
-    env_file:
-      - .env
     depends_on:
       mysql:
         condition: service_healthy
