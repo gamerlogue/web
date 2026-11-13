@@ -3,8 +3,6 @@
 # DO NOT SET ARGS IN THIS FILE!
 # Use the docker compose file to set the args.
 ####
-ARG PHP_VERSION=8.5
-
 ###########################################
 # Fresh editor: Alpine doesn't package it, so the static (musl) binary of its release.
 # min-size build: no plugins, tree-sitter grammars or networking (update checks, telemetry).
@@ -16,7 +14,8 @@ RUN wget -qO- "https://github.com/sinelaw/fresh/releases/download/v0.5.8/fresh-m
 ###########################################
 # Base Image (Some code from https://github.com/exaco/laravel-docktane)
 ###########################################
-FROM ghcr.io/maicol07/docker-php:${PHP_VERSION}-frankenphp-alpine AS base
+# Release-pinned tag, bumped by Renovate (versioning rule in renovate.json).
+FROM serversideup/php:8.5-frankenphp-alpine-v5.1.2 AS base
 
 USER root
 RUN install-php-extensions apcu bcmath exif intl gd
@@ -25,22 +24,16 @@ ARG TZ=Europe/Rome
 
 ENV APP_ENV=production \
     CADDY_ADMIN="localhost:2019" \
-    CADDY_GLOBAL_OPTIONS="import ${APP_BASE_DIR}/deployment/global.caddyfile" \
     CADDY_HTTP_PORT=80 \
-    CADDY_PHP_SERVER_OPTIONS="import ${APP_BASE_DIR}/deployment/php-server.caddyfile" \
     CADDY_SERVER_EXTRA_DIRECTIVES="import ${APP_BASE_DIR}/deployment/site.caddyfile" \
     COMPOSER_FUND=0 \
     FORCE_COLOR=1 \
-    # /etc/frankenphp/Caddyfile takes the worker block from this variable and nowhere else.
-    # Overridden in dev by deployment/dev/start-container-dev.sh, which adds the `watch` directives.
-    FRANKENPHP_CONFIG="worker ${APP_BASE_DIR}/public/frankenphp-worker.php" \
     OCTANE_SERVER=frankenphp \
     PHP_DATE_TIMEZONE=${TZ} \
     PHP_INI_SCAN_DIR=":$APP_BASE_DIR/deployment" \
     PHP_OPCACHE_ENABLE=1 \
-    PHP_OPCACHE_INTERNED_STRINGS_BUFFER=16 \
-    PHP_OPCACHE_MAX_ACCELERATED_FILES=32531 \
-    PHP_OPCACHE_MEMORY_CONSUMPTION=256 \
+    # v5 defaults to 0 (PHP files cached until restart); see deployment/DECISIONS.md.
+    PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
     PHP_REALPATH_CACHE_TTL=720 \
     TERM=xterm-color \
     TZ=${TZ} \
@@ -64,6 +57,10 @@ RUN apk add --no-cache --update \
     xh
 
 COPY --from=fresh /usr/local/bin/fresh /usr/local/bin/fresh
+
+# The image's Caddyfile ignores CADDY_GLOBAL_OPTIONS when Octane starts FrankenPHP and imports this
+# folder instead. Symlink rather than copy: the target comes from the bind mount (dev) or `COPY . .` (prod).
+RUN ln -s ${APP_BASE_DIR}/deployment/global.caddyfile /etc/frankenphp/caddyfile-global.d/global.caddyfile
 
 # Setup User (Fish as default shell), Timezone & Permissions
 RUN set -eux; \

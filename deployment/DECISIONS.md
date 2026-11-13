@@ -22,20 +22,19 @@ none of that: without `trusted_proxies`, behind a proxy Laravel sees the proxy's
 client's. It also means dev and prod share the same configuration, which rules out a class of bugs that
 only show up in production.
 
-**Consequence**: `CADDY_GLOBAL_OPTIONS`, `CADDY_PHP_SERVER_OPTIONS`, `CADDY_SERVER_EXTRA_DIRECTIVES` and
-`FRANKENPHP_CONFIG` become the variables that actually matter: with Octane's stub the first two are
-either ignored or overwritten. In particular **the `worker` block comes exclusively from
-`FRANKENPHP_CONFIG`**: if that variable is empty or points at the wrong path, the server does not start
-(`worker filename is invalid … no such file or directory`). Note that Octane installs the worker under
-`public/`, not in the project root. `config/octane.php` forwards these variables to the child process
-through `octane.caddy.env`, which is spread last in `StartFrankenPhpCommand` and therefore wins over the
-values Octane generates.
+**Consequence**: `octane:start` sets `LARAVEL_OCTANE=1`, and the image's Caddyfile (serversideup/php v5)
+switches to Octane mode on it: it generates the `worker { }` block itself (`public/frankenphp-worker.php`,
+plus Octane's `num` and `watch` directives inside it), routes requests to the worker, and takes the admin
+API address from Octane's `--admin-host`/`--admin-port`. So **do not define a worker in
+`FRANKENPHP_CONFIG`**: FrankenPHP refuses to start with `global workers must not have duplicate
+filenames`. Under Octane the image also ignores `CADDY_ADMIN` and `CADDY_GLOBAL_OPTIONS` (Octane sets the
+latter for its own stub), which is why `deployment/global.caddyfile` is symlinked into
+`/etc/frankenphp/caddyfile-global.d/` instead. `CADDY_SERVER_EXTRA_DIRECTIVES` is overwritten by Octane
+(Mercure config), so `config/octane.php` forwards it through `octane.caddy.env`, which is spread last in
+`StartFrankenPhpCommand` and therefore wins.
 
-**Where they are set**: all four are `ENV` in the `Dockerfile` (the Caddy ones as `import` of
-`deployment/global.caddyfile`, `deployment/php-server.caddyfile` and `deployment/site.caddyfile`), so
-Kubernetes, which never reads the compose files, gets them too.
-`FRANKENPHP_CONFIG` uses the one-line `worker <file>` form because a Dockerfile `ENV` cannot hold
-newlines. The `prod` stage's `CMD` is the same `octane:start` as `compose.prod.yaml`.
+**Where they are set**: in the `Dockerfile`, so Kubernetes, which never reads the compose files, gets
+them too. The `prod` stage's `CMD` is the same `octane:start` as `compose.prod.yaml`.
 
 **If you go back to the stub**, `CADDY_SERVER_EXTRA_DIRECTIVES` has to be removed: there it is
 interpolated inside `route { }`, where `log` is not a handler directive, so config adaptation fails and
@@ -84,26 +83,17 @@ so Caddy issues the certificate on the fly from its internal CA.
 That is only the *fallback* URL; the primary one is `ws.host:clientPort`, i.e. 5173, and it works. An HMR
 error message naming 5174 is the fallback, not the cause.
 
-### PHP hot reload does not use Octane's `--watch`
-The `watch` directives are injected inside `worker { }` through `FRANKENPHP_CONFIG`, built by
-`start-container-dev.sh`.
+### PHP hot reload uses Octane's `--watch`, with a narrowed list
+`start-container-dev.sh` passes `--watch` when `WEBSERVER` ends in `-watch`. Octane turns `octane.watch`
+into `watch` directives, and the v5 Caddyfile places them inside the Octane `worker { }` block (the old
+fork placed them under `frankenphp { }`, where `watch` is invalid, so the script used to build the
+worker block by hand).
 
-**Why**: Octane's `buildWatchConfig()` generates `CADDY_SERVER_WATCH_DIRECTIVES` for its own stub, where
-the placeholder sits inside `worker { }`. In the image's Caddyfile it sits one level up, under
-`frankenphp { }`, where `watch` is not a valid subdirective.
+**`octane.watch` in `config/octane.php` deviates from Laravel's default on purpose**, and neither change
+is optional:
 
-| Variant | Result |
-|---|---|
-| `watch` under `frankenphp { }` (i.e. `--watch`) | ❌ `unknown "frankenphp" subdirective: watch` |
-| `{$CADDY_SERVER_WATCH_DIRECTIVES}` nested inside `FRANKENPHP_CONFIG` | ❌ `{$…}` placeholders are **not** re-expanded: substitution is single-pass |
-| `watch` written literally inside `worker { }` in `FRANKENPHP_CONFIG` | ✅ |
-
-**Consequence**: `config/octane.php` remains the single source of truth for the path list (the script
-reads it with `php artisan config:show octane.watch --no-ansi`), but that list **has to be adapted**, and
-neither transformation is optional:
-
-- **single file paths must be dropped**: a `watch <file>` segfaults FrankenPHP (SIGSEGV, exit 139) when
-  the watcher restarts the workers while they are still booting. Twelve runs of the real dev script
+- **no single file paths**: a `watch <file>` segfaults FrankenPHP (SIGSEGV, exit 139) when the watcher
+  restarts the workers while they are still booting. Twelve runs of the real dev script
   (`octane:start` + `bun dev` under `concurrently`):
 
   | `watch` list | Runs | Crashes |
@@ -111,24 +101,15 @@ neither transformation is optional:
   | contains `composer.lock` and/or `.env` (file paths) | 6 | **5** |
   | only `<dir>/**/*.php` patterns | 6 | **0** |
 
-  It is a race, not a deterministic failure, so do not conclude anything from a single clean run. Note
-  that the default list in `config/octane.php` contains `composer.lock` and `.env`: tested verbatim, it
-  crashed 2 out of 2;
-- **directories must be narrowed to PHP files**, otherwise the `resources/ts` rewrites done by
-  Vite/wayfinder and the `bootstrap/cache` ones done by Laravel cause a reload storm.
+  It is a race, not a deterministic failure, so do not conclude anything from a single clean run;
+- **directories narrowed to PHP files**, otherwise the `resources/ts` rewrites done by Vite/wayfinder and
+  the `bootstrap/cache` ones done by Laravel cause a reload storm.
 
-**The `set -f` around the loop in the script is mandatory, not cosmetic.** Without noglob the shell
-expands the patterns (`database/**/*.php` becomes the list of matching files), which the `-d` test then
-drops, **silently losing the pattern**. That is how `database/**/*.php` and `resources/**/*.php` went
-missing in the first draft while the watcher still appeared to work.
+Side effect: no automatic reload on `composer.lock` and `.env`, which need manual intervention anyway
+(`config:clear` after an `.env` change).
 
-Side effect: we lose automatic reload on `composer.lock` and `.env`, which need manual intervention
-anyway (`config:clear` after an `.env` change).
-
-*Verified*: all 8 patterns present, `composer.lock` and `.env` dropped; `WEBSERVER=octane-watch` starts
-clean 2 runs out of 2; and the reload really fires: writing to `routes/web.php` makes FrankenPHP log
-`shutting down` + `restarting {"exit_status": 0}` on every thread. A bare `touch` (mtime only) does not
-trigger it, an actual write does.
+*Verified* on v5: the adapted config has a single worker with the 8 patterns; writing a file under
+`routes/` logs `filesystem changes detected` and the app keeps answering 200.
 
 ---
 
@@ -164,7 +145,8 @@ they depend on the runtime environment.
 **Why**: in Octane worker mode `include`s happen once per worker lifetime, not per request, so the cost is
 roughly one `stat()` per file, once, unlike PHP-FPM, where it would be per request. In exchange it lets
 you edit a file inside a production container and see the effect after an `octane:reload`, without
-recreating the container.
+recreating the container. serversideup/php v5 defaults to 0, hence the explicit
+`PHP_OPCACHE_VALIDATE_TIMESTAMPS=1` in the `base` stage.
 
 ### JIT in production only
 `PHP_OPCACHE_JIT=tracing` + `PHP_OPCACHE_JIT_BUFFER_SIZE=64M` in the `prod-base` stage, not in `base`.
@@ -192,7 +174,7 @@ dropped, *verified*, only `access.log` was being written.
 
 **Why stdout as well**: in the global block of the image's Caddyfile an unnamed logger is rejected
 (`duplicate global log option for: default`, since the image already imports one), so the default logger
-stays on stdout and the runtime logs end up in both places. That is not a flaw: it is the only copy that
+stays on stderr and the runtime logs end up in both places. That is not a flaw: it is the only copy that
 survives a redeploy, see the accepted risks.
 
 `/var/log/frankenphp` is created and chowned in the `Dockerfile`, and chowned **again** in the `dev` stage
@@ -245,11 +227,12 @@ Beware when editing `compose.prod.yaml`: `depends_on` in short form **wins over*
 through `extends`, silently downgrading `service_healthy` to `service_started`. Check with
 `docker compose config` after touching it.
 
-### `CADDY_ADMIN="localhost:2019"`
-With the image's Caddyfile, `CADDY_ADMIN=":2019"` binds on every interface (*verified* on the adapted
-config: `"admin":{"listen":":2019"}`) and Caddy's admin API accepts `POST /load` with an arbitrary
-configuration, which is a full server takeover. `localhost:2019` confines it to the container's loopback;
-`start-container-dev.sh` still extracts the port from it with `awk -F:`.
+### The admin API listens on loopback
+Caddy's admin API accepts `POST /load` with an arbitrary configuration, which is a full server takeover,
+so it must not bind on every interface. Under Octane the image takes the address from Octane's
+`--admin-host` (default `localhost`) and `--admin-port`, not from `CADDY_ADMIN` (*verified* on the
+adapted config: `"admin":{"listen":"localhost:2019"}`). `CADDY_ADMIN="localhost:2019"` stays in the
+`Dockerfile` because `start-container-dev.sh` extracts the port from it with `awk -F:`.
 
 ### `cap_drop: [ALL]` on mysql and redis, not on laravel
 On mysql and redis adding back `CHOWN`, `SETUID`, `SETGID` and `DAC_OVERRIDE` is enough, *verified*, both
@@ -290,8 +273,8 @@ authentication: the container says so in its own logs. In production the passwor
 time.
 
 ### Unpinned images
-`mysql`, `redis:alpine`, `axllent/mailpit:latest` and the base image's floating tag: we want automatic
-updates. The risk is a MySQL major bump that makes the existing data directory unreadable.
+`mysql`, `redis:alpine`, `axllent/mailpit:latest`: we want automatic updates. The PHP base image is
+release-pinned (`8.5-frankenphp-alpine-vX.Y.Z`) and bumped by Renovate. The risk is a MySQL major bump that makes the existing data directory unreadable.
 
 ### Development tooling in the `base` stage
 `vim`, `fish`, `git`, `mariadb-client`, `micro`, `nss-tools`, `xh`, `wget` and `iputils` sit in `base` and

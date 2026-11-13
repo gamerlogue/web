@@ -184,17 +184,17 @@ return [
     |
     */
 
+    // PHP-only patterns, no single files: a `watch <file>` segfaults FrankenPHP while workers boot,
+    // and bare directories reload on every Vite/wayfinder write. See deployment/DECISIONS.md.
     'watch' => [
-        'app',
-        'bootstrap',
+        'app/**/*.php',
+        'bootstrap/**/*.php',
         'config/**/*.php',
         'database/**/*.php',
         'public/**/*.php',
         'resources/**/*.php',
         'lang/**/*.php',
-        'routes',
-        'composer.lock',
-        '.env',
+        'routes/**/*.php',
     ],
 
     /*
@@ -238,10 +238,7 @@ return [
 
     'caddy' => [
         'env' => [
-            'CADDY_GLOBAL_OPTIONS' => env('CADDY_GLOBAL_OPTIONS', ''),
-            'CADDY_PHP_SERVER_OPTIONS' => env('CADDY_PHP_SERVER_OPTIONS', ''),
             'CADDY_SERVER_EXTRA_DIRECTIVES' => env('CADDY_SERVER_EXTRA_DIRECTIVES', ''),
-            'FRANKENPHP_CONFIG' => env('FRANKENPHP_CONFIG', '')
         ]
     ]
 ];

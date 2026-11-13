@@ -1,7 +1,0 @@
-# php_server options, imported by the base image Caddyfile through CADDY_PHP_SERVER_OPTIONS
-# (Dockerfile). Lives in the image, so Compose and Kubernetes serve the same rules.
-
-index frankenphp-worker.php
-try_files {path} frankenphp-worker.php
-# Required for the public/storage/ directory...
-resolve_root_symlink
