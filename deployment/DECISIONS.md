@@ -28,17 +28,12 @@ plus Octane's `num` and `watch` directives inside it), routes requests to the wo
 API address from Octane's `--admin-host`/`--admin-port`. So **do not define a worker in
 `FRANKENPHP_CONFIG`**: FrankenPHP refuses to start with `global workers must not have duplicate
 filenames`. Under Octane the image also ignores `CADDY_ADMIN` and `CADDY_GLOBAL_OPTIONS` (Octane sets the
-latter for its own stub), which is why `deployment/global.caddyfile` is symlinked into
-`/etc/frankenphp/caddyfile-global.d/` instead. `CADDY_SERVER_EXTRA_DIRECTIVES` is overwritten by Octane
-(Mercure config), so `config/octane.php` forwards it through `octane.caddy.env`, which is spread last in
-`StartFrankenPhpCommand` and therefore wins.
+latter for its own stub) and Octane overwrites `CADDY_SERVER_EXTRA_DIRECTIVES` (Mercure config). That is
+why `deployment/global.caddyfile` and `deployment/site.caddyfile` are symlinked into
+`/etc/frankenphp/caddyfile-global.d/` and `caddyfile-server.d/`, which the image imports by glob.
 
 **Where they are set**: in the `Dockerfile`, so Kubernetes, which never reads the compose files, gets
 them too. The `prod` stage's `CMD` is the same `octane:start` as `compose.prod.yaml`.
-
-**If you go back to the stub**, `CADDY_SERVER_EXTRA_DIRECTIVES` has to be removed: there it is
-interpolated inside `route { }`, where `log` is not a handler directive, so config adaptation fails and
-the server never starts.
 
 ### Vite runs in plaintext behind Caddy, on the same public port
 Vite listens on `127.0.0.1:5174` without TLS; Caddy terminates TLS on 5173 and proxies to it

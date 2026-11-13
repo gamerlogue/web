@@ -1,4 +1,4 @@
-# Site directives, imported by the base image Caddyfile through CADDY_SERVER_EXTRA_DIRECTIVES
+# Site directives, symlinked into /etc/frankenphp/caddyfile-server.d/
 # (Dockerfile). Lives in the image, so Compose and Kubernetes serve the same rules.
 
 # Access log: discarded unless CADDY_ACCESS_LOG_OUTPUT is set (the prod stage sets stdout).

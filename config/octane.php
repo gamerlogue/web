@@ -235,10 +235,4 @@ return [
     */
 
     'state_file' => env('OCTANE_STATE_FILE', storage_path('logs/octane-server-state.json')),
-
-    'caddy' => [
-        'env' => [
-            'CADDY_SERVER_EXTRA_DIRECTIVES' => env('CADDY_SERVER_EXTRA_DIRECTIVES', ''),
-        ]
-    ]
 ];

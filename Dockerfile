@@ -25,7 +25,6 @@ ARG TZ=Europe/Rome
 ENV APP_ENV=production \
     CADDY_ADMIN="localhost:2019" \
     CADDY_HTTP_PORT=80 \
-    CADDY_SERVER_EXTRA_DIRECTIVES="import ${APP_BASE_DIR}/deployment/site.caddyfile" \
     COMPOSER_FUND=0 \
     FORCE_COLOR=1 \
     OCTANE_SERVER=frankenphp \
@@ -58,9 +57,11 @@ RUN apk add --no-cache --update \
 
 COPY --from=fresh /usr/local/bin/fresh /usr/local/bin/fresh
 
-# The image's Caddyfile ignores CADDY_GLOBAL_OPTIONS when Octane starts FrankenPHP and imports this
-# folder instead. Symlink rather than copy: the target comes from the bind mount (dev) or `COPY . .` (prod).
-RUN ln -s ${APP_BASE_DIR}/deployment/global.caddyfile /etc/frankenphp/caddyfile-global.d/global.caddyfile
+# The image's Caddyfile imports these folders by glob; under Octane they are the only way in
+# (CADDY_GLOBAL_OPTIONS is ignored, CADDY_SERVER_EXTRA_DIRECTIVES overwritten). Symlinks rather than
+# copies: the targets come from the bind mount (dev) or `COPY . .` (prod).
+RUN ln -s ${APP_BASE_DIR}/deployment/global.caddyfile /etc/frankenphp/caddyfile-global.d/global.caddyfile && \
+    ln -s ${APP_BASE_DIR}/deployment/site.caddyfile /etc/frankenphp/caddyfile-server.d/site.caddyfile
 
 # Setup User (Fish as default shell), Timezone & Permissions
 RUN set -eux; \
