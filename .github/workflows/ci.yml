@@ -74,14 +74,12 @@ jobs:
 
   deploy:
     needs: [release, docker]
-    if: vars.PORTAINER_STACK_ID
+    if: vars.PORTAINER_STACKS
     uses: maicol07/actions/.github/workflows/portainer.yml@v1
     with:
-      stack_id: ${{ vars.PORTAINER_STACK_ID }}
-      endpoint_id: ${{ vars.PORTAINER_ENDPOINT_ID }}
+      stacks: ${{ vars.PORTAINER_STACKS }}
       image: ghcr.io/gamerlogue/web
       tag: ${{ needs.release.outputs.tag }}
-      url: ${{ vars.APP_URL }}
     secrets:
       portainer_url: ${{ secrets.PORTAINER_URL }}
       portainer_api_key: ${{ secrets.PORTAINER_API_KEY }}
