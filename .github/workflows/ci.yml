@@ -32,6 +32,19 @@ jobs:
     uses: ./.github/workflows/tests.yml
     secrets: inherit
 
+  # Quality. Pint and PHPStan stay in tests.yml: composer install there needs the SQLite file it
+  # creates first (package:discover boots API Platform). Not in release.needs until they pass:
+  # ESLint crashes (typescript-eslint does not support TypeScript 7), Stylelint has 58 errors.
+  eslint:
+    uses: maicol07/actions/.github/workflows/js.yml@v1
+    with:
+      run: bunx --bun eslint resources/ts vite.config.ts eslint.config.ts
+
+  stylelint:
+    uses: maicol07/actions/.github/workflows/js.yml@v1
+    with:
+      run: bunx --bun stylelint "resources/**/*.{scss,vue}"
+
   release:
     needs: [security, tests]
     if: github.event_name == 'push'
