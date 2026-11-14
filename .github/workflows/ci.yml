@@ -1,28 +1,87 @@
 name: CI
+# Shared pipeline of maicol07/actions: checks on PRs and main, then on main the release PR, and
+# once it is merged the GitHub Release, the image and the Portainer deploy. A job is overridden by
+# replacing its `uses:` with steps of its own (same job name, so `needs` keeps working).
 
 on:
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  # Never cancel a release half done on main.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 permissions:
   contents: read
-  packages: write
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
+  security:
+    uses: maicol07/actions/.github/workflows/security.yml@v1
+
+  commit_lint:
+    if: github.event_name != 'schedule'
+    uses: maicol07/actions/.github/workflows/commit-lint.yml@v1
+
+  # Own workflow: actionlint, changelog check, Pint, PHPStan and the Laravel tests.
   tests:
     uses: ./.github/workflows/tests.yml
     secrets: inherit
 
-  build:
-    needs: tests
-    uses: ./.github/workflows/docker-build-push.yml
+  release:
+    needs: [security, tests]
+    if: github.event_name == 'push'
+    uses: maicol07/actions/.github/workflows/release.yml@v1
+    permissions:
+      contents: write
+      pull-requests: write
+
+  docker:
+    needs: release
+    if: needs.release.outputs.tag
+    uses: maicol07/actions/.github/workflows/docker.yml@v1
+    permissions:
+      packages: write
     with:
-      push: ${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+      registry: ghcr.io
+      image: gamerlogue/web
+      tag: ${{ needs.release.outputs.tag }}
+      ref: ${{ needs.release.outputs.tag }}
+      extra_tags: type=raw,value=latest
+    secrets:
+      registry_username: ${{ github.actor }}
+      registry_password: ${{ secrets.GITHUB_TOKEN }}
+
+  # Every main push: edge + the short commit SHA. On PRs (and nightly) only a build check.
+  docker_edge:
+    needs: tests
+    uses: maicol07/actions/.github/workflows/docker.yml@v1
+    permissions:
+      packages: write
+    with:
+      registry: ghcr.io
+      image: gamerlogue/web
+      tag: edge
+      extra_tags: type=sha,prefix=
+      push: ${{ github.event_name == 'push' }}
+    secrets:
+      registry_username: ${{ github.actor }}
+      registry_password: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: [release, docker]
+    if: vars.PORTAINER_STACK_ID
+    uses: maicol07/actions/.github/workflows/portainer.yml@v1
+    with:
+      stack_id: ${{ vars.PORTAINER_STACK_ID }}
+      endpoint_id: ${{ vars.PORTAINER_ENDPOINT_ID }}
+      image: ghcr.io/gamerlogue/web
+      tag: ${{ needs.release.outputs.tag }}
+      url: ${{ vars.APP_URL }}
+    secrets:
+      portainer_url: ${{ secrets.PORTAINER_URL }}
+      portainer_api_key: ${{ secrets.PORTAINER_API_KEY }}
