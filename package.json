@@ -11,6 +11,9 @@
     "modern-normalize": "^3.0.1",
     "ts-pattern": "^5.9.2"
   },
+  "optionalDependencies": {
+    "@laravel/multiplex": "^0.4.1"
+  },
   "devDependencies": {
     "@laravel/vite-plugin-wayfinder": "^0.1.11",
     "@maicol07/eslint-config": "3.1.3",
@@ -32,8 +35,5 @@
     "type-fest": "^6.0.1",
     "typescript": "npm:@typescript/typescript6@^6.0.3",
     "vite": "^8.3.8"
-  },
-  "optionalDependencies": {
-    "@laravel/multiplex": "^0.4.1"
   }
 }
