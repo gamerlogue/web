@@ -235,6 +235,7 @@
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php82" />
       <path value="$PROJECT_DIR$/vendor/php-debugbar/php-debugbar" />
       <path value="$PROJECT_DIR$/vendor/php-debugbar/symfony-bridge" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-time" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.5" />
