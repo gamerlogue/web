@@ -14,25 +14,26 @@
   "devDependencies": {
     "@laravel/vite-plugin-wayfinder": "^0.1.11",
     "@maicol07/eslint-config": "3.1.3",
-    "@types/node": "^26.6.5",
-    "eslint": "^10.13.0",
-    "fontaine": "^1.0.2",
+    "@types/node": "^26.6.6",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "eslint": "^10.15.0",
+    "fontaine": "^1.0.3",
     "include-media": "^2.0.0",
-    "laravel-vite-plugin": "^3.2.0",
-    "postcss-html": "^2.0.0",
-    "sass-embedded": "^1.106.0",
-    "stylelint": "^17.16.0",
+    "laravel-vite-plugin": "^3.2.1",
+    "postcss-html": "^2.0.1",
+    "sass-embedded": "^1.108.2",
+    "stylelint": "^18.0.0",
     "stylelint-config-clean-order": "^10.0.0",
     "stylelint-config-html": "^2.0.0",
-    "stylelint-config-recommended-scss": "^17.0.1",
+    "stylelint-config-recommended-scss": "^18.0.0",
     "stylelint-config-recommended-vue": "^2.0.0",
-    "stylelint-config-standard": "^40.0.0",
-    "stylelint-config-standard-scss": "^17.0.0",
-    "type-fest": "^5.10.0",
-    "typescript": "~6.0.3",
-    "vite": "^8.3.5"
+    "stylelint-config-standard": "^41.0.0",
+    "stylelint-config-standard-scss": "^18.0.0",
+    "type-fest": "^6.0.1",
+    "typescript": "npm:@typescript/typescript6@^6.0.3",
+    "vite": "^8.3.8"
   },
-    "optionalDependencies": {
-        "@laravel/multiplex": "^0.4.1"
-    }
+  "optionalDependencies": {
+    "@laravel/multiplex": "^0.4.1"
+  }
 }
