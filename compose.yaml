@@ -19,6 +19,8 @@ services:
     command: ['${APP_BASE_PATH:-/var/www/html}/deployment/dev/start-container-dev.sh']
     # Laravel reads .env itself (bind mount); only vars consumed outside PHP go here.
     environment:
+      # The image defaults to production, and .env cannot override an existing env var
+      APP_ENV: '${APP_ENV:-local}'
       SERVER_NAME: '${SERVER_NAME:-laravel.localhost}' # start-container-dev.sh, vite.caddyfile
       # noinspection HttpUrlsUsage
       CADDY_HTTP_SERVER_ADDRESS: 'http://${SERVER_NAME:-laravel.localhost}'
