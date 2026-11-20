@@ -31,6 +31,8 @@ services:
       XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-debug,develop}'
       XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal log=/tmp/xdebug.log}'
       WEBSERVER: ${WEBSERVER:-octane-watch}
+      # Octane's `auto` starts one worker per host CPU, each holding the whole app in memory
+      EXTRA_OCTANE_FLAGS: '${EXTRA_OCTANE_FLAGS:---workers=2}'
     volumes:
       - '.:/var/www/html'
       # Terminates TLS for the Vite port: see the comment inside the file

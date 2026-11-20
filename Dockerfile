@@ -186,6 +186,5 @@ COPY --chown=${USER} --from=build /app/public public
 EXPOSE 80
 
 # Same command as compose.prod.yaml, so an orchestrator running the image as-is (Kubernetes) gets
-# Octane. Known issue: a numeric OCTANE_WORKERS makes Octane emit `num N` under `frankenphp {}`,
-# which the image Caddyfile rejects, so only `auto` (the host's CPUs, not the cgroup limit) works.
+# Octane. `auto` is the host's CPU count, not the cgroup limit: set OCTANE_WORKERS per deployment.
 CMD ["sh", "-c", "exec php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=80 --admin-port=2019 --workers=\"${OCTANE_WORKERS:-auto}\" --caddyfile=/etc/frankenphp/Caddyfile"]

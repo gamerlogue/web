@@ -282,7 +282,11 @@ that `apk info --rdepends expect` lists no dependent package.
 ### No resource limits in the compose files
 They depend on the host, so they are set per deployment. If you do add them: `--workers=auto` reads the
 **host's** CPU count, not the cgroup limit, so it must be paired with an explicit `OCTANE_WORKERS`,
-otherwise you get N workers fighting over a fraction of a CPU. Redis is the other one worth sizing:
+otherwise you get N workers fighting over a fraction of a CPU. It costs memory too, one copy of the app
+per worker: *measured* on a 24-CPU host, `auto` put FrankenPHP at 830 MiB, `--workers=2` at 191 MiB, which
+is why dev passes `--workers=2` (`EXTRA_OCTANE_FLAGS` in `compose.yaml`). A numeric value works with the
+image's Caddyfile (*verified* on v5.1.2 with the production `octane:start` command: `num` lands inside the
+`worker {}` block). Redis is the other one worth sizing:
 without `--maxmemory` it grows until the OOM killer takes it, losing the whole cache instead of evicting
 old keys, which is why `--maxmemory` + `allkeys-lru` are already set.
 
