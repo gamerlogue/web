@@ -1,0 +1,50 @@
+# Build & deploy pipeline shared by all website templates; see the included file for details.
+# Quality and test jobs (MRs, main and tags) are this template's own, on the shared .composer base.
+# Variables to set on the repo:
+# AWS_WEB_HOST_PROD: The hosts (separated by commas) where the application will be deployed in production
+include:
+  - project: websites/utils/ci-templates
+    ref: 3.2.1
+    file: /web-app.yml
+
+quality:
+  extends: .composer
+  stage: quality
+  script:
+    - vendor/bin/pint --test
+
+# Shared bun setup: the install cache is keyed on bun.lock so each job's install is mostly linking.
+.bun:
+  stage: quality
+  interruptible: true
+  image: oven/bun:1.4.3-alpine
+  rules: !reference [.composer, rules]
+  variables:
+    BUN_INSTALL_CACHE_DIR: .bun-cache
+  cache:
+    key:
+      files: [bun.lock]
+    paths: [.bun-cache]
+  before_script:
+    - bun install --frozen-lockfile
+
+stylelint:
+  extends: .bun
+  script:
+    - bunx stylelint "resources/**/*.{css,scss,vue}"
+
+eslint:
+  extends: .bun
+  script:
+    - bunx --bun eslint .
+
+test:
+  extends: .composer
+  stage: test
+  # composer:2 has no phpredis: artisan would boot Telescope against the .env redis cache.
+  variables:
+    CACHE_STORE: array
+  script:
+    - cp .env.example .env
+    - php artisan key:generate
+    - php artisan test

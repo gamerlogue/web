@@ -1,4 +1,6 @@
 .idea/claudeCodeEditorTabs.xml
+# CI bun install cache (BUN_INSTALL_CACHE_DIR in .gitlab-ci.yml)
+.bun-cache
 
 ### Laravel Vite ###
 public/build

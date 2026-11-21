@@ -1,0 +1,18 @@
+# Values shared by every site of this template, passed by ci-templates' helm_deploy before the
+# site's own values file (which wins on conflicts).
+deployment:
+  # The site's files volume (an NFS PVC).
+  mountPath: /var/www/html/storage/app
+  # Liveness: Caddy accepts connections. Readiness: /healthcheck, answered by Caddy (the base image's
+  # Caddyfile), not PHP: a database outage must not take every pod out of the Service.
+  livenessProbe:
+    tcpSocket:
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /healthcheck
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5

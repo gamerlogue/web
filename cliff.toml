@@ -70,18 +70,13 @@ commit_parsers = [
   { message = "^test", group = "<!-- 07 -->✅ Tests" },
   { message = "^build", group = "<!-- 08 -->👷 Building scripts changes" },
   { message = "^ci", group = "<!-- 09 -->👷 CI changes" },
+  # The release MR's own commit: its content is the changelog itself.
+  { message = '^chore\(release\)', skip = true },
   { message = "^chore", group = "<!-- 10 -->Other changes" },
   { message = "^Revert", group = "<!-- 11 -->⏪ Reverts" },
   { message = "^Merge pull request", group = "<!-- 12 -->🔀 Pull Requests" },
 ]
 # Drops what no parser matched (e.g. plain merge commits).
 filter_commits = true
-# Drop template releases and legacy two-part tags, including their commits.
-tag_pattern = "^v?[0-9]+\\.[0-9]+(\\.[0-9]+)?(-[0-9A-Za-z.-]+)?$"
-skip_tags = "^v|^[0-9]+\\.[0-9]+$"
+tag_pattern = "[0-9].*"
 sort_commits = "oldest"
-
-# Next version when the release workflow gets none: feat bumps the minor, the rest the patch.
-[bump]
-# In 0.x a breaking change bumps the minor too; 1.0.0 is passed explicitly.
-breaking_always_bump_major = false

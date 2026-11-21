@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="McpServerSettings">
-    <option name="autoApproveAgentEdits" value="true" />
     <option name="autoStart" value="true" />
     <option name="defaultsApplied" value="true" />
     <option name="defaultsVersion" value="2" />
     <option name="disabledToolIds">
       <set>
+        <option value="set_theme" />
         <option value="get_sonar_rule_description" />
         <option value="list_themes" />
         <option value="run_sonarqube_analysis" />
         <option value="get_notifications" />
-        <option value="set_theme" />
       </set>
     </option>
-    <option name="port" value="8644" />
-    <option name="showReviewInEditor" value="true" />
+    <option name="port" value="8646" />
   </component>
 </project>

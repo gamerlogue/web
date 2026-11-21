@@ -1,0 +1,21 @@
+# Global options, symlinked into /etc/frankenphp/caddyfile-global.d/ (Dockerfile).
+# The default logger already writes errors to stderr; these keep a copy on disk.
+
+log file {
+    output file /var/log/frankenphp/frankenphp.log {
+        roll_size 10MiB
+        roll_keep 5
+    }
+    exclude http.log.access
+}
+
+# A site keeps a single access logger (site.caddyfile), so the file copy is a global
+# logger subscribed to its namespace.
+log access-file {
+    format json
+    output file /var/log/frankenphp/access.log {
+        roll_size 10MiB
+        roll_keep 5
+    }
+    include http.log.access.access
+}

@@ -3,12 +3,19 @@
 # DO NOT SET ARGS IN THIS FILE!
 # Use the docker compose file to set the args.
 ####
-ARG PHP_VERSION=8.5
+###########################################
+# Fresh editor: Alpine doesn't package it, so the static (musl) binary of its release.
+# min-size build: no plugins, tree-sitter grammars or networking (update checks, telemetry).
+###########################################
+FROM alpine:3.23 AS fresh
+RUN wget -qO- "https://github.com/sinelaw/fresh/releases/download/v0.5.8/fresh-min-size-$(uname -m)-unknown-linux-musl.tar.xz" \
+    | tar -xJ -C /usr/local/bin --strip-components=1 "fresh-min-size-$(uname -m)-unknown-linux-musl/fresh"
 
 ###########################################
 # Base Image (Some code from https://github.com/exaco/laravel-docktane)
 ###########################################
-FROM ghcr.io/maicol07/docker-php:${PHP_VERSION}-frankenphp-alpine AS base
+# Release-pinned tag, bumped by Renovate (versioning rule in renovate.json).
+FROM serversideup/php:8.5-frankenphp-alpine-v5.1.2 AS base
 
 USER root
 RUN install-php-extensions apcu bcmath exif intl gd
@@ -30,9 +37,8 @@ ENV APP_ENV=production \
     PHP_DATE_TIMEZONE=${TZ} \
     PHP_INI_SCAN_DIR=":$APP_BASE_DIR/deployment" \
     PHP_OPCACHE_ENABLE=1 \
-    PHP_OPCACHE_INTERNED_STRINGS_BUFFER=16 \
-    PHP_OPCACHE_MAX_ACCELERATED_FILES=32531 \
-    PHP_OPCACHE_MEMORY_CONSUMPTION=256 \
+    # v5 defaults to 0 (PHP files cached until restart); see deployment/DECISIONS.md.
+    PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
     PHP_REALPATH_CACHE_TTL=720 \
     TERM=xterm-color \
     TZ=${TZ} \
@@ -45,8 +51,9 @@ RUN apk add --no-cache --update \
     fish \
     git \
     iputils \
-    micro \
+    jq \
     mariadb-client \
+    micro \
     nss-tools \
     tzdata \
     unzip \
@@ -54,7 +61,15 @@ RUN apk add --no-cache --update \
     wget \
     xh
 
-# Setup timezone and log permissions
+COPY --from=fresh /usr/local/bin/fresh /usr/local/bin/fresh
+
+# The image's Caddyfile imports these folders by glob; under Octane they are the only way in
+# (CADDY_GLOBAL_OPTIONS is ignored, CADDY_SERVER_EXTRA_DIRECTIVES overwritten). Symlinks rather than
+# copies: the targets come from the bind mount (dev) or `COPY . .` (prod).
+RUN ln -s ${APP_BASE_DIR}/deployment/global.caddyfile /etc/frankenphp/caddyfile-global.d/global.caddyfile && \
+    ln -s ${APP_BASE_DIR}/deployment/site.caddyfile /etc/frankenphp/caddyfile-server.d/site.caddyfile
+
+# Setup User (Fish as default shell), Timezone & Permissions
 RUN set -eux; \
     ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime; \
     echo ${TZ} > /etc/timezone; \
@@ -83,16 +98,6 @@ ENV CADDY_AUTO_HTTPS=on \
 USER root
 RUN install-php-extensions xdebug
 
-RUN apk add --no-cache --update \
-    fish \
-    git \
-    iputils \
-    micro \
-    nss-tools \
-    vim \
-    wget \
-    xh
-
 # Use the build arguments to change the UID
 # and GID of www-data while also changing
 # the file permissions for NGINX
@@ -103,7 +108,7 @@ RUN docker-php-serversideup-set-id www-data $USER_ID:$GROUP_ID && \
     chown ${USER} /var/log/frankenphp
 
 # Install Dev specific helpers
-COPY --from=oven/bun:alpine /usr/local/bin/bun /usr/local/bin/bunx /usr/local/bin/
+COPY --from=oven/bun:1.4.3-alpine /usr/local/bin/bun /usr/local/bin/bunx /usr/local/bin/
 
 # SSL Certs permissions for Sail/Local dev
 RUN mkdir -p /etc/ssl/certs /usr/local/share/ca-certificates \
@@ -125,6 +130,7 @@ ARG USER_ID=82
 ARG GROUP_ID=82
 
 ENV AUTORUN_ENABLED=on \
+    CADDY_ACCESS_LOG_OUTPUT=stdout \
     PHP_OPCACHE_JIT=tracing \
     PHP_OPCACHE_JIT_BUFFER_SIZE=64M
 
@@ -176,7 +182,7 @@ RUN export DB_CONNECTION=sqlite \
 ###########################################
 # Frontend Build
 ###########################################
-FROM oven/bun:alpine AS build
+FROM oven/bun:1.4.3-alpine AS build
 WORKDIR /app
 COPY --link package.json bun.lock bunfig.toml ./
 
@@ -200,3 +206,7 @@ FROM prod-base AS prod
 COPY --chown=${USER} --from=build /app/public public
 
 EXPOSE 80
+
+# Same command as compose.prod.yaml, so an orchestrator running the image as-is (Kubernetes) gets
+# Octane. `auto` is the host's CPU count, not the cgroup limit: set OCTANE_WORKERS per deployment.
+CMD ["sh", "-c", "exec php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=80 --admin-port=2019 --workers=\"${OCTANE_WORKERS:-auto}\" --caddyfile=/etc/frankenphp/Caddyfile"]

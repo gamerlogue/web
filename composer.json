@@ -19,7 +19,6 @@
     "laravel/framework": "^13.0",
     "laravel/horizon": "^5.48",
     "laravel/octane": "^2.18",
-    "laravel/pail": "^1.2",
     "laravel/pulse": "^1.8",
     "laravel/sanctum": "^4.3",
     "laravel/telescope": "^5.22",
@@ -35,12 +34,14 @@
     "soved/laravel-gdpr": "^1.9"
   },
   "require-dev": {
+    "barryvdh/laravel-debugbar": "^4.0",
     "fakerphp/faker": "^1.23",
     "fumeapp/modeltyper": "^3.0",
     "larastan/larastan": "^3.10",
     "laravel-lang/lang": "^15.26",
     "laravel-lang/publisher": "^16.7",
     "laravel/boost": "^2.0",
+    "laravel/pail": "^1.2.5",
     "laravel/pint": "^1.30",
     "laravel/pao": "^1.1",
     "laravel/sail": "^1.65",
@@ -69,12 +70,12 @@
       "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
       "@php artisan key:generate",
       "@php artisan migrate --force",
-      "pnpm install",
-      "pnpm run build"
+      "bun install",
+      "bun run build"
     ],
     "dev": [
       "Composer\\Config::disableProcessTimeout",
-      "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+      "@php artisan dev"
     ],
     "test": [
       "@php artisan config:clear --ansi @no_additional_args",

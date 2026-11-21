@@ -1,4 +1,13 @@
+# A plain `prek install` / `pre-commit install` (sitekit init) sets up both kinds of hooks.
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
+  # A GitLab PAT was committed once and stayed in the history; this is what catches the
+  # next one before it gets there. Betterleaks is the gitleaks author's rewrite.
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.9.0
+    hooks:
+      - id: betterleaks
   - repo: https://github.com/commit-check/commit-check
     rev: v2.19.2
     hooks:
@@ -7,3 +16,13 @@ repos:
       - id: check-branch
       - id: check-author-name
       - id: check-author-email
+  # Same rule as the CI commit_lint job; commit-check's check-message rejects a gitmoji after the
+  # colon. fixup!/amend! pass here (they are squashed before the merge), not in CI.
+  - repo: local
+    hooks:
+      - id: conventional-commit
+        name: conventional commit message
+        language: pygrep
+        entry: '\A((feat|fix|docs|style|refactor|test|chore|ci|build|perf|revert)(\([^)]+\))?!?: .+|Revert ".+"|Merge .+|(fixup|amend|squash)! .+)'
+        args: [--multiline, --negate]
+        stages: [commit-msg]

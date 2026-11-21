@@ -23,6 +23,13 @@ jobs:
       TWITCH_CLIENT_ID: ci
       TWITCH_CLIENT_SECRET: ci
 
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [8.5]
+
+    name: PHP ${{ matrix.php }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -45,7 +52,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
-          php-version: '8.5'
+          php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, intl, fileinfo
           coverage: none
 
@@ -78,4 +85,4 @@ jobs:
         run: ./vendor/bin/phpstan analyse --memory-limit=1G
 
       - name: Execute tests
-        run: php artisan test --compact
+        run: php artisan test

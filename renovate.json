@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["local>platform/renovate"],
+  "packageRules": [
+    {
+      "description": "Tags like 8.5-frankenphp-alpine-v5.1.2: track the image release, keep PHP version and variation fixed",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["serversideup/php"],
+      "versioning": "regex:^(?<compatibility>.+)-v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
+    }
+  ]
+}

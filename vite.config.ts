@@ -39,9 +39,9 @@ export default defineConfig({
       refresh: true,
       fonts: [
         bunny('Instrument Sans', {
-          weights: [400, 500, 600],
-        }),
-      ],
+          weights: [400, 500, 600]
+        })
+      ]
     }),
     vue({
       template: {
@@ -57,11 +57,8 @@ export default defineConfig({
     ...additionalPlugins
   ],
   // No server.https on purpose: Caddy terminates TLS on ${VITE_PORT} and proxies here in
-  // plaintext (see deployment/dev/vite.caddyfile). When server.https is set, Vite builds the
-  // dev server with node:http2 createSecureServer — hard-coded in resolveHttpServer, with no
-  // opt-out — and the HTTP/1.1 Upgrade of the WebSocket handshake never reaches Vite's
-  // listener: every HMR attempt gets a 403, even with the vite-ping subprotocol that bypasses
-  // all of Vite's own checks.
+  // plaintext. With server.https, Vite's node:http2 server never passes the WebSocket
+  // Upgrade to its listener, so HMR gets a 403. See deployment/DECISIONS.md.
   server: {
     host: '127.0.0.1',
     port: Number(process.env.VITE_INTERNAL_PORT ?? 5174),
@@ -77,5 +74,4 @@ export default defineConfig({
       ]
     }
   }
-})
-;
+});

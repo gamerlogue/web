@@ -1,0 +1,8 @@
+# Site directives, symlinked into /etc/frankenphp/caddyfile-server.d/
+# (Dockerfile). Lives in the image, so Compose and Kubernetes serve the same rules.
+
+# Access log: discarded unless CADDY_ACCESS_LOG_OUTPUT is set (the prod stage sets stdout).
+log access {
+    format json
+    output {$CADDY_ACCESS_LOG_OUTPUT:discard}
+}

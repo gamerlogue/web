@@ -4,45 +4,15 @@ services:
     build:
       context: .
       target: prod
-    user: "${WWWUSER-www-data}"
+    user: '${WWWUSER-www-data}'
     extra_hosts:
       - '${SERVER_NAME:-laravel.localhost}:127.0.0.1'
     ports:
       - '${APP_PORT:-80}:80'
-    env_file:
-      - .env
     # Set healthcheck to use our native healthcheck script for Octane
     healthcheck:
-      test: ["CMD", "healthcheck-octane"]
+      test: [CMD, healthcheck-octane]
       start_period: 10s
-    environment:
-      CADDY_GLOBAL_OPTIONS: |
-        log file {
-            output file /var/log/frankenphp/frankenphp.log {
-                roll_size 10MiB
-                roll_keep 5
-            }
-        }
-      CADDY_PHP_SERVER_OPTIONS: |
-        index frankenphp-worker.php
-        try_files {path} frankenphp-worker.php
-        # Required for the public/storage/ directory...
-        resolve_root_symlink
-      CADDY_SERVER_EXTRA_DIRECTIVES: |
-        log access {
-            format json
-            output file /var/log/frankenphp/access.log {
-                roll_size 10MiB
-                roll_keep 5
-            }
-        }
-      # Overridden in dev by deployment/dev/start-container-dev.sh, which appends the `watch`
-      # directives. Needed here because /etc/frankenphp/Caddyfile takes the worker block from
-      # this variable and nowhere else.
-      FRANKENPHP_CONFIG: |
-        worker {
-          file "${APP_PUBLIC_PATH:-/var/www/html/public}/frankenphp-worker.php"
-        }
     volumes:
       - caddy_config:/config:rw
       - caddy_data:/data:rw
@@ -64,18 +34,16 @@ services:
     build:
       context: .
       target: prod
-    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    command: [php, /var/www/html/artisan, 'schedule:work']
     stop_signal: SIGTERM
     healthcheck:
-      test: ["CMD", "healthcheck-schedule"]
+      test: [CMD, healthcheck-schedule]
       start_period: 10s
     logging:
       driver: json-file
       options:
         max-size: 10m
         max-file: 3
-    env_file:
-      - .env
     security_opt:
       - no-new-privileges:true
 
@@ -84,19 +52,17 @@ services:
     build:
       context: .
       target: prod
-    command: ["php", "/var/www/html/artisan", "queue:work", "--tries=3"]
+    command: [php, /var/www/html/artisan, 'queue:work', --tries=3]
     stop_signal: SIGTERM
     healthcheck:
       # This is our native healthcheck script for the queue
-      test: ["CMD", "healthcheck-queue"]
+      test: [CMD, healthcheck-queue]
       start_period: 10s
     logging:
       driver: json-file
       options:
         max-size: 10m
         max-file: 3
-    env_file:
-      - .env
     depends_on:
       mariadb:
         condition: service_healthy
@@ -110,22 +76,16 @@ services:
     build:
       context: .
       target: prod
-    command: ["php", "/var/www/html/artisan", "horizon"]
+    command: [php, /var/www/html/artisan, horizon]
     stop_signal: SIGTERM
-    # Horizon finishes the job in flight before exiting, but Docker's default grace period is 10s:
-    # anything longer gets SIGKILLed, and with tries: 1 the job is lost rather than retried. This
-    # sits above the supervisor's 60s job timeout plus shutdown slack.
-    stop_grace_period: 90s
     healthcheck:
-      test: ["CMD", "healthcheck-horizon"]
+      test: [CMD, healthcheck-horizon]
       start_period: 10s
     logging:
       driver: json-file
       options:
         max-size: 10m
         max-file: 3
-    env_file:
-      - .env
     depends_on:
       mariadb:
         condition: service_healthy
@@ -134,12 +94,9 @@ services:
     security_opt:
       - no-new-privileges:true
 
-
   mariadb:
     restart: unless-stopped
     image: 'mariadb:13'
-    # No `ports` here: the database is only reachable over the compose network. compose.yaml
-    # publishes it for development, where MARIADB_ALLOW_EMPTY_PASSWORD makes that acceptable.
     environment:
       MARIADB_AUTO_UPGRADE: 'yes'
       MARIADB_ROOT_PASSWORD: '${DB_ROOT_PASSWORD:-}'
@@ -165,15 +122,11 @@ services:
   redis:
     restart: unless-stopped
     image: 'redis:alpine'
-    # volatile-lru, not allkeys-lru: the queue lists Horizon reads carry no TTL, so eviction can
-    # only take cache entries that have one, never a pending job. The ceiling: if keys without a
-    # TTL ever fill maxmemory, Redis starts refusing writes instead of evicting. That is a loud
-    # failure rather than a silent one, and the fix at that point is a separate Redis for queues.
-    command: ["redis-server", "--maxmemory", "${REDIS_MAXMEMORY:-384mb}", "--maxmemory-policy", "volatile-lru"]
+    command: [redis-server, --maxmemory, '${REDIS_MAXMEMORY:-384mb}', --maxmemory-policy, allkeys-lru]
     volumes:
       - 'redis:/data'
     healthcheck:
-      test: [ CMD, redis-cli, ping ]
+      test: [CMD, redis-cli, ping]
       retries: 3
       timeout: 5s
     logging:
