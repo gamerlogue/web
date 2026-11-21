@@ -20,9 +20,9 @@ const isMobile = useIsMobile();
   <footer>
     <div>
       <span>
-        {{ $t('Copyright © {initial_year} - {current_year}', { initial_year: '2019', current_year: new Date().getFullYear() }) }} Maicol07 -&nbsp;
+        {{ $t('Copyright © {initial_year} - {current_year}', {initial_year: '2019', current_year: new Date().getFullYear()}) }} Maicol07 -&nbsp;
       </span>
-      <a href="" @click.prevent="creditsDialogOpened = true">{{ $t('Credits') }}</a>
+      <a href="#" @click.prevent="creditsDialogOpened = true">{{ $t('Credits') }}</a>
 
       <md-dialog :open="creditsDialogOpened" @closed="creditsDialogOpened = false">
         <span slot="headline">{{ $t('Credits') }}</span>

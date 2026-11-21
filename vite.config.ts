@@ -1,13 +1,13 @@
 import type {PluginOption} from 'vite';
-import {resolve, dirname} from 'node:path';
+import {dirname, resolve} from 'node:path';
 import process from 'node:process';
+import {fileURLToPath} from 'node:url';
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import {wayfinder} from '@laravel/vite-plugin-wayfinder';
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
+import {bunny} from 'laravel-vite-plugin/fonts';
 import {defineConfig} from 'vite';
-import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
-import {bunny} from "laravel-vite-plugin/fonts";
-import {fileURLToPath} from "node:url";
 
 const SERVER_NAME = process.env.SERVER_NAME;
 

@@ -4,7 +4,6 @@ import type {PageComponentProps} from '~/typings/inertia.js';
 import {usePage} from '@inertiajs/vue3';
 import {BullhornOutlineIcon, MenuIcon, MenuOpenIcon} from 'mdi-vue3';
 import {computed, ref} from 'vue';
-import Logo from '~/Components/Logo.vue';
 import UserAccountImage from '~/Components/UserAccountImage.vue';
 import UserPopout from '~/Components/UserPopout.vue';
 // import {dashboard} from '~/routes';
@@ -43,9 +42,9 @@ const userPopoutOpen = ref(false);
         <MenuIcon/>
       </md-icon>
     </md-icon-button>
-<!--    <div>-->
-<!--      <Logo :href="dashboard()"/>-->
-<!--    </div>-->
+    <!--    <div> -->
+    <!--      <Logo :href="dashboard()"/> -->
+    <!--    </div> -->
 
     <div slot="end">
       <md-icon-button data-target="ln-embed" aria-label="Updates menu">

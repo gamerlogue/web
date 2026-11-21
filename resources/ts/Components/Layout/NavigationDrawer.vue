@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import {router} from '@inertiajs/vue3';
-import {AccountCircleOutlineIcon, FileDocumentOutlineIcon, GavelIcon, LockOutlineIcon, MenuOpenIcon, ViewDashboardOutlineIcon} from 'mdi-vue3';
+import {FileDocumentOutlineIcon, GavelIcon, MenuOpenIcon} from 'mdi-vue3';
 import {watch} from 'vue';
 import {useI18n} from 'vue-i18n';
 import LanguageSwitcher from '~/Components/LanguageSwitcher.vue';
-import NavigationDrawerItem from '~/Components/Layout/NavigationDrawerItem.vue';
 import {useIsMobile} from '~/utilities.ts';
 import '@material/web/labs/navigationdrawer/navigation-drawer.js';
 import '@material/web/labs/navigationdrawer/navigation-drawer-modal.js';
@@ -39,24 +38,24 @@ router.on('finish', () => {
         </md-icon>
       </md-icon-button>
       <md-list v-auto-animate aria-label="List of pages" role="menubar" class="nav slide-fade-in">
-<!--        <NavigationDrawerItem :href="dashboard()">-->
-<!--          <md-icon slot="start">-->
-<!--            <ViewDashboardOutlineIcon/>-->
-<!--          </md-icon>-->
-<!--          {{ $t('Dashboard') }}-->
-<!--        </NavigationDrawerItem>-->
-<!--        <NavigationDrawerItem :href="personalInfo()">-->
-<!--          <md-icon slot="start">-->
-<!--            <AccountCircleOutlineIcon/>-->
-<!--          </md-icon>-->
-<!--          {{ $t('Personal info') }}-->
-<!--        </NavigationDrawerItem>-->
-<!--        <NavigationDrawerItem :href="security.show()">-->
-<!--          <md-icon slot="start">-->
-<!--            <LockOutlineIcon/>-->
-<!--          </md-icon>-->
-<!--          {{ $t('Security') }}-->
-<!--        </NavigationDrawerItem>-->
+        <!--        <NavigationDrawerItem :href="dashboard()"> -->
+        <!--          <md-icon slot="start"> -->
+        <!--            <ViewDashboardOutlineIcon/> -->
+        <!--          </md-icon> -->
+        <!--          {{ $t('Dashboard') }} -->
+        <!--        </NavigationDrawerItem> -->
+        <!--        <NavigationDrawerItem :href="personalInfo()"> -->
+        <!--          <md-icon slot="start"> -->
+        <!--            <AccountCircleOutlineIcon/> -->
+        <!--          </md-icon> -->
+        <!--          {{ $t('Personal info') }} -->
+        <!--        </NavigationDrawerItem> -->
+        <!--        <NavigationDrawerItem :href="security.show()"> -->
+        <!--          <md-icon slot="start"> -->
+        <!--            <LockOutlineIcon/> -->
+        <!--          </md-icon> -->
+        <!--          {{ $t('Security') }} -->
+        <!--        </NavigationDrawerItem> -->
         <!--        <template v-for="link in links" :key="link.href"> -->
         <!--          <DrawerItem :href="link.href" @click="isMobile() && (drawerOpen = false)">{{ link.title }}</DrawerItem> -->
         <!--        </template> -->
@@ -99,20 +98,20 @@ md-navigation-drawer, md-navigation-drawer-modal {
   }
 
   &:is(md-navigation-drawer-modal) {
-
     --md-navigation-drawer-modal-container-color: var(--md-sys-color-background);
+
     z-index: 2;
 
     > div {
       display: flex;
-      padding: 12px;
       flex-direction: column;
+      padding: 12px;
     }
 
     .drawer-footer {
       display: flex;
-      justify-content: space-evenly;
       flex-wrap: wrap;
+      justify-content: space-evenly;
     }
   }
 }

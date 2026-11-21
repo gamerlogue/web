@@ -14,7 +14,9 @@ const {titleElement = 'h2'} = defineProps<{
         <slot name="icon"></slot>
       </md-avatar>
 
-      <component :is="titleElement"><slot name="title"></slot></component>
+      <component :is="titleElement">
+        <slot name="title"></slot>
+      </component>
     </div>
 
     <slot></slot>
@@ -66,8 +68,8 @@ md-filled-card {
 
   &.danger {
     --md-filled-card-container-color: var(--md-sys-color-error-container);
-    color: var(--md-sys-color-on-error-container);
 
+    color: var(--md-sys-color-on-error-container);
 
     .header {
       md-avatar {
