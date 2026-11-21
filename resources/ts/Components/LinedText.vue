@@ -18,8 +18,8 @@ import '@material/web/divider/divider.js';
 // Line before and after text (horizontal)
 .lined-text {
   display: grid;
-  grid-column-gap: .75rem;
   grid-template-columns: 1fr max-content 1fr;
+  column-gap: .75rem;
 
   & > div:has(> md-divider) {
     display: flex;

@@ -68,6 +68,7 @@ md-filled-card {
     --md-filled-card-container-color: var(--md-sys-color-error-container);
     color: var(--md-sys-color-on-error-container);
 
+
     .header {
       md-avatar {
         --md-avatar-container-color: var(--md-sys-color-error);

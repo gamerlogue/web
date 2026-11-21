@@ -63,7 +63,7 @@
   .vue3-loading-shimmer {
     --vue3-loading-shimmer-bg: #313537 !important;
 
-    // noinspection Stylelint
+    // stylelint-disable-next-line custom-property-pattern -- defined by vue3-loading-shimmer
     --vue3-loading-shimmer-shimmerBg: linear-gradient(90deg, rgb(24 26 27 / 0%) 0%, rgb(24 26 27 / 10%) 20%, rgb(24 26 27 / 30%) 40%, rgb(24 26 27 / 50%) 60%, rgb(24 26 27 / 30%) 80%, rgb(24 26 27 / 10%) 100%) !important;
   }
 }

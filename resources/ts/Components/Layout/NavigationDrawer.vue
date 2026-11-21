@@ -99,18 +99,19 @@ md-navigation-drawer, md-navigation-drawer-modal {
   }
 
   &:is(md-navigation-drawer-modal) {
+
     --md-navigation-drawer-modal-container-color: var(--md-sys-color-background);
     z-index: 2;
 
     > div {
-      padding: 12px;
       display: flex;
+      padding: 12px;
       flex-direction: column;
     }
 
     .drawer-footer {
-      justify-content: space-evenly;
       display: flex;
+      justify-content: space-evenly;
       flex-wrap: wrap;
     }
   }

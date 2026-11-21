@@ -55,12 +55,12 @@
 
   // Zoho chat
   @include im.media(">=tablet") {
-    // noinspection Stylelint
+    // stylelint-disable-next-line selector-id-pattern -- third-party (Cookiescript)
     #cookiescript_badge {
       bottom: 72px !important;
     }
 
-    // noinspection Stylelint
+    // stylelint-disable-next-line selector-class-pattern -- third-party (Zoho)
     .siq_bR {
       bottom: 63px !important;
       transform: scale(.7666);
@@ -72,12 +72,13 @@
   }
 
   @include im.media("<tablet") {
-    // noinspection Stylelint
+    // stylelint-disable-next-line selector-id-pattern -- third-party (Cookiescript)
     #cookiescript_badge {
       bottom: 20px !important;
       transform: scale(1.1666);
     }
 
+    // stylelint-disable-next-line selector-class-pattern -- third-party (Zoho)
     .siq_bR {
       transform: scale(0.7);
     }
