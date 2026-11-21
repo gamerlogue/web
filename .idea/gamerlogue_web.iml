@@ -146,7 +146,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/uid" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/var-dumper" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/yaml" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/theseer/tokenizer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/tijsverkoyen/css-to-inline-styles" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/voku/portable-ascii" />
@@ -222,6 +221,7 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/forxer/gravatar" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/forxer/laravel-gravatar" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-time" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/php-debugbar/symfony-bridge" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -205,7 +205,6 @@
       <path value="$PROJECT_DIR$/vendor/myclabs/deep-copy" />
       <path value="$PROJECT_DIR$/vendor/mockery/mockery" />
       <path value="$PROJECT_DIR$/vendor/filp/whoops" />
-      <path value="$PROJECT_DIR$/vendor/theseer/tokenizer" />
       <path value="$PROJECT_DIR$/vendor/sebastian/global-state" />
       <path value="$PROJECT_DIR$/vendor/sebastian/comparator" />
       <path value="$PROJECT_DIR$/vendor/sebastian/type" />
@@ -277,6 +276,7 @@
       <path value="$PROJECT_DIR$/vendor/forxer/gravatar" />
       <path value="$PROJECT_DIR$/vendor/forxer/laravel-gravatar" />
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-time" />
+      <path value="$PROJECT_DIR$/vendor/php-debugbar/symfony-bridge" />
     </include_path>
   </component>
   <component name="PhpInterpreters">
