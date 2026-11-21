@@ -614,6 +614,7 @@ otherwise). Newest first, standard pagination.
 | `GET /notifications/{id}` | One |
 | `PATCH /notifications/{id}` | `{"is_read": true}` or `false`; nothing else is writable (`422`) |
 | `POST /notifications/read-all` | **Plain JSON**, marks every one read, `204` |
+| `POST /device-tokens` | **Plain JSON** `{"token", "platform": "android"}`, registers the FCM token (upsert by token, moves it to the caller), `204` |
 
 | Attribute | Type | Content |
 |---|---|---|
