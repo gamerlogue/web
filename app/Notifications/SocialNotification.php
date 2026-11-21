@@ -17,12 +17,15 @@ use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
  * Someone did something to a user's profile or content. Stored in the database, whose `type`
  * column holds the kind (review_liked, comment_replied…) rather than the class name, and pushed
  * to the recipient's devices through FCM.
+ *
+ * @phpstan-type SocialType 'new_follower'|'review_liked'|'review_commented'|'list_liked'|'list_commented'|'comment_replied'|'comment_reacted'
  */
 class SocialNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     /**
+     * @param  SocialType  $type
      * @param  array<string, mixed>  $extra  e.g. game_id, comment_id, reaction
      */
     public function __construct(
@@ -35,6 +38,7 @@ class SocialNotification extends Notification implements ShouldQueue
     /**
      * Sends it unless the recipient is the actor, or the two are in a block.
      *
+     * @param  SocialType  $type
      * @param  array<string, mixed>  $extra
      */
     public static function send(User $recipient, string $type, User $actor, ?Model $subject, array $extra): void
