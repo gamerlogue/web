@@ -16,6 +16,7 @@
     "forxer/laravel-gravatar": "^6.0",
     "inertiajs/inertia-laravel": "^3.0",
     "laravel-lang/locales": "^2.10",
+    "laravel-notification-channels/fcm": "^6.2",
     "laravel/framework": "^13.0",
     "laravel/horizon": "^5.48",
     "laravel/octane": "^2.18",
