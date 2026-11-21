@@ -616,6 +616,11 @@ otherwise). Newest first, standard pagination.
 | `POST /notifications/read-all` | **Plain JSON**, marks every one read, `204` |
 | `POST /device-tokens` | **Plain JSON** `{"token", "platform": "android"}`, registers the FCM token (upsert by token, moves it to the caller), `204` |
 
+Every notification is also pushed through FCM to the recipient's registered devices: a
+`notification` message (English title and body) on Android channel `social`, with data
+`notification_id` (the notification's id) and `type`. Tokens FCM reports as unregistered or
+invalid are deleted; there is no unregister endpoint.
+
 | Attribute | Type | Content |
 |---|---|---|
 | `type` | string | see below |

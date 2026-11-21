@@ -240,6 +240,17 @@ class User extends Authenticatable implements MustVerifyEmail, PortableContract
     }
 
     /**
+     * The FCM tokens of this user's devices. A query rather than a relation: API Platform would
+     * expose a relation as a JSON:API relationship.
+     *
+     * @return list<string>
+     */
+    public function routeNotificationForFcm(): array
+    {
+        return DeviceToken::where('user_id', $this->id)->pluck('token')->all();
+    }
+
+    /**
      * Refuses another user everything beyond this profile's public card, with the code the client
      * branches on: a block first, then a private profile.
      *
