@@ -7,7 +7,7 @@
 # Fresh editor: Alpine doesn't package it, so the static (musl) binary of its release.
 # min-size build: no plugins, tree-sitter grammars or networking (update checks, telemetry).
 ###########################################
-FROM alpine:3.23 AS fresh
+FROM alpine:3.24 AS fresh
 RUN wget -qO- "https://github.com/sinelaw/fresh/releases/download/v0.5.8/fresh-min-size-$(uname -m)-unknown-linux-musl.tar.xz" \
     | tar -xJ -C /usr/local/bin --strip-components=1 "fresh-min-size-$(uname -m)-unknown-linux-musl/fresh"
 
@@ -182,7 +182,7 @@ RUN export DB_CONNECTION=sqlite \
 ###########################################
 # Frontend Build
 ###########################################
-FROM oven/bun:1.4.3-alpine AS build
+FROM oven/bun:1.4.4-alpine AS build
 WORKDIR /app
 COPY --link package.json bun.lock bunfig.toml ./
 
