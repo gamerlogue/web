@@ -6,13 +6,34 @@ namespace App\Models\Concerns;
 
 use App\Models\Notification;
 use App\Models\Reaction;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Reactions on a model, and the cleanup of everything others did on it.
  */
 trait HasInteractions
 {
+    /**
+     * Refuses a viewer who may not see this model, with the HTTP error the API answers.
+     */
+    abstract public function ensureVisibleTo(User $viewer): void;
+
+    /**
+     * ensureVisibleTo() as a boolean, for choosing whom to notify.
+     */
+    public function isVisibleTo(User $viewer): bool
+    {
+        try {
+            $this->ensureVisibleTo($viewer);
+        } catch (HttpException) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * @return MorphMany<Reaction, $this>
      */

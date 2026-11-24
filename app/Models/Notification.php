@@ -29,7 +29,7 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     ],
     rules: NotificationRequest::class
 )]
-#[ApiProperty(description: 'new_follower, review_liked, review_commented, list_liked, list_commented, comment_replied or comment_reacted.', property: 'type', writable: false)]
+#[ApiProperty(description: 'new_follower, review_liked, review_commented, list_liked, list_commented, comment_replied, comment_reacted or mention.', property: 'type', writable: false)]
 #[ApiProperty(description: 'What the notification renders from.', property: 'data', writable: false, nativeType: new BuiltinType(TypeIdentifier::ARRAY))]
 #[ApiProperty(description: 'Whether it was read; set it to true or false.', property: 'is_read', nativeType: new BuiltinType(TypeIdentifier::BOOL))]
 #[ApiProperty(property: 'read_at', writable: false)]

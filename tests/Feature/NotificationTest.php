@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use App\Enums\LibraryEntryStatus;
+use App\Enums\Visibility;
 use App\Models\GameList;
 use App\Models\LibraryEntry;
 use App\Models\User;
+use App\Models\UserBlock;
 
 /**
  * @return list<array<string, mixed>>
@@ -97,4 +99,41 @@ test('taking back a like or deleting a comment takes back its notification', fun
     actingAsNative($fan)->deleteJson("/api/comments/{$comment}", [], jsonApiHeaders())->assertNoContent();
 
     expect(notificationsOf($owner))->toBe([]);
+});
+
+test('a new comment notifies whom it mentions, once each, if they can read it and were not notified already', function () {
+    $owner = User::factory()->create(['nickname' => 'Owner']);
+    $author = User::factory()->create(['nickname' => 'author', 'picture' => 'https://example.test/p.png']);
+    $mentioned = User::factory()->create(['nickname' => 'Mario.Rossi']);
+    $blocked = User::factory()->create(['nickname' => 'blocked']);
+    UserBlock::create(['user_id' => $blocked->id, 'blocked_id' => $author->id]);
+    $entry = LibraryEntry::create(['user_id' => $owner->id, 'game_id' => 1, 'status' => LibraryEntryStatus::Completed, 'owned' => true, 'review' => 'Great']);
+
+    $comment = (int) post($author, '/api/comments', 'Comment', ['commentable_type' => 'library_entry', 'commentable_id' => $entry->id,
+        'comment' => '@mario.rossi (@MARIO.ROSSI). @owner @author @blocked @nobody mail@mario.rossi']);
+
+    expect(notificationsOf($mentioned))->toBe([['type' => 'mention', 'actor' => ['id' => $author->id, 'nickname' => 'author', 'picture' => 'https://example.test/p.png'],
+        'subject_type' => 'comment', 'subject_id' => $comment, 'comment_id' => $comment]])
+        ->and(collect(notificationsOf($owner))->pluck('type')->all())->toBe(['review_commented'])
+        ->and(notificationsOf($author))->toBe([])
+        ->and(notificationsOf($blocked))->toBe([]);
+
+    $late = User::factory()->create(['nickname' => 'late']);
+    actingAsNative($author)->patchJson("/api/comments/{$comment}", ['data' => ['type' => 'Comment', 'attributes' => ['comment' => 'Hi @late']]], jsonApiHeaders())->assertOk();
+    expect(notificationsOf($late))->toBe([]);
+});
+
+test('a comment notifies at most ten mentioned users, and none who cannot read the thread', function () {
+    $author = User::factory()->create(['visibility' => Visibility::Private]);
+    $users = collect(range(1, 11))->map(static fn (int $index) => User::factory()->create(['nickname' => sprintf('user%02d', $index)]));
+    $entry = LibraryEntry::create(['user_id' => $author->id, 'game_id' => 1, 'status' => LibraryEntryStatus::Completed, 'owned' => true, 'review' => 'Mine']);
+    $list = GameList::factory()->for($author)->create(['visibility' => Visibility::Public]);
+    $mentions = '@user01 ' . $users->map(static fn (User $user): string => "@{$user->nickname}")->implode(' ');
+
+    post($author, '/api/comments', 'Comment', ['commentable_type' => 'library_entry', 'commentable_id' => $entry->id, 'comment' => $mentions]);
+    expect($users->sum(static fn (User $user): int => count(notificationsOf($user))))->toBe(0);
+
+    $author->update(['visibility' => Visibility::Public]);
+    post($author, '/api/comments', 'Comment', ['commentable_type' => 'list', 'commentable_id' => $list->id, 'comment' => $mentions]);
+    expect($users->map(static fn (User $user): int => count(notificationsOf($user)))->all())->toBe([...array_fill(0, 10, 1), 0]);
 });

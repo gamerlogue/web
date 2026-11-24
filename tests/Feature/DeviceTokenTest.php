@@ -76,6 +76,7 @@ test('each type is pushed on its Android channel, with its type and id', functio
     ]);
 })->with([
     'new_follower' => ['new_follower', [], 'New follower', 'fan started following you', 'followers'],
+    'mention' => ['mention', ['comment_id' => 1], 'New mention', 'fan mentioned you in a comment', 'mentions'],
     'review_liked' => ['review_liked', [], 'New like', 'fan liked your review', 'social'],
 ]);
 
