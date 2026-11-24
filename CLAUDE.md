@@ -300,6 +300,10 @@ sliding, family capped at 180 days — the forced re-authentication interval.
 - `User::blockedUserIds()` is memoized on the instance. In production every request gets a fresh
   user; in tests `actingAsNative()` reuses one, so call `forgetBlockedUserIds()` after creating a
   block outside the API.
+- `followed_user_activity` fans out from `ActivityObserver` in a queued closure, which looks the
+  game name up on IGDB: a test that makes a followed user complete or review a game needs
+  `Http::fake` for `api.igdb.com`. Activities are deleted in bulk (`Activity::forget()`), never one
+  by one, so that is where their notifications go too.
 - Library imports are flagged per request in `Context` by the `X-Library-Import` middleware, never
   in static or singleton state (Octane).
 - There is no `.env.testing`: `--env=testing` falls back to the development database. Check

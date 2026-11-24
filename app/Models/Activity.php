@@ -10,6 +10,8 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\QueryParameter;
+use App\Observers\ActivityObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +37,7 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
 #[QueryParameter('filter[user]', description: "A user's activities instead of the caller's, subject to their visibility", constraints: ['uuid'])]
 #[QueryParameter('filter[feed]', description: 'The activities of the users the caller follows', constraints: ['in:true,false'])]
 #[QueryParameter('sort', filter: SortFilter::class, description: 'Only "-created_at", the default', properties: ['created_at'])]
+#[ObservedBy(ActivityObserver::class)]
 class Activity extends Model
 {
     /** Repeating a verb on the same subject within this window updates the activity in place. */
@@ -101,10 +104,13 @@ class Activity extends Model
     }
 
     /**
-     * Deleting a subject takes its activities with it.
+     * Deleting a subject takes its activities with it, and the notifications about them.
      */
     public static function forget(Model $subject): void
     {
+        Notification::where('type', 'followed_user_activity')
+            ->whereIn('data->activity_id', self::whereMorphedTo('subject', $subject)->pluck('id'))
+            ->delete();
         self::whereMorphedTo('subject', $subject)->delete();
     }
 

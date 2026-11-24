@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 use App\Enums\LibraryEntryStatus;
 use App\Enums\Visibility;
+use App\Models\Activity;
 use App\Models\GameList;
 use App\Models\LibraryEntry;
 use App\Models\User;
 use App\Models\UserBlock;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 /**
  * @return list<array<string, mixed>>
@@ -136,4 +139,34 @@ test('a comment notifies at most ten mentioned users, and none who cannot read t
     $author->update(['visibility' => Visibility::Public]);
     post($author, '/api/comments', 'Comment', ['commentable_type' => 'list', 'commentable_id' => $list->id, 'comment' => $mentions]);
     expect($users->map(static fn (User $user): int => count(notificationsOf($user)))->all())->toBe([...array_fill(0, 10, 1), 0]);
+});
+
+test('followers are told what a followed user completed, reviewed or listed, if they can see it', function () {
+    Cache::put('igdb_cache.access_token', 'test-token');
+    Http::fake(['api.igdb.com/v4/games' => Http::response([['id' => 42, 'name' => 'Doom']])]);
+    $author = User::factory()->create(['nickname' => 'author', 'picture' => 'https://example.test/p.png']);
+    [$follower, $stranger] = User::factory()->count(2)->create();
+    $follower->follow($author);
+
+    $entry = LibraryEntry::create(['user_id' => $author->id, 'game_id' => 42, 'status' => LibraryEntryStatus::Completed, 'owned' => true, 'review' => 'Great']);
+    LibraryEntry::create(['user_id' => $author->id, 'game_id' => 7, 'status' => LibraryEntryStatus::Playing, 'owned' => true]);
+    actingAsNative($author);
+    $list = GameList::factory()->for($author)->create(['name' => 'Top']);
+    GameList::factory()->for($author)->private()->create();
+    $author->update(['visibility' => Visibility::Private]);
+    GameList::factory()->for($author)->create();
+
+    $actor = ['id' => $author->id, 'nickname' => 'author', 'picture' => 'https://example.test/p.png'];
+    $activityId = static fn (string $verb): int => Activity::where('verb', $verb)->sole()->id;
+    $game = ['subject_type' => 'library_entry', 'subject_id' => $entry->id, 'game_id' => 42, 'game_name' => 'Doom', 'list_name' => null];
+    expect(notificationsOf($follower))->toEqualCanonicalizing([
+        ['type' => 'followed_user_activity', 'actor' => $actor, 'activity_id' => $activityId('completed'), 'verb' => 'completed', ...$game],
+        ['type' => 'followed_user_activity', 'actor' => $actor, 'activity_id' => $activityId('reviewed'), 'verb' => 'reviewed', ...$game],
+        ['type' => 'followed_user_activity', 'actor' => $actor, 'subject_type' => 'list', 'subject_id' => $list->id,
+            'activity_id' => Activity::where('verb', 'list_created')->whereMorphedTo('subject', $list)->sole()->id, 'verb' => 'list_created',
+            'game_id' => null, 'game_name' => null, 'list_name' => 'Top'],
+    ])->and(notificationsOf($stranger))->toBe([]);
+
+    $entry->delete();
+    expect(collect(notificationsOf($follower))->pluck('verb')->all())->toBe(['list_created']);
 });

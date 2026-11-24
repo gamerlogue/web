@@ -645,7 +645,7 @@ notifications about it.
 user who can read the thread. Only the first 10 distinct nicknames of a comment count. Someone already notified about the same
 comment (`review_commented`, `list_commented`, `comment_replied`) gets only that one.
 
-**`followed_user_activity`** (not implemented yet on the server): one per follower, only for the
+**`followed_user_activity`**: one per follower, only for the
 verbs `completed`, `reviewed` (subject `library_entry`) and `list_created` (subject `list`), and
 only when the follower can see the subject. `game_name` is the IGDB name for the push body and the
 list; `game_id`/`game_name` are null for `list_created`, `list_name` for the others. Deleting the
