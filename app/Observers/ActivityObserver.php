@@ -12,8 +12,8 @@ use App\Notifications\SocialNotification;
 use MariusGelez\IGDBLaravel\Models\Game;
 
 /**
- * Turns some new activities into notifications to the actor's followers. An activity folded into
- * a recent one is not new and notifies nobody again.
+ * Turns some new activities into notifications: a few verbs to the actor's followers, an earned
+ * badge to the actor. An activity folded into a recent one is not new and notifies nobody again.
  */
 class ActivityObserver
 {
@@ -22,6 +22,13 @@ class ActivityObserver
 
     public function created(Activity $activity): void
     {
+        if ($activity->verb === 'badge_earned') {
+            // The only notification about one's own action, hence not through send().
+            $user = User::findOrFail($activity->user_id);
+            $user->notify(new SocialNotification('badge_earned', $user, null, ['badge' => $activity->payload['badge']]));
+
+            return;
+        }
         if (! in_array($activity->verb, self::FOLLOWER_VERBS, true)) {
             return;
         }

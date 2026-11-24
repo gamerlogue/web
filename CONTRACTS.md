@@ -651,7 +651,7 @@ only when the follower can see the subject. `game_name` is the IGDB name for the
 list; `game_id`/`game_name` are null for `list_created`, `list_name` for the others. Deleting the
 activity deletes these notifications.
 
-**`badge_earned`** (not implemented yet on the server): sent with the `badge_earned` activity, to
+**`badge_earned`**: sent with the `badge_earned` activity (which the server does not record yet), to
 the user who earned the badge; the only type about one's own action, so its `actor` is that user.
 
 ```json

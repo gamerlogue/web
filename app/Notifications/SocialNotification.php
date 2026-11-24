@@ -18,7 +18,7 @@ use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
  * column holds the kind (review_liked, comment_replied…) rather than the class name, and pushed
  * to the recipient's devices through FCM.
  *
- * @phpstan-type SocialType 'new_follower'|'review_liked'|'review_commented'|'list_liked'|'list_commented'|'comment_replied'|'comment_reacted'|'mention'|'followed_user_activity'
+ * @phpstan-type SocialType 'new_follower'|'review_liked'|'review_commented'|'list_liked'|'list_commented'|'comment_replied'|'comment_reacted'|'mention'|'followed_user_activity'|'badge_earned'
  */
 class SocialNotification extends Notification implements ShouldQueue
 {
@@ -111,12 +111,14 @@ class SocialNotification extends Notification implements ShouldQueue
             'followed_user_activity' => ['New activity', $this->extra['verb'] === 'list_created'
                 ? "{$actor} created the list {$this->extra['list_name']}"
                 : "{$actor} {$this->extra['verb']} " . ($this->extra['game_name'] ?? 'a game')],
+            'badge_earned' => ['New badge', "You earned the {$this->extra['badge']} badge"],
         };
         // Must match the app's NotificationChannel.ofNotificationType.
         $channel = match ($this->type) {
             'new_follower' => 'followers',
             'mention' => 'mentions',
             'followed_user_activity' => 'following',
+            'badge_earned' => 'badges',
             default => 'social',
         };
 

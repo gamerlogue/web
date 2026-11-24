@@ -170,3 +170,12 @@ test('followers are told what a followed user completed, reviewed or listed, if 
     $entry->delete();
     expect(collect(notificationsOf($follower))->pluck('verb')->all())->toBe(['list_created']);
 });
+
+test('earning a badge notifies the user who earned it', function () {
+    $user = User::factory()->create(['nickname' => 'me', 'picture' => 'https://example.test/p.png']);
+
+    Activity::create(['user_id' => $user->id, 'verb' => 'badge_earned', 'subject_class' => User::class, 'subject_id' => $user->id, 'payload' => ['badge' => 'first_review']]);
+
+    expect(notificationsOf($user))->toBe([['type' => 'badge_earned', 'actor' => ['id' => $user->id, 'nickname' => 'me', 'picture' => 'https://example.test/p.png'],
+        'subject_type' => null, 'subject_id' => null, 'badge' => 'first_review']]);
+});

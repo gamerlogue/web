@@ -80,6 +80,7 @@ test('each type is pushed on its Android channel, with its type and id', functio
     'completed' => ['followed_user_activity', ['verb' => 'completed', 'game_name' => 'Doom', 'list_name' => null], 'New activity', 'fan completed Doom', 'following'],
     'reviewed' => ['followed_user_activity', ['verb' => 'reviewed', 'game_name' => 'Doom', 'list_name' => null], 'New activity', 'fan reviewed Doom', 'following'],
     'list_created' => ['followed_user_activity', ['verb' => 'list_created', 'game_name' => null, 'list_name' => 'Top'], 'New activity', 'fan created the list Top', 'following'],
+    'badge_earned' => ['badge_earned', ['badge' => 'first_review'], 'New badge', 'You earned the first_review badge', 'badges'],
     'review_liked' => ['review_liked', [], 'New like', 'fan liked your review', 'social'],
 ]);
 
