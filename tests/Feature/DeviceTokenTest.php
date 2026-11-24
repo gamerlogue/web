@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\DeviceToken;
 use App\Models\User;
+use App\Notifications\SocialNotification;
 use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Exception\Messaging\NotFound;
 use Kreait\Firebase\Exception\Messaging\ServerUnavailable;
@@ -60,9 +61,23 @@ test('a notification is pushed to every device of its recipient', function () {
         ->and($message->toArray())->toBe([
             'data' => ['notification_id' => $owner->notifications()->sole()->id, 'type' => 'new_follower'],
             'notification' => ['title' => 'New follower', 'body' => 'fan started following you'],
-            'android' => ['notification' => ['channel_id' => 'social']],
+            'android' => ['notification' => ['channel_id' => 'followers']],
         ]);
 });
+
+test('each type is pushed on its Android channel, with its type and id', function (string $type, array $extra, string $title, string $body, string $channel) {
+    $notification = new SocialNotification($type, User::factory()->make(['nickname' => 'fan']), null, $extra);
+    $notification->id = 'abc';
+
+    expect($notification->toFcm(new User)->toArray())->toBe([
+        'data' => ['notification_id' => 'abc', 'type' => $type],
+        'notification' => ['title' => $title, 'body' => $body],
+        'android' => ['notification' => ['channel_id' => $channel]],
+    ]);
+})->with([
+    'new_follower' => ['new_follower', [], 'New follower', 'fan started following you', 'followers'],
+    'review_liked' => ['review_liked', [], 'New like', 'fan liked your review', 'social'],
+]);
 
 test('nothing is pushed to a recipient without devices', function () {
     $owner = User::factory()->create();

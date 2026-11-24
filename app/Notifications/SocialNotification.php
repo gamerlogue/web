@@ -107,10 +107,15 @@ class SocialNotification extends Notification implements ShouldQueue
             'comment_replied' => ['New reply', "{$actor} replied to your comment"],
             'comment_reacted' => ['New reaction', "{$actor} reacted to your comment"],
         };
+        // Must match the app's NotificationChannel.ofNotificationType.
+        $channel = match ($this->type) {
+            'new_follower' => 'followers',
+            default => 'social',
+        };
 
         return FcmMessage::create()
             ->notification(new FcmNotification(title: $title, body: $body))
             ->data(['notification_id' => $this->id, 'type' => $this->type])
-            ->android(['notification' => ['channel_id' => 'social']]);
+            ->android(['notification' => ['channel_id' => $channel]]);
     }
 }
