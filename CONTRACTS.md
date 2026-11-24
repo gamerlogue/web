@@ -614,12 +614,6 @@ otherwise). Newest first, standard pagination.
 | `GET /notifications/{id}` | One |
 | `PATCH /notifications/{id}` | `{"is_read": true}` or `false`; nothing else is writable (`422`) |
 | `POST /notifications/read-all` | **Plain JSON**, marks every one read, `204` |
-| `POST /device-tokens` | **Plain JSON** `{"token", "platform": "android"}`, registers the FCM token (upsert by token, moves it to the caller), `204` |
-
-Every notification is also pushed through FCM to the recipient's registered devices: a
-`notification` message (English title and body) on Android channel `social`, with data
-`notification_id` (the notification's id) and `type`. Tokens FCM reports as unregistered or
-invalid are deleted; there is no unregister endpoint.
 
 | Attribute | Type | Content |
 |---|---|---|
@@ -638,10 +632,27 @@ invalid are deleted; there is no unregister endpoint.
 | `list_commented` | the list's owner | `list` | `list_name`, `comment_id` |
 | `comment_replied` | the author of the comment replied to | `comment` | `comment_id` (the reply) |
 | `comment_reacted` | the comment's author | `comment` | `reaction`, `reaction_id` |
+| `mention` | each user named `@nickname` in a new comment | `comment` | `comment_id` (the comment) |
+| `followed_user_activity` | each follower of the activity's user | the activity's | `activity_id`, `verb`, `game_id`, `game_name`, `list_name` |
+| `badge_earned` | the user who earned it | null | `badge` (the badge key, as in the `badge_earned` activity) |
 
 Nobody is notified of their own actions, nor by a user they are in a block with. Taking back a
 reaction or deleting a comment deletes its notification; deleting content deletes the
-notifications about it. Push notifications are not part of this phase.
+notifications about it.
+
+**`mention`** (not implemented yet on the server): on comment creation only, every distinct
+`@nickname` (case-insensitive, `@` at the start or after a non-word character) naming an existing
+user who can read the thread. At most 10 per comment. Someone already notified about the same
+comment (`review_commented`, `list_commented`, `comment_replied`) gets only that one.
+
+**`followed_user_activity`** (not implemented yet on the server): one per follower, only for the
+verbs `completed`, `reviewed` (subject `library_entry`) and `list_created` (subject `list`), and
+only when the follower can see the subject. `game_name` is the IGDB name for the push body and the
+list; `game_id`/`game_name` are null for `list_created`, `list_name` for the others. Deleting the
+activity deletes these notifications.
+
+**`badge_earned`** (not implemented yet on the server): sent with the `badge_earned` activity, to
+the user who earned the badge; the only type about one's own action, so its `actor` is that user.
 
 ```json
 {"data": [{"id": "9f1c…", "type": "Notification", "attributes": {"type": "review_liked",
@@ -651,6 +662,37 @@ notifications about it. Push notifications are not part of this phase.
   "updated_at": "2026-10-17T16:00:00+02:00"}}],
  "meta": {"totalItems": 1, "itemsPerPage": 30, "currentPage": 1}}
 ```
+
+### Push (FCM)
+
+Every notification is also pushed to the recipient's devices through Firebase Cloud Messaging; only the Android app
+registers one.
+
+| Method and path | Effect |
+|---|---|
+| `POST /device-tokens` | **Plain JSON** `{"token": "<FCM token>", "platform": "android"}`, ability `profile`; any `2xx` |
+
+- Upsert by `token`: the app sends it on every start and whenever FCM rotates it. A token tied to another user moves to
+  the caller.
+- No unregister call: on sign-out the app deletes its FCM token, as the bearer is already gone. Delete a token when FCM
+  answers `UNREGISTERED` (or `INVALID_ARGUMENT` for it) to a send; deleting the account deletes its tokens.
+- Send a `notification` message (title and body), so Android shows it even when the app is not running. Tapping it
+  opens the notifications list; one received in the foreground refreshes the unread badge.
+- Name the notification's Android channel in `android.notification.channel_id`. The user turns each channel on or
+  off in the system settings (the app has no notification settings of its own), so the mapping must match the app's
+  `NotificationChannel.ofNotificationType`:
+
+  | `type` | `channel_id` |
+  |---|---|
+  | `new_follower` | `followers` |
+  | `mention` | `mentions` |
+  | `followed_user_activity` | `following` |
+  | `badge_earned` | `badges` |
+  | every other | `social` |
+
+  Without one Android uses `social`. Also send the `data` keys `type` (the notification `type`) and
+  `notification_id`: in the foreground the app shows the push itself, on the channel of `type`, and
+  `notification_id` keeps two pushes from replacing each other.
 
 ---
 
